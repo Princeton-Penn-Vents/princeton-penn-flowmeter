@@ -1,0 +1,9 @@
+name: flowmeter
+channels:
+  - conda-forge
+dependencies:
+  - python==3.7
+  - pyqt
+  - pyqtgraph
+  - numpy
+  - matplotlib
