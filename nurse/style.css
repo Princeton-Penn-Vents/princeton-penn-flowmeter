@@ -3,7 +3,7 @@ QWidget {
 }
 
 QLabel {
-  color: white;
+  color: #4CB3EF;
 }
 
 AlertWidget > QLabel {
