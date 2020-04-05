@@ -72,12 +72,27 @@ class PatientSensor(QtWidgets.QWidget):
         outer_layout.addWidget(lower)
         lower_layout = QtWidgets.QGridLayout()
         lower.setLayout(lower_layout)
-        lower_layout.addWidget(QtWidgets.QLabel("MinFlow: 12.2 L/m"), 0, 0)
-        lower_layout.addWidget(QtWidgets.QLabel("MaxFlow: 12.2 L/m"), 0, 1)
-        lower_layout.addWidget(QtWidgets.QLabel("AveMinFlow: 12.2 L/m"), 0, 2)
-        lower_layout.addWidget(QtWidgets.QLabel("TimeWindow: 20 s"), 1, 0)
-        lower_layout.addWidget(QtWidgets.QLabel("AveFlow: 12.2 L/m"), 1, 1)
-        lower_layout.addWidget(QtWidgets.QLabel("CurrentFlow: 20 L/m"), 1, 2)
+
+        self.text_widgets=[]
+        self.text_widgets.append(QtWidgets.QLabel("MinFlow: 12.2 L/m"))
+        self.text_widgets.append(QtWidgets.QLabel("MaxFlow: 12.2 L/m"))
+        self.text_widgets.append(QtWidgets.QLabel("AveMinFlow: 12.2 L/m"))
+        self.text_widgets.append(QtWidgets.QLabel("TimeWindow: 20 L/m"))
+        self.text_widgets.append(QtWidgets.QLabel("AveFlow: 12.2 L/m"))
+        self.text_widgets.append(QtWidgets.QLabel("CurrentFlow: 20 L/m"))
+
+        self.widget_lookup={}
+        self.widget_lookup['MinFlow']=0
+        self.widget_lookup['MaxFlow']=1
+        self.widget_lookup['AveMinFlow']=2
+        self.widget_lookup['TimeWindow']=3
+        self.widget_lookup['AveFlow']=4
+        self.widget_lookup['CurrentFlow']=5
+        
+        nCols=3
+        for i,widget in enumerate(self.text_widgets):
+            lower_layout.addWidget(widget,i//nCols,i%nCols)
+          
 
         self.num_data_points=1000
         self.time=np.arange(-1000,0,1)
@@ -112,6 +127,11 @@ class PatientSensor(QtWidgets.QWidget):
         else:
             self.alert.status = Status.ALERT.name
 
+
+        for key in self.widget_lookup:
+            val=self.widget_lookup[key]
+            v=np.random.uniform(5.,15.)
+            self.text_widgets[val].setText(key+':'+str(int(v))+' L/m')
 
 class MainWindow(QtWidgets.QMainWindow):
 
