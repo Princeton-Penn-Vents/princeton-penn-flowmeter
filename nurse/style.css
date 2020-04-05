@@ -1,0 +1,26 @@
+QWidget {
+  background-color:black;
+}
+
+QLabel {
+  color: white;
+}
+
+AlertWidget > QLabel {
+  background-color: yellow;
+  font: bold;
+  font-size: 30px;
+  color: white;
+}
+
+AlertWidget[status="OK"] > QLabel {
+  background-color: green;
+}
+
+AlertWidget[status="ALERT"] > QLabel {
+  background-color: red;
+}
+
+AlertWidget[status="DISCON"] > QLabel {
+  background-color: blue;
+}
