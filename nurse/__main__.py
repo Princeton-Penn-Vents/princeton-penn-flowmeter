@@ -73,26 +73,22 @@ class PatientSensor(QtWidgets.QWidget):
         lower_layout = QtWidgets.QGridLayout()
         lower.setLayout(lower_layout)
 
-        self.text_widgets=[]
-        self.text_widgets.append(QtWidgets.QLabel("MinFlow: 12.2 L/m"))
-        self.text_widgets.append(QtWidgets.QLabel("MaxFlow: 12.2 L/m"))
-        self.text_widgets.append(QtWidgets.QLabel("AveMinFlow: 12.2 L/m"))
-        self.text_widgets.append(QtWidgets.QLabel("TimeWindow: 20 L/m"))
-        self.text_widgets.append(QtWidgets.QLabel("AveFlow: 12.2 L/m"))
-        self.text_widgets.append(QtWidgets.QLabel("CurrentFlow: 20 L/m"))
+        self.info_strings=["MinFlow (L/m):","MaxFlow (L/m):","AveMinFlow (L/m):",
+                           "TimeWindow (s):", "AveFlow (L/m):", "CurrentFlow (L/m):"]
 
-        self.widget_lookup={}
-        self.widget_lookup['MinFlow']=0
-        self.widget_lookup['MaxFlow']=1
-        self.widget_lookup['AveMinFlow']=2
-        self.widget_lookup['TimeWindow']=3
-        self.widget_lookup['AveFlow']=4
-        self.widget_lookup['CurrentFlow']=5
-        
+        #dummy
+        self.info_vals=[12.2,12.2,12.2,20.0,12.2,20.]
+      
         nCols=3
-        for i,widget in enumerate(self.text_widgets):
-            lower_layout.addWidget(widget,i//nCols,i%nCols)
-          
+        self.info_widgets=[]
+        self.val_widgets=[]
+        self.widget_lookup={}
+        for i in range(len(self.info_strings)):
+            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[i]))
+            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[i]))))
+            lower_layout.addWidget(self.info_widgets[-1],i//nCols,2*(i%nCols))
+            lower_layout.addWidget(self.val_widgets[-1],i//nCols,1+2*(i%nCols))
+            self.widget_lookup[self.info_strings[i]]=i
 
         self.num_data_points=1000
         self.time=np.arange(-1000,0,1)
@@ -131,7 +127,7 @@ class PatientSensor(QtWidgets.QWidget):
         for key in self.widget_lookup:
             val=self.widget_lookup[key]
             v=np.random.uniform(5.,15.)
-            self.text_widgets[val].setText(key+':'+str(int(v))+' L/m')
+            self.val_widgets[val].setText(str(int(v)))
 
 class MainWindow(QtWidgets.QMainWindow):
 
