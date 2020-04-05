@@ -33,6 +33,7 @@ class AlertWidget(QtWidgets.QWidget):
 
         name = QtWidgets.QLabel(str(i + 1))
         # name.setStyleSheet("font-size: 30px;");
+        name.setStyleSheet("color: black;");
         name.setAlignment(QtCore.Qt.AlignCenter)
         column_layout.addWidget(name)
 
@@ -117,7 +118,7 @@ class PatientSensor(QtWidgets.QWidget):
             (self.real_time + i * 13 % 100) / 10 - 2
         ) * np.random.uniform(0.9, 1.1, 1)
 
-        pen = pg.mkPen(color=(0, 255, 0) if ok else (255, 0, 0), width=5)
+        pen = pg.mkPen(color=(151, 222, 121) if ok else (237, 67, 55), width=5)
         self.graph.clear()
         self.graph.plot(self.time, np.roll(self.flow, -1 * self.curr_bin), pen=pen)
 
