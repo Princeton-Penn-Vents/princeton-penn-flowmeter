@@ -1,0 +1,28 @@
+QWidget {
+  background-color:black;
+}
+
+QLabel {
+  color: #4CB3EF;
+}
+
+AlertWidget > QLabel {
+  background-color: yellow;
+  font: bold;
+  font-size: 30px;
+  color: black;
+  border-radius: 3px;
+}
+
+AlertWidget[status="OK"] > QLabel {
+  background-color: #97DE79; /* (151,222,121) */
+}
+
+AlertWidget[status="ALERT"] > QLabel {
+  /* background-color: #FF1080; (255, 16, 128) */
+  background-color: #ED4337; /* (237, 67, 55) */
+}
+
+AlertWidget[status="DISCON"] > QLabel {
+  background-color: #4CB3EF ;   /* (76,179,239) */
+}
