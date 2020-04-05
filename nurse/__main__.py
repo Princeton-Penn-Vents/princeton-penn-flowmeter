@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtWidgets, uic, QtCore
-from PyQt5.QtCore import QTimer
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import numpy as np
@@ -119,6 +118,7 @@ class PatientSensor(QtWidgets.QWidget):
         ) * np.random.uniform(0.9, 1.1, 1)
 
         pen = pg.mkPen(color=(0, 255, 0) if ok else (255, 0, 0), width=5)
+        self.graph.clear()
         self.graph.plot(self.time, np.roll(self.flow, -1 * self.curr_bin), pen=pen)
 
         upper = pg.InfiniteLine(angle=0)
@@ -169,20 +169,18 @@ class MainWindow(QtWidgets.QMainWindow):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 5)))
             graph.set_plot(i)
 
-        self.qTimer = QTimer()
+        self.qTimer = QtCore.QTimer()
         self.qTimer.setInterval(1000)
         self.qTimer.timeout.connect(self.update_graphs)
         self.qTimer.start()
 
+    @QtCore.pyqtSlot()
     def update_graphs(self):
-        print("Calling")
         for i, graph in enumerate(self.graphs):
             graph.set_plot(i)
 
 
 def main():
-    import time
-
     app = QtWidgets.QApplication(sys.argv)
     main = MainWindow()
     main.show()
