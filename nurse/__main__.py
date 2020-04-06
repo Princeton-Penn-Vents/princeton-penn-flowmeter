@@ -8,6 +8,8 @@ import numpy as np
 import sys
 import os
 import enum
+import xml.etree.ElementTree as et
+import requests
 
 
 class Status(enum.Enum):
@@ -31,11 +33,45 @@ class LocalGenerator:
         )
         if self.status == Status.DISCON:
             v[-min(self.current, len(self.time)) :] = 0
-        return v
+        return self.time, v
 
     def tick(self):
         self.current += 5
         self.random = np.roll(self.random, 5)
+
+
+class DisconGenerator:
+    status = Status.DISCON
+
+    def calc_flow(self):
+        return [], []
+
+    def tick(self):
+        pass
+
+
+class RemoteGenerator:
+    def tick(self):
+        pass
+
+    def __init__(self, ip="127.0.0.1", port="8123"):
+        self.ip = ip
+        self.port = port
+        self.status = Status.OK
+
+    def calc_flow(self):
+        try:
+            r = requests.get(f"http://{self.ip}:{self.port}")
+        except requests.exceptions.ConnectionError:
+            self.status = Status.DISCON
+            return [], []
+
+        root = et.fromstring(r.text)
+        assert root.tag == "ventsensor"
+        time = np.fromstring(root.find("data").find("time").text, sep=",")
+        flow = np.fromstring(root.find("data").find("flow").text, sep=",")
+
+        return time, flow
 
 
 class AlertWidget(QtWidgets.QWidget):
@@ -117,9 +153,13 @@ class PatientSensor(QtWidgets.QWidget):
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
         if i == 4:
-            status = Status.DISCON
-        self.alert.pstatus(status)
-        self.flow = LocalGenerator(status)
+            self.flow = DisconGenerator()
+        elif i == 3:
+            self.flow = RemoteGenerator()
+        else:
+            self.flow = LocalGenerator(status)
+
+        self.alert.pstatus(self.flow.status)
 
     def set_plot(self):
         color = {
@@ -129,8 +169,8 @@ class PatientSensor(QtWidgets.QWidget):
         }[self.alert.status()]
 
         pen = pg.mkPen(color=color, width=5)
-        self.curve = self.graph.plot(self.flow.time, self.flow.calc_flow(), pen=pen)
-        self.graph.setRange(xRange=(-1000, 0), yRange=(-3, 10))
+        self.curve = self.graph.plot(*self.flow.calc_flow(), pen=pen)
+        # self.graph.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
         pen = pg.mkPen(color=(220, 220, 50), width=3)
 
@@ -140,7 +180,8 @@ class PatientSensor(QtWidgets.QWidget):
     @Slot()
     def update_plot(self):
         self.flow.tick()
-        self.curve.setData(self.flow.time, self.flow.calc_flow())
+        self.curve.setData(*self.flow.calc_flow())
+        self.alert.pstatus(self.flow.status)
 
         for key in self.widget_lookup:
             val = self.widget_lookup[key]
