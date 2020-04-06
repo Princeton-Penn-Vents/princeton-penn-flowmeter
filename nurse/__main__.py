@@ -159,6 +159,10 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
+        # Avoid wiggles when updating
+        for i in range(4):
+            layout.setColumnStretch(i, 3)
+
         self.centralwidget = QtWidgets.QWidget(self)
         self.setObjectName("maingrid")
 
