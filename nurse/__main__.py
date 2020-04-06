@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
@@ -10,6 +10,9 @@ import os
 import enum
 import xml.etree.ElementTree as et
 import requests
+from pathlib import Path
+
+DIR = Path(__file__).parent.absolute()
 
 
 class Status(enum.Enum):
@@ -89,13 +92,14 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout = QtWidgets.QVBoxLayout()
         self.setLayout(column_layout)
 
-        name = QtWidgets.QLabel(str(i + 1))
-        name.setAlignment(QtCore.Qt.AlignCenter)
-        column_layout.addWidget(name)
+        self.name_btn = QtWidgets.QPushButton(str(i + 1))
+        # self.name_btn.setAlignment(QtCore.Qt.AlignCenter)
+        column_layout.addWidget(self.name_btn)
 
         self.alert = QtWidgets.QLabel("DISCON")
         self.alert.setAlignment(QtCore.Qt.AlignCenter)
         column_layout.addWidget(self.alert)
+
 
 
 class PatientSensor(QtWidgets.QWidget):
@@ -162,6 +166,14 @@ class PatientSensor(QtWidgets.QWidget):
             self.flow = LocalGenerator(status)
 
         self.alert.status = self.flow.status
+        self.alert.name_btn.clicked.connect(self.click_number)
+
+    @Slot()
+    def click_number(self):
+        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
+        if ok:
+            port = int(number)
+            self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
         color = {
@@ -210,7 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setObjectName("maingrid")
 
         # Replace with proper importlib.resources if made a package
-        with open("style.css") as f:
+        with open(DIR / "style.css") as f:
             self.setStyleSheet(f.read())
 
         self.setCentralWidget(self.centralwidget)

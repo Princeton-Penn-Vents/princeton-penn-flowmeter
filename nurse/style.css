@@ -1,4 +1,4 @@
-QWidget {
+MainWindow > QWidget {
   background-color:black;
 }
 
@@ -14,15 +14,23 @@ AlertWidget > QLabel {
   border-radius: 3px;
 }
 
-AlertWidget[status="OK"] > QLabel {
-  background-color: #97DE79; /* (151,222,121) */
+
+AlertWidget > QPushButton {
+  color: white;
+  font: bold;
+  font-size: 30px;
+  background-color: black;
 }
 
-AlertWidget[status="ALERT"] > QLabel {
+AlertWidget[status="OK"] > QLabel, QPushButton {
+  background-color: black; /* #97DE79; (151,222,121) */
+}
+
+AlertWidget[status="ALERT"] > QLabel, QPushButton {
   /* background-color: #FF1080; (255, 16, 128) */
   background-color: #ED4337; /* (237, 67, 55) */
 }
 
-AlertWidget[status="DISCON"] > QLabel {
+AlertWidget[status="DISCON"] > QLabel, QPushButton {
   background-color: #4CB3EF ;   /* (76,179,239) */
 }
