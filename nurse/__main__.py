@@ -134,13 +134,8 @@ class PatientSensor(QtWidgets.QWidget):
 
         pen = pg.mkPen(color=(220, 220, 50), width=3)
 
-        upper = pg.InfiniteLine(angle=0, pen=pen)
-        upper.setPos([0, 8])
-        self.graph.addItem(upper)
-
-        lower = pg.InfiniteLine(angle=0, pen=pen)
-        lower.setPos([0, -2])
-        self.graph.addItem(lower)
+        self.upper = self.graph.addLine(y=8, pen=pen)
+        self.lower = self.graph.addLine(y=-2, pen=pen)
 
     @Slot()
     def update_plot(self):
