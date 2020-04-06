@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import numpy as np
@@ -15,29 +16,46 @@ class Status(enum.Enum):
     DISCON = enum.auto()
 
 
-class AlertWidget(QtWidgets.QWidget):
-    @QtCore.pyqtProperty(str)
-    def status(self):
-        return self._status
+class LocalGenerator:
+    def __init__(self, status: Status):
+        self.status = status
+        self.time = np.linspace(-1000, 0, 1000)
+        self.current = 0
+        self.random = np.random.uniform(0.9, 1.1, len(self.time))
 
-    @status.setter
-    def status(self, value: str):
-        self.alert.setText(value)
-        self._status = value
+    def calc_flow(self):
+        v = (
+            (np.mod(self.time + self.current, 100) / 10 - 2)
+            * self.random
+            * (0.6 if self.status == Status.ALERT else 1)
+        )
+        if self.status == Status.DISCON:
+            v[-min(self.current, len(self.time)) :] = 0
+        return v
+
+    def tick(self):
+        self.current += 5
+        self.random = np.roll(self.random, 5)
+
+
+class AlertWidget(QtWidgets.QWidget):
+    def status(self):
+        return Status[self.property("status")]
+
+    def pstatus(self, value):
+        self.alert.setText(value.name)
+        self.setProperty("status", value.name)
 
     def __init__(self, i: int):
         super().__init__()
-        self._status = Status.DISCON.name
         column_layout = QtWidgets.QVBoxLayout()
         self.setLayout(column_layout)
 
         name = QtWidgets.QLabel(str(i + 1))
-        # name.setStyleSheet("font-size: 30px;");
-        name.setStyleSheet("color: black;");
         name.setAlignment(QtCore.Qt.AlignCenter)
         column_layout.addWidget(name)
 
-        self.alert = QtWidgets.QLabel("OK")
+        self.alert = QtWidgets.QLabel("DISCON")
         self.alert.setAlignment(QtCore.Qt.AlignCenter)
         column_layout.addWidget(self.alert)
 
@@ -45,7 +63,6 @@ class AlertWidget(QtWidgets.QWidget):
 class PatientSensor(QtWidgets.QWidget):
     def __init__(self, i):
         super().__init__()
-        self._alert_status = Status.DISCON.name
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -61,7 +78,8 @@ class PatientSensor(QtWidgets.QWidget):
 
         self.graph = pg.PlotWidget()
         self.graph.setLabel("left", "Flow", units="L/m")
-        self.graph.setLabel("bottom", "Time", units="seconds")
+        # Time inferred
+        # self.graph.setLabel("bottom", "Time", units="seconds")
         layout.addWidget(self.graph)
 
         self.alert = AlertWidget(i)
@@ -88,53 +106,46 @@ class PatientSensor(QtWidgets.QWidget):
         self.info_widgets = []
         self.val_widgets = []
         self.widget_lookup = {}
-        for i in range(len(self.info_strings)):
-            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[i]))
-            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[i]))))
-            lower_layout.addWidget(self.info_widgets[-1], i // nCols, 2 * (i % nCols))
+        for j in range(len(self.info_strings)):
+            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
+            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
+            lower_layout.addWidget(self.info_widgets[-1], j // nCols, 2 * (j % nCols))
             lower_layout.addWidget(
-                self.val_widgets[-1], i // nCols, 1 + 2 * (i % nCols)
+                self.val_widgets[-1], j // nCols, 1 + 2 * (j % nCols)
             )
-            self.widget_lookup[self.info_strings[i]] = i
+            self.widget_lookup[self.info_strings[j]] = j
 
-        self.num_data_points = 1000
-        self.time = np.arange(-1000, 0, 1)
-        self.flow = (np.mod(self.time + i * 13, 100) / 10 - 2) * np.random.uniform(
-            0.9, 1.1, len(self.time)
-        )
-        self.curr_bin = 999
-        self.real_time = self.time[-1]  # for animation
+        status = Status.OK if i % 7 != 1 else Status.ALERT
+        if i == 4:
+            status = Status.DISCON
+        self.alert.pstatus(status)
+        self.flow = LocalGenerator(status)
 
-    def set_plot(self, i):  # time, values, ok=True):
-        # hardwire some error conditions
-        isdead = i == 4
-        if isdead:
-            return
-        ok = i % 7 != 1
+    def set_plot(self):
+        color = {
+            Status.OK: (151, 222, 121),
+            Status.ALERT: (237, 67, 55),
+            Status.DISCON: (50, 50, 220),
+        }[self.alert.status()]
 
-        self.curr_bin = (self.curr_bin + 1) % self.num_data_points
-        self.real_time += 1
-        self.flow[self.curr_bin] = (
-            (self.real_time + i * 13 % 100) / 10 - 2
-        ) * np.random.uniform(0.9, 1.1, 1)
+        pen = pg.mkPen(color=color, width=5)
+        self.curve = self.graph.plot(self.flow.time, self.flow.calc_flow(), pen=pen)
+        self.graph.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
-        pen = pg.mkPen(color=(151, 222, 121) if ok else (237, 67, 55), width=5)
-        self.graph.clear()
-        self.graph.plot(self.time, np.roll(self.flow, -1 * self.curr_bin), pen=pen)
+        pen = pg.mkPen(color=(220, 220, 50), width=3)
 
-        upper = pg.InfiniteLine(angle=0)
-        upper.setPos([0, 10])
-
-        lower = pg.InfiniteLine(angle=0)
-        lower.setPos([0, -2])
-
+        upper = pg.InfiniteLine(angle=0, pen=pen)
+        upper.setPos([0, 8])
         self.graph.addItem(upper)
+
+        lower = pg.InfiniteLine(angle=0, pen=pen)
+        lower.setPos([0, -2])
         self.graph.addItem(lower)
 
-        if ok:
-            self.alert.status = Status.OK.name
-        else:
-            self.alert.status = Status.ALERT.name
+    @Slot()
+    def update_plot(self):
+        self.flow.tick()
+        self.curve.setData(self.flow.time, self.flow.calc_flow())
 
         for key in self.widget_lookup:
             val = self.widget_lookup[key]
@@ -149,7 +160,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         pg.setConfigOptions(antialias=True)
 
-        # self.graphs = QtWidgets.QVBoxLayout()
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -168,17 +178,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphs = [PatientSensor(i) for i in range(20)]
         for i, graph in enumerate(self.graphs):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 5)))
-            graph.set_plot(i)
+            graph.set_plot()
 
-        self.qTimer = QtCore.QTimer()
-        self.qTimer.setInterval(1000)
-        self.qTimer.timeout.connect(self.update_graphs)
-        self.qTimer.start()
-
-    @QtCore.pyqtSlot()
-    def update_graphs(self):
-        for i, graph in enumerate(self.graphs):
-            graph.set_plot(i)
+            graph.qTimer = QtCore.QTimer()
+            graph.qTimer.setInterval(1000)
+            graph.qTimer.timeout.connect(graph.update_plot)
+            graph.qTimer.start()
 
 
 def main():
