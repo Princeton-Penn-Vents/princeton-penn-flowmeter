@@ -21,6 +21,13 @@ class Status(enum.Enum):
     DISCON = enum.auto()
 
 
+COLOR = {
+    Status.OK: (151, 222, 121),
+    Status.ALERT: (237, 67, 55),
+    Status.DISCON: (50, 50, 220),
+}
+
+
 class LocalGenerator:
     def __init__(self, status: Status):
         self.status = status
@@ -176,11 +183,7 @@ class PatientSensor(QtWidgets.QWidget):
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
-        color = {
-            Status.OK: (151, 222, 121),
-            Status.ALERT: (237, 67, 55),
-            Status.DISCON: (50, 50, 220),
-        }[self.alert.status]
+        color = COLOR[self.alert.status]
 
         pen = pg.mkPen(color=color, width=5)
         self.curve = self.graph.plot(*self.flow.calc_flow(), pen=pen)
