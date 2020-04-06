@@ -93,6 +93,8 @@ class AlertWidget(QtWidgets.QWidget):
     def status(self, value):
         self.alert.setText(value.name)
         self.setProperty("status", value.name)
+        self.alert.style().unpolish(self.alert)
+        self.alert.style().polish(self.alert)
 
     def __init__(self, i: int):
         super().__init__()
