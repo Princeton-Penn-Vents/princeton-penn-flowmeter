@@ -75,10 +75,12 @@ class RemoteGenerator:
 
 
 class AlertWidget(QtWidgets.QWidget):
+    @property
     def status(self):
         return Status[self.property("status")]
 
-    def pstatus(self, value):
+    @status.setter
+    def status(self, value):
         self.alert.setText(value.name)
         self.setProperty("status", value.name)
 
@@ -159,14 +161,14 @@ class PatientSensor(QtWidgets.QWidget):
         else:
             self.flow = LocalGenerator(status)
 
-        self.alert.pstatus(self.flow.status)
+        self.alert.status = self.flow.status
 
     def set_plot(self):
         color = {
             Status.OK: (151, 222, 121),
             Status.ALERT: (237, 67, 55),
             Status.DISCON: (50, 50, 220),
-        }[self.alert.status()]
+        }[self.alert.status]
 
         pen = pg.mkPen(color=color, width=5)
         self.curve = self.graph.plot(*self.flow.calc_flow(), pen=pen)
@@ -181,7 +183,7 @@ class PatientSensor(QtWidgets.QWidget):
     def update_plot(self):
         self.flow.tick()
         self.curve.setData(*self.flow.calc_flow())
-        self.alert.pstatus(self.flow.status)
+        self.alert.status = self.flow.status
 
         for key in self.widget_lookup:
             val = self.widget_lookup[key]
