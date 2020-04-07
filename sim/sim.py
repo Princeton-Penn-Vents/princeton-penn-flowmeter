@@ -147,22 +147,22 @@ def make(
 if __name__ == "__main__":
     time, breaths, flow, volume, pressure = make()
 
-    import pylab
+    import matplotlib.pyplot as plt
 
-    fig = pylab.figure()
-    pylab.subplot(3, 1, 1)
-    pylab.plot(time, flow)
-    pylab.xlabel("Time (seconds)")
-    pylab.ylabel("Flow (L/m)")
+    fig = plt.figure()
+    plt.subplot(3, 1, 1)
+    plt.plot(time, flow)
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Flow (L/m)")
 
-    pylab.subplot(3, 1, 2)
-    pylab.plot(time, volume)
-    pylab.xlabel("Time (seconds)")
-    pylab.ylabel("Volume (L)")
+    plt.subplot(3, 1, 2)
+    plt.plot(time, volume)
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Volume (L)")
 
-    pylab.subplot(3, 1, 3)
-    pylab.plot(time, pressure)
-    pylab.xlabel("Time (seconds)")
-    pylab.ylabel("Pressure (cm H2O)")
+    plt.subplot(3, 1, 3)
+    plt.plot(time, pressure)
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Pressure (cm H2O)")
 
-    pylab.show()
+    plt.show()
