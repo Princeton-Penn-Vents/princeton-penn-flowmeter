@@ -8,7 +8,7 @@ def constant_compliance(**kwargs):
     return 0.4
 
 
-def get_breath_starts(*, current_time, max_time, breathing_rate):
+def get_breath_starts(*, last_breath_time, max_time, breathing_rate):
     """
     expected parameters:
     current_time (time in seconds)
@@ -23,10 +23,9 @@ def get_breath_starts(*, current_time, max_time, breathing_rate):
         1.2 * max_time / breathing_rate
     )  # safety margin for fluctuating this later
 
-    breath_starts = np.arange(1, 1 + max_breaths * breathing_rate, breathing_rate)
-
-    return breath_starts + current_time #% breathing_rate  # [breath_starts<max_time]
-
+    breath_starts = np.arange(0, max_breaths * breathing_rate, breathing_rate)
+    return breath_starts + last_breath_time + breathing_rate #% breathing_rate  # [breath_starts<max_time]
+        
 
 def nominal_flow(
     *,
@@ -72,7 +71,11 @@ def nominal_flow(
     exp_zero_bins = flow_start_bins[1:]
     exp_min_bins = flow_end_bins[:-1]
     times = np.arange(current_time, current_time + 1.2 * sim_time, 1.0 / sampling_rate)
-
+    #print(current_time)
+    timesRet = np.arange(current_time, current_time + sim_time, 1.0 / sampling_rate)
+    if len(timesRet)>len(flow):
+        timesRet=timesRet[0:len(flow)]
+        
     for i in range(len(exp_min_bins)):
         if exp_min_bins[i] < bins:
             b_min = exp_min_bins[i] + 2
@@ -83,7 +86,7 @@ def nominal_flow(
             )
             flow[b_min:b_max] *= -1.0 * breath_integrals[i] / np.sum(flow[b_min:b_max])
 
-    return flow
+    return timesRet,flow
 
 
 def nominal_volume(*, flow, v0, sample_rate):
@@ -125,10 +128,10 @@ def make(
 ):
 
     breaths = get_breath_starts(
-        current_time=current_time, max_time=sim_time, breathing_rate=breathing_rate
+        max_time=sim_time, breathing_rate=breathing_rate, last_breath_time=0
     )
 
-    flow = nominal_flow(
+    times, flow = nominal_flow(
         sim_time=sim_time,
         sampling_rate=sample_rate,
         max_flow=max_flow,
@@ -143,9 +146,8 @@ def make(
         volume=volume, peep=peep, compliance_func=constant_compliance
     )
 
-    time = np.arange(current_time, sim_time + current_time, 1.0 / sample_rate)
-
-    return time, breaths, flow, volume, pressure
+    #print(len(times),len(breaths),len(flow),len(volume),len(pressure))
+    return times, breaths, flow, volume, pressure
 
 
 if __name__ == "__main__":
