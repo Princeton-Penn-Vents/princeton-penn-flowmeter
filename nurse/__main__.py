@@ -8,7 +8,7 @@ import numpy as np
 import sys
 import os
 import enum
-import xml.etree.ElementTree as et
+import json
 import requests
 from pathlib import Path
 
@@ -76,10 +76,9 @@ class RemoteGenerator:
             self.status = Status.DISCON
             return [], []
 
-        root = et.fromstring(r.text)
-        assert root.tag == "ventsensor"
-        time = np.fromstring(root.find("data").find("time").text, sep=",")
-        flow = np.fromstring(root.find("data").find("flow").text, sep=",")
+        root = json.loads(r.text)
+        time = np.asarray(root["data"]["time"])
+        flow = np.asarray(root["data"]["flow"])
 
         return time, flow
 
@@ -185,6 +184,7 @@ class PatientSensor(QtWidgets.QWidget):
                 port = int(number)
             except ValueError:
                 self.flow = DisconGenerator()
+                return
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):

@@ -7,5 +7,4 @@ dependencies:
   - pyqtgraph
   - numpy
   - matplotlib
-  - lxml
   - requests
