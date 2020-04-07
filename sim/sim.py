@@ -1,25 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import numpy
 
-def get_param(key,args,name):
-    if key not in args:
-        print("Missing argument to",name,"is",key)
-        sys.exit(1)
-    return args[key]
-
-def get_param_with_default(key,args,name,default):
-    if key not in args:
-        return default
-    return args[key]
-
-
-def constant_compliance(kwargs):
+def constant_compliance(**kwargs):
     return 0.4
 
-
-def get_breath_starts(**kwargs):
+def get_breath_starts(*, max_time, breathing_rate):
     """
     expected parameters:
     breathing_rate (seconds between breaths)
@@ -29,9 +16,6 @@ def get_breath_starts(**kwargs):
     array of breath start times
     """
 
-    max_time = get_param("max_time",kwargs,"get_breath_starts")
-    breathing_rate = get_param("breathing_rate",kwargs,"get_breath_starts")
-    
     max_breaths = 1.2* max_time / breathing_rate # safety margin for fluctuating this later
 
     breath_starts = numpy.arange(1,1+max_breaths*breathing_rate,breathing_rate)
@@ -39,7 +23,7 @@ def get_breath_starts(**kwargs):
     return breath_starts#[breath_starts<max_time]
     
     
-def nominal_flow(**kwargs):
+def nominal_flow(*, sim_time, sampling_rate, max_flow, tidal_volume, breath_starts, recovery_tau, inhale_exhale_ratio=0.5):
     """
     expected parameters
     sim_time, (seconds)
@@ -50,13 +34,6 @@ def nominal_flow(**kwargs):
     recovery_tau,
     inhale_exhale_ratio (optional, default is 0.5)
     """
-
-    sim_time=get_param("sim_time",kwargs,"nominal_flow")
-    sampling_rate=get_param("sampling_rate",kwargs,"nominal_flow")
-    max_flow=get_param("max_flow",kwargs,"nominal_flow")
-    tidal_volume=get_param("tidal_volume",kwargs,"nominal_flow")
-    breath_starts=get_param("breath_starts",kwargs,"nominal_flow")
-    recovery_tau=get_param("recovery_tau",kwargs,"nominal_flow")
 
     bins=int(sim_time * sampling_rate)
     flow = numpy.zeros(bins)
@@ -87,45 +64,39 @@ def nominal_flow(**kwargs):
             
     return flow
 
-def nominal_volume(**kwargs):
+def nominal_volume(*, flow, v0, sample_rate):
     """
     expected parameters
     flow
     v0
     sample_rate
     """
-    flow = get_param("flow",kwargs,"nominal_volume")
-    v0 = get_param("v0",kwargs,"nominal_volume")
-    sample_rate = get_param("sample_rate",kwargs,"nominal_volume")
-
     return numpy.cumsum(flow)*(1.0/sample_rate)+v0
 
-def nominal_pressure(**kwargs):
+def nominal_pressure(*, volume, peep, compliance_func):
     """
     expected parameters
     volume
     peep (cm H20)
     compliance_func
     """
-
-    volume = get_param("volume",kwargs,"nominal_pressure")
-    peep = get_param("peep",kwargs,"nominal_pressure")
-    compliance = get_param("compliance_func",kwargs,"nominal_pressure")
     
+    # We can add **kwargs and join it with locals if we need to go further up the chain
+    compliance_val= compliance_func(**locals())
     pressure= numpy.zeros(len(volume))
     pressure[0]=peep
-    compliance_val= compliance(kwargs)
     delta_p = (volume[1:]-volume[:-1])*compliance_val
     pressure[1:]=pressure[0]+numpy.cumsum(delta_p)
     return pressure
 
-if __name__ == "__main__":
-    sim_time = 120.
-    sample_rate = 100.
-    breathing_rate = 12.
-    max_flow = 12. # L/m
-    tidal_volume = 0.6 # L
-    peep = 4 #cm H20
+def make(*,
+    sim_time = 120.,
+    sample_rate = 100.,
+    breathing_rate = 12.,
+    max_flow = 12., # L/m
+    tidal_volume = 0.6, # L
+    peep = 4, #cm H20
+    ):
 
     breaths=get_breath_starts( max_time=sim_time, breathing_rate=breathing_rate)
 
@@ -145,6 +116,13 @@ if __name__ == "__main__":
                                 compliance_func=constant_compliance)
         
     time = numpy.arange(0,sim_time,1.0/sample_rate)
+
+    return time, breaths, flow, volume, pressure
+
+
+if __name__ == "__main__":
+    time, breaths, flow, volume, pressure = make()
+
     import pylab
 
     fig=pylab.figure()
@@ -162,6 +140,5 @@ if __name__ == "__main__":
     pylab.plot(time,pressure)
     pylab.xlabel("Time (seconds)")
     pylab.ylabel("Pressure (cm H2O)")
-
 
     pylab.show()

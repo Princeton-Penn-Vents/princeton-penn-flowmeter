@@ -91,7 +91,7 @@ class AlertWidget(QtWidgets.QWidget):
 
     @status.setter
     def status(self, value):
-        self.alert.setText(value.name)
+        self.alert.setText(value.name if value != Status.OK else "")
         self.setProperty("status", value.name)
         self.alert.style().unpolish(self.alert)
         self.alert.style().polish(self.alert)
