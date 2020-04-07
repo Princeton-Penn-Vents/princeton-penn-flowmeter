@@ -181,7 +181,10 @@ class PatientSensor(QtWidgets.QWidget):
     def click_number(self):
         number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
         if ok:
-            port = int(number)
+            try:
+                port = int(number)
+            except ValueError:
+                self.flow = DisconGenerator()
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
