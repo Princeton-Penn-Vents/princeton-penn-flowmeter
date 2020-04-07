@@ -8,9 +8,10 @@ def constant_compliance(**kwargs):
     return 0.4
 
 
-def get_breath_starts(*, max_time, breathing_rate):
+def get_breath_starts(*, current_time, max_time, breathing_rate):
     """
     expected parameters:
+    current_time (time in seconds)
     breathing_rate (seconds between breaths)
     max_time (end time of the simulation)
 
@@ -24,7 +25,7 @@ def get_breath_starts(*, max_time, breathing_rate):
 
     breath_starts = np.arange(1, 1 + max_breaths * breathing_rate, breathing_rate)
 
-    return breath_starts  # [breath_starts<max_time]
+    return breath_starts + current_time #% breathing_rate  # [breath_starts<max_time]
 
 
 def nominal_flow(
@@ -35,23 +36,25 @@ def nominal_flow(
     tidal_volume,
     breath_starts,
     recovery_tau,
+    current_time=0,
     inhale_exhale_ratio=0.5,
 ):
     """
-    expected parameters
+    expected parameters:
+    current_time: current time in seconds
     sim_time, (seconds)
     sampling_rate (Hz)
     max_flow, L/minute
     tidal_volume, L
     breath_starts, array of timestamps 
     recovery_tau,
-    inhale_exhale_ratio (optional, default is 0.5)
+    inhale_exhale_ratio (optional, default is 0.5) (unused)
     """
 
     bins = int(sim_time * sampling_rate)
     flow = np.zeros(bins)
 
-    flow_start_bins = breath_starts * sampling_rate
+    flow_start_bins = ( breath_starts -current_time )  * sampling_rate
     # max_flow is in L/minute
     flow_end_bins = flow_start_bins + tidal_volume * sampling_rate / (max_flow / 60.0)
 
@@ -68,7 +71,7 @@ def nominal_flow(
 
     exp_zero_bins = flow_start_bins[1:]
     exp_min_bins = flow_end_bins[:-1]
-    times = np.arange(0, 1.2 * sim_time, 1.0 / sampling_rate)
+    times = np.arange(current_time, current_time + 1.2 * sim_time, 1.0 / sampling_rate)
 
     for i in range(len(exp_min_bins)):
         if exp_min_bins[i] < bins:
@@ -78,9 +81,7 @@ def nominal_flow(
                 (times[b_min:b_max] - times[flow_start_bins[i]])
                 / (times[b_max] - times[flow_start_bins[i]])
             )
-            flow[b_min:b_max] *= (
-                -1.0 * breath_integrals[i] / np.sum(flow[b_min:b_max])
-            )
+            flow[b_min:b_max] *= -1.0 * breath_integrals[i] / np.sum(flow[b_min:b_max])
 
     return flow
 
@@ -114,6 +115,7 @@ def nominal_pressure(*, volume, peep, compliance_func):
 
 def make(
     *,
+    current_time=0,
     sim_time=120.0,
     sample_rate=100.0,
     breathing_rate=12.0,
@@ -122,7 +124,9 @@ def make(
     peep=4,  # cm H20
 ):
 
-    breaths = get_breath_starts(max_time=sim_time, breathing_rate=breathing_rate)
+    breaths = get_breath_starts(
+        current_time=current_time, max_time=sim_time, breathing_rate=breathing_rate
+    )
 
     flow = nominal_flow(
         sim_time=sim_time,
@@ -139,30 +143,56 @@ def make(
         volume=volume, peep=peep, compliance_func=constant_compliance
     )
 
-    time = np.arange(0, sim_time, 1.0 / sample_rate)
+    time = np.arange(current_time, sim_time + current_time, 1.0 / sample_rate)
 
     return time, breaths, flow, volume, pressure
 
 
 if __name__ == "__main__":
-    time, breaths, flow, volume, pressure = make()
 
     import matplotlib.pyplot as plt
+    from matplotlib import animation
+
+    anim = True
+    if False:
+        time, flow, volume, pressure = [], [], [], []
+    else:
+        time, _, flow, volume, pressure = make()
 
     fig = plt.figure()
     plt.subplot(3, 1, 1)
-    plt.plot(time, flow)
+    (line_flow,) = plt.plot(time, flow)
     plt.xlabel("Time (seconds)")
     plt.ylabel("Flow (L/m)")
 
     plt.subplot(3, 1, 2)
-    plt.plot(time, volume)
+    (line_volume,) = plt.plot(time, volume)
     plt.xlabel("Time (seconds)")
     plt.ylabel("Volume (L)")
 
     plt.subplot(3, 1, 3)
-    plt.plot(time, pressure)
+    (line_pressure,) = plt.plot(time, pressure)
     plt.xlabel("Time (seconds)")
     plt.ylabel("Pressure (cm H2O)")
 
+    if anim:
+
+        def init():
+            line_flow.set_data([], [])
+            line_volume.set_data([], [])
+            line_pressure.set_data([], [])
+            return line_flow, line_volume, line_pressure
+
+        def animate(i):
+            time, breaths, flow, volume, pressure = make(current_time=i / 10)
+            line_flow.set_data(time, flow)
+            line_volume.set_data(time, volume)
+            line_pressure.set_data(time, pressure)
+            return line_flow, line_volume, line_pressure
+
+        animation.FuncAnimation(
+            fig, animate, init_func=init, frames=500, interval=10, blit=True
+        )
+
     plt.show()
+    
