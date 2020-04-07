@@ -11,9 +11,9 @@ Order does not matter in JSON.
 
 ## Data format (patient -> nurse)
 
-Note: comments inserted for clarity - JSON does not allow comments
+Note: comments inserted for clarity only - JSON does not allow comments
 
-```json
+```yaml
 {
   "version": 1,
   "source": "Sim.send",
@@ -22,7 +22,7 @@ Note: comments inserted for clarity - JSON does not allow comments
   },
   "calibration": {
     # Calibration parameters here
-  }
+  },
   "time":1234.343,   # Current packet timestamp
   "alarms":{
     "MinFlow": false,
