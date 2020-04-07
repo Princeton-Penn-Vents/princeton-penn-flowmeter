@@ -76,7 +76,7 @@ def rotaryA_callback(ch, level, tick):
 def rotarySW_callback(ch, level, tick):
   global alarmThreshold1,setThreshold1
   if ch == pinSW:
-    setThreshold1 = !setThreshold1
+    setThreshold1 = not setThreshold1
 pi.callback(pinA, pigpio.FALLING_EDGE, rotaryA_callback)
 pi.callback(pinSW, pigpio.FALLING_EDGE, rotarySW_callback)
 # ------------------
@@ -166,8 +166,8 @@ busSPD3.write_i2c_block_data(DEVICE_SDP3, 0x3F, [0x15])
 # read can stop after 3 bytes, if temp and pressure scale factor are not needed
 nbytes=9
 dataSDP3 = busSDP3.read_i2c_black_data(DEVICE_SDP3, 0, nbytes)
-temp = (tmpdataSDP3[3] << 8) + tmpdataSDP3[4])
-dpsf = (tmpdataSDP3[6] << 8) + tmpdataSDP3[7])
+temp = (tmpdataSDP3[3] << 8) + tmpdataSDP3[4]
+dpsf = (tmpdataSDP3[6] << 8) + tmpdataSDP3[7]
 # stop continuous measurement 0x3FF9
 #busSPD3.write_i2c_block_data(DEVICE_SDP3, 0x3F, [0xF9])
 # for soft reset, DEVICE_RESET = 0x00 and command 0x0006 (20ms reset)
