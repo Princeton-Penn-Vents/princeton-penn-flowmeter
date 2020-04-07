@@ -7,11 +7,12 @@
 ```
 
 Note that this is 1 per line, produced 50 times per second.
-Order does not matter in JSON.
+Order does not matter in JSON. `"v":1` is for version 1 - we could later
+add a new version.
 
 ## Data format (patient -> nurse)
 
-Note: comments inserted for clarity only - JSON does not allow comments
+Note: comments inserted for clarity only - JSON does not allow comments.
 
 ```yaml
 {
@@ -24,7 +25,7 @@ Note: comments inserted for clarity only - JSON does not allow comments
     # Calibration parameters here
   },
   "time":1234.343,   # Current packet timestamp
-  "alarms":{
+  "alarms": {
     "MinFlow": false,
     # Status of patient alarms here
   },
