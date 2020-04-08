@@ -257,7 +257,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setObjectName("maingrid")
 
         # Replace with proper importlib.resources if made a package
-        with open(DIR / "style.css") as f:
+        with open(DIR / "nurse" / "style.css") as f:
             self.setStyleSheet(f.read())
 
         self.setCentralWidget(self.centralwidget)
