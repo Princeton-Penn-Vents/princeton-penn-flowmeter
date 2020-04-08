@@ -9,6 +9,7 @@ from datetime import datetime
 from functools import partial
 from start_sims import start_sims
 from threading import Thread
+import time
 
 
 def main(sim, timer):
@@ -26,6 +27,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def __init__(self, parent, version_num, *args, **kwargs):
         self.parent = parent
         self.version_num = version_num
+        self.time = time.time()
+        self.data = parent.sims[version_num].get_batch(60 * 5)  # 5 minute interval
         super().__init__(*args, **kwargs)
 
     def do_HEAD(self):
@@ -34,10 +37,34 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        sim = self.parent.sims[self.version_num]
+
         self.do_HEAD()
-        self.wfile.write(
-            main(self.parent.sims[self.version_num], self.parent.start_time)
-        )  # time.time() - start_time))
+
+        cur_time = time.time()
+        new_seconds = cur_time - self.time
+        self.time = cur_time
+
+        batch = sim.get_batch(new_seconds)
+        data = batch["data"]
+
+        events = len(data["timestamps"])
+        self.data["data"]["timestamps"] = (
+            self.data["data"]["timestamps"][-events:] + data["timestamps"]
+        )
+        self.data["data"]["flows"] = (
+            self.data["data"]["flows"][-events:] + data["flows"]
+        )
+        self.data["data"]["pressures"] = (
+            self.data["data"]["pressures"][-events:] + data["pressures"]
+        )
+
+        # enrich with stuff that comes from the analysis
+        self.data["alarms"] = {}
+        # enrich with stuff that comes from the overall patient server
+        self.data["time"] = self.data["data"]["timestamps"][-1]
+
+        self.wfile.write(json.dumps(self.data).encode("ascii"))
 
 
 class OurServer:
@@ -74,7 +101,7 @@ class OurServer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Serve values on network as JSON")
-    parser.add_argument("--port", type=int, default=8123, help="First port to serve on")
+    parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
     args = parser.parse_args()
     print(args)

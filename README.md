@@ -21,3 +21,5 @@ apt upgrade
 apt install vim # for my sanity
 python3 -m pip install pyqtgraph
 ```
+
+Open the raspberry pi settings, and turn off "display blanking")
