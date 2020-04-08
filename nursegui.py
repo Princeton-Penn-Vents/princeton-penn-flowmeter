@@ -291,7 +291,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Avoid wiggles when updating
-        for i in range(4):
+        for i in range(5):
             layout.setColumnStretch(i, 3)
 
         self.centralwidget = QtWidgets.QWidget(self)
