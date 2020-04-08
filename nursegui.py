@@ -37,7 +37,7 @@ class LocalGenerator:
         self.flow = np.concatenate((breath,breath,breath,breath,breath,breath))
         self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
         self.time = np.arange(0,len(self.flow),1)
-        self.axistime = -1.0 * self.time / 50  # ticks per second
+        self.axistime = self.time / 50  # ticks per second
 
     def calc_flow(self):
         #v = (
@@ -55,7 +55,7 @@ class LocalGenerator:
 
     def tick(self):
         self.current += 10
-        self.flow = np.roll(self.flow, 10)
+        self.flow = np.roll(self.flow, -10)
 
 class DisconGenerator:
     status = Status.DISCON
