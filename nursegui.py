@@ -2,120 +2,25 @@
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
+
 import pyqtgraph as pg
-import numpy as np
-import sys
-import os
-import enum
-import json
-import requests
+
+# stdlib
 import argparse
+import numpy as np
+import os
+import sys
 from pathlib import Path
 
+from nurse.generator import Status, LocalGenerator, RemoteGenerator
+
 DIR = Path(__file__).parent.absolute()
-
-
-class Status(enum.Enum):
-    OK = enum.auto()
-    ALERT = enum.auto()
-    DISCON = enum.auto()
-
 
 COLOR = {
     Status.OK: (151, 222, 121),
     Status.ALERT: (237, 67, 55),
     Status.DISCON: (50, 50, 220),
 }
-
-
-class LocalGenerator:
-    def __init__(self, status: Status):
-        self.status = status
-        self.current = 0
-        ramp = np.array(
-            [0.1, 0.8807970779778823, 0.96, 0.9975273768433653, 0.9996646498695336]
-        )
-        decay = -1.0 * np.exp(-1.0 * np.arange(0, 3, 0.03))
-        breath = 10 * np.concatenate(
-            (ramp, np.full(35, 1), np.flip(ramp), -1.0 * ramp, decay)
-        )
-        self.flow = np.concatenate((breath, breath, breath, breath, breath, breath))
-        self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
-        self.time = np.arange(0, len(self.flow), 1)
-        self.axistime = np.flip(self.time / 50)  # ticks per second
-        # Ramp up to 500ml in 50 ticks, then simple ramp down in 100
-        tvolume = np.concatenate((10 * np.arange(0, 50, 1), 5 * np.arange(100, 0, -1)))
-        self.volume = np.concatenate(
-            (tvolume, tvolume, tvolume, tvolume, tvolume, tvolume)
-        )
-        self.volume = self.volume * np.random.uniform(0.98, 1.02, len(self.volume))
-
-    def calc_flow(self):
-        v = self.flow * (0.6 if self.status == Status.ALERT else 1)
-        if self.status == Status.DISCON:
-            v[-min(self.current, len(self.time)) :] = 0
-        return self.axistime, v
-
-    def calc_volume(self):
-        v = self.volume * (0.6 if self.status == Status.ALERT else 1)
-        if self.status == Status.DISCON:
-            v[-min(self.current, len(self.time)) :] = 0
-        return self.axistime, v
-
-    def tick(self):
-        self.current += 10
-        self.flow = np.roll(self.flow, -10)
-        self.volume = np.roll(self.volume, -10)
-
-
-class DisconGenerator:
-    status = Status.DISCON
-
-    def calc_flow(self):
-        return [], []
-
-    def calc_volume(self):
-        return [], []
-
-    def tick(self):
-        pass
-
-
-class RemoteGenerator:
-    def tick(self):
-        pass
-
-    def __init__(self, ip="127.0.0.1", port="8123"):
-        self.ip = ip
-        self.port = port
-        self.status = Status.OK
-
-    def calc_flow(self):
-        try:
-            r = requests.get(f"http://{self.ip}:{self.port}")
-        except requests.exceptions.ConnectionError:
-            self.status = Status.DISCON
-            return [], []
-
-        root = json.loads(r.text)
-        time = np.asarray(root["data"]["timestamps"])
-        flow = np.asarray(root["data"]["flows"])
-
-        return time, flow
-
-    # A hack
-    def calc_volume(self):
-        try:
-            r = requests.get(f"http://{self.ip}:{self.port}")
-        except requests.exceptions.ConnectionError:
-            self.status = Status.DISCON
-            return [], []
-
-        root = json.loads(r.text)
-        time = np.asarray(root["data"]["timestamps"])
-        flow = np.asarray(root["data"]["flows"])
-
-        return time, flow
 
 
 class AlertWidget(QtWidgets.QWidget):
@@ -156,7 +61,7 @@ class GraphicsView(pg.GraphicsView):
 
 
 class PatientSensor(QtWidgets.QWidget):
-    def __init__(self, i, *, remote):
+    def __init__(self, i, *, ip, port):
         super().__init__()
 
         outer_layout = QtWidgets.QVBoxLayout()
@@ -232,11 +137,8 @@ class PatientSensor(QtWidgets.QWidget):
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
 
-        if remote:
-            if i == 0:
-                self.flow = RemoteGenerator()
-            else:
-                self.flow = DisconGenerator()
+        if port is not None:
+            self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             self.flow = LocalGenerator(status)
 
@@ -255,14 +157,19 @@ class PatientSensor(QtWidgets.QWidget):
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
+        self.flow.get_data()
+        self.flow.analyze()
+
         pen = pg.mkPen(color=(120, 255, 50), width=2)
-        self.curve_flow = self.graph_flow.plot(*self.flow.calc_flow(), pen=pen)
+        self.curve_flow = self.graph_flow.plot(self.flow.time, self.flow.flow, pen=pen)
         pen = pg.mkPen(color=(255, 120, 50), width=2)
         self.curve_pressure = self.graph_pressure.plot(
-            *self.flow.calc_volume(), pen=pen
+            self.flow.time, self.flow.pressure, pen=pen
         )
         pen = pg.mkPen(color=(50, 120, 255), width=2)
-        self.curve_volume = self.graph_volume.plot(*self.flow.calc_volume(), pen=pen)
+        self.curve_volume = self.graph_volume.plot(
+            self.flow.time, self.flow.volume, pen=pen
+        )
         # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
         self.graph_flow.setXLink(self.graph_pressure)
@@ -277,10 +184,13 @@ class PatientSensor(QtWidgets.QWidget):
 
     @Slot()
     def update_plot(self):
-        self.flow.tick()
-        self.curve_flow.setData(*self.flow.calc_flow())
-        self.curve_pressure.setData(*self.flow.calc_volume())
-        self.curve_volume.setData(*self.flow.calc_volume())
+        self.flow.get_data()
+        self.flow.analyze()
+
+        self.curve_flow.setData(self.flow.time, self.flow.flow)
+        self.curve_pressure.setData(self.flow.time, self.flow.pressure)
+        self.curve_volume.setData(self.flow.time, self.flow.volume)
+
         self.alert.status = self.flow.status
 
         for key in self.widget_lookup:
@@ -290,7 +200,7 @@ class PatientSensor(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, remote, **kwargs):
+    def __init__(self, *args, ip, port, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -317,7 +227,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.centralwidget.setLayout(layout)
 
-        self.graphs = [PatientSensor(i, remote=remote) for i in range(20)]
+        self.graphs = [PatientSensor(i, ip=ip, port=port) for i in range(20)]
         for i, graph in enumerate(self.graphs):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
@@ -332,9 +242,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close()
 
 
-def main(argv, *, remote, fullscreen):
+def main(argv, *, ip, port, fullscreen):
     app = QtWidgets.QApplication(argv)
-    main = MainWindow(remote=remote)
+    main = MainWindow(ip=ip, port=port)
     if fullscreen:
         main.showFullScreen()
     else:
@@ -344,9 +254,15 @@ def main(argv, *, remote, fullscreen):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--remote", action="store_true")
+    parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
+    parser.add_argument(
+        "--port", type=int, help="Select a starting port (8100 recommended)"
+    )
     parser.add_argument("--fullscreen", action="store_true")
     arg, unparsed_args = parser.parse_known_args()
     main(
-        argv=sys.argv[:1] + unparsed_args, remote=arg.remote, fullscreen=arg.fullscreen
+        argv=sys.argv[:1] + unparsed_args,
+        ip=arg.ip,
+        port=arg.port,
+        fullscreen=arg.fullscreen,
     )
