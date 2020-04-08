@@ -159,6 +159,7 @@ class PatientSensor(QtWidgets.QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         upper.setLayout(layout)
+        #upper.setStyleSheet("background-color: #FEFFCF;");
 
         graphview = pg.GraphicsView(parent=self)
         graphlayout = pg.GraphicsLayout()
@@ -191,6 +192,7 @@ class PatientSensor(QtWidgets.QWidget):
         layout.addWidget(self.alert, 3)
 
         lower = QtWidgets.QWidget()
+        #lower.setStyleSheet("background-color: #FEFFCF;");
         outer_layout.addWidget(lower)
         lower_layout = QtWidgets.QGridLayout()
         lower.setLayout(lower_layout)
