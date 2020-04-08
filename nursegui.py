@@ -145,6 +145,16 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout.addStretch(6)
 
 
+class GraphicsView(pg.GraphicsView):
+    def __init__(self, *args, i, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_plot = i
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            print(f"Clicked {self.current_plot + 1}")
+
+
 class PatientSensor(QtWidgets.QWidget):
     def __init__(self, i, *, remote):
         super().__init__()
@@ -161,7 +171,7 @@ class PatientSensor(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         upper.setLayout(layout)
 
-        graphview = pg.GraphicsView(parent=self)
+        graphview = GraphicsView(parent=self, i=i)
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
         graphview.setCentralWidget(graphlayout)
