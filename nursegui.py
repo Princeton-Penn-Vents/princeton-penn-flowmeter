@@ -244,7 +244,7 @@ class PatientSensor(QtWidgets.QWidget):
         pen = pg.mkPen(color=(120, 255, 50), width=2)
         self.curve_flow = self.graph_flow.plot(*self.flow.calc_flow(), pen=pen)
         pen = pg.mkPen(color=(255, 120, 50), width=2)
-        self.curve_pressure = self.graph_pressure.plot(*self.flow.calc_flow(), pen=pen)
+        self.curve_pressure = self.graph_pressure.plot(*self.flow.calc_volume(), pen=pen)
         pen = pg.mkPen(color=(50, 120, 255), width=2)
         self.curve_volume = self.graph_volume.plot(*self.flow.calc_volume(), pen=pen)
         # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
@@ -263,7 +263,7 @@ class PatientSensor(QtWidgets.QWidget):
     def update_plot(self):
         self.flow.tick()
         self.curve_flow.setData(*self.flow.calc_flow())
-        self.curve_pressure.setData(*self.flow.calc_flow())
+        self.curve_pressure.setData(*self.flow.calc_volume())
         self.curve_volume.setData(*self.flow.calc_volume())
         self.alert.status = self.flow.status
 
