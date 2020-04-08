@@ -2,14 +2,18 @@
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
+
 import pyqtgraph as pg
-import numpy as np
-import sys
-import os
+
+# stdlib
+import abc
+import argparse
 import enum
 import json
+import numpy as np
+import os
 import requests
-import argparse
+import sys
 from pathlib import Path
 
 DIR = Path(__file__).parent.absolute()
@@ -28,7 +32,37 @@ COLOR = {
 }
 
 
-class LocalGenerator:
+class Generator(abc.ABC):
+    @abc.abstractmethod
+    def get_data(self):
+        pass
+
+    @abc.abstractmethod
+    def analyze(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def time(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def flow(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def pressure(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def volume(self):
+        pass
+
+
+class LocalGenerator(Generator):
     def __init__(self, status: Status):
         self.status = status
         self.current = 0
@@ -39,58 +73,75 @@ class LocalGenerator:
         breath = 10 * np.concatenate(
             (ramp, np.full(35, 1), np.flip(ramp), -1.0 * ramp, decay)
         )
-        self.flow = np.concatenate((breath, breath, breath, breath, breath, breath))
-        self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
-        self.time = np.arange(0, len(self.flow), 1)
-        self.axistime = np.flip(self.time / 50)  # ticks per second
+        self._flow = np.concatenate((breath, breath, breath, breath, breath, breath))
+        self._flow = self._flow * np.random.uniform(0.98, 1.02, len(self._flow))
+        self._time = np.arange(0, len(self._flow), 1)
+        self.axistime = np.flip(self._time / 50)  # ticks per second
         # Ramp up to 500ml in 50 ticks, then simple ramp down in 100
         tvolume = np.concatenate((10 * np.arange(0, 50, 1), 5 * np.arange(100, 0, -1)))
-        self.volume = np.concatenate(
+        self._volume = np.concatenate(
             (tvolume, tvolume, tvolume, tvolume, tvolume, tvolume)
         )
-        self.volume = self.volume * np.random.uniform(0.98, 1.02, len(self.volume))
+        self._volume = self._volume * np.random.uniform(0.98, 1.02, len(self._volume))
 
-    def calc_flow(self):
-        v = self.flow * (0.6 if self.status == Status.ALERT else 1)
-        if self.status == Status.DISCON:
-            v[-min(self.current, len(self.time)) :] = 0
-        return self.axistime, v
-
-    def calc_volume(self):
-        v = self.volume * (0.6 if self.status == Status.ALERT else 1)
-        if self.status == Status.DISCON:
-            v[-min(self.current, len(self.time)) :] = 0
-        return self.axistime, v
-
-    def tick(self):
+    def get_data(self):
         self.current += 10
-        self.flow = np.roll(self.flow, -10)
-        self.volume = np.roll(self.volume, -10)
+        self._flow = np.roll(self._flow, -10)
+        self._volume = np.roll(self._volume, -10)
+
+    def analyze(self):
+        pass
+
+    @property
+    def flow(self):
+        return self._flow * (0.6 if self.status == Status.ALERT else 1)
+
+    @property
+    def volume(self):
+        return self._volume * (0.6 if self.status == Status.ALERT else 1)
+
+    @property
+    def pressure(self):
+        return self._volume * (0.6 if self.status == Status.ALERT else 1)
+
+    @property
+    def time(self):
+        return self.axistime
 
 
-class DisconGenerator:
+class DisconGenerator(Generator):
     status = Status.DISCON
 
-    def calc_flow(self):
-        return [], []
-
-    def calc_volume(self):
-        return [], []
-
-    def tick(self):
+    def get_data(self):
         pass
 
-
-class RemoteGenerator:
-    def tick(self):
+    def analyze(self):
         pass
 
+    @property
+    def flow(self):
+        return []
+
+    @property
+    def volume(self):
+        return []
+
+    @property
+    def pressure(self):
+        return []
+
+    @property
+    def time(self):
+        return []
+
+
+class RemoteGenerator(Generator):
     def __init__(self, ip="127.0.0.1", port="8123"):
         self.ip = ip
         self.port = port
         self.status = Status.OK
 
-    def calc_flow(self):
+    def get_data(self):
         try:
             r = requests.get(f"http://{self.ip}:{self.port}")
         except requests.exceptions.ConnectionError:
@@ -98,24 +149,29 @@ class RemoteGenerator:
             return [], []
 
         root = json.loads(r.text)
-        time = np.asarray(root["data"]["timestamps"])
-        flow = np.asarray(root["data"]["flows"])
+        self._time = np.asarray(root["data"]["timestamps"])
+        self._flow = np.asarray(root["data"]["flows"])
+        self._pressure = np.asarray(root["data"]["pressures"])
+        self._volume = self._pressure
 
-        return time, flow
+    def analyze(self):
+        pass
 
-    # A hack
-    def calc_volume(self):
-        try:
-            r = requests.get(f"http://{self.ip}:{self.port}")
-        except requests.exceptions.ConnectionError:
-            self.status = Status.DISCON
-            return [], []
+    @property
+    def flow(self):
+        return self._flow
 
-        root = json.loads(r.text)
-        time = np.asarray(root["data"]["timestamps"])
-        flow = np.asarray(root["data"]["flows"])
+    @property
+    def volume(self):
+        return self._volume
 
-        return time, flow
+    @property
+    def pressure(self):
+        return self._pressure
+
+    @property
+    def time(self):
+        return self._time
 
 
 class AlertWidget(QtWidgets.QWidget):
@@ -253,14 +309,19 @@ class PatientSensor(QtWidgets.QWidget):
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
+        self.flow.get_data()
+        self.flow.analyze()
+
         pen = pg.mkPen(color=(120, 255, 50), width=2)
-        self.curve_flow = self.graph_flow.plot(*self.flow.calc_flow(), pen=pen)
+        self.curve_flow = self.graph_flow.plot(self.flow.time, self.flow.flow, pen=pen)
         pen = pg.mkPen(color=(255, 120, 50), width=2)
         self.curve_pressure = self.graph_pressure.plot(
-            *self.flow.calc_volume(), pen=pen
+            self.flow.time, self.flow.pressure, pen=pen
         )
         pen = pg.mkPen(color=(50, 120, 255), width=2)
-        self.curve_volume = self.graph_volume.plot(*self.flow.calc_volume(), pen=pen)
+        self.curve_volume = self.graph_volume.plot(
+            self.flow.time, self.flow.volume, pen=pen
+        )
         # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
         self.graph_flow.setXLink(self.graph_pressure)
@@ -275,10 +336,13 @@ class PatientSensor(QtWidgets.QWidget):
 
     @Slot()
     def update_plot(self):
-        self.flow.tick()
-        self.curve_flow.setData(*self.flow.calc_flow())
-        self.curve_pressure.setData(*self.flow.calc_volume())
-        self.curve_volume.setData(*self.flow.calc_volume())
+        self.flow.get_data()
+        self.flow.analyze()
+
+        self.curve_flow.setData(self.flow.time, self.flow.flow)
+        self.curve_pressure.setData(self.flow.time, self.flow.pressure)
+        self.curve_volume.setData(self.flow.time, self.flow.volume)
+
         self.alert.status = self.flow.status
 
         for key in self.widget_lookup:
