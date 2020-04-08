@@ -26,12 +26,18 @@ class VentSim:
         self.precompute()
         
     def precompute(self):
-        self.times = np.arange(0, self.sim_time, 1.0 / self.sampling_rate)
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
+        self.times = np.arange(0, 1.2*self.sim_time, 1.0 / self.sampling_rate)[:len(self.flow)]
         self.volume = self.nominal_volume()
         self.pressure = self.nominal_pressure()
 
+    def extend(self):
+        self.curr_time +=self.sim_time
+        self.precompute()
+        self.current_bin=0
+        
+    
     def get_breath_starts(self):
         """
         returns:
@@ -39,12 +45,9 @@ class VentSim:
         """
 
         max_breaths = 1.2 * self.sim_time / self.breathing_rate # safety margin for fluctuating this later
-
         deltas=np.random.normal(self.breathing_rate,self.breath_sigma,int(max_breaths))
         deltas=np.minimum(deltas,self.max_breath_interval)
-        breath_starts = np.cumsum(deltas)
-        
-        #breath_starts = np.arange(0, max_breaths * self.breathing_rate, self.breathing_rate)
+        breath_starts = np.append(0,np.cumsum(deltas)) # put a breath at the beginning..
         return breath_starts 
 
     def nominal_flow(self):
@@ -54,10 +57,12 @@ class VentSim:
         inhale_exhale_ratio (optional, default is 0.5) (unused)
         """
 
-        bins = int(self.sim_time * self.sampling_rate)
+        #bins = int(self.sim_time * self.sampling_rate)
+        bins = int(self.breath_starts[np.where(self.breath_starts>self.sim_time)][0]*self.sampling_rate)
         flow = np.zeros(bins)
         
         flow_start_bins = ( self.breath_starts )  * self.sampling_rate
+        
         # max_flow is in L/minute
         flow_end_bins = flow_start_bins + self.tidal_volume * self.sampling_rate / (self.max_flow / 60.0)
         
@@ -101,7 +106,8 @@ class VentSim:
         return pressure
 
     def get_next(self):
-        assert self.current_bin < len(self.times), "out of simulated data -ask developer to implement automatic extentions"
+        if self.current_bin >= len(self.times):
+            self.extend()
         d = {
             "v" : 1,
             "t" : self.curr_time + self.times[self.current_bin],
@@ -114,7 +120,8 @@ class VentSim:
 
     def get_batch(self,nSeconds):
         nbins=int(nSeconds * self.sampling_rate)
-        assert self.current_bin+nbins <= len(self.times), "out of simulated data -ask developer to implement automatic extentions"
+        if self.current_bin+nbins > len(self.times):
+            self.extend()
 
         d = {
             "version" : 1,
@@ -145,7 +152,9 @@ if __name__ == "__main__":
     print(now_time)
 
     simulator = VentSim(now_time,1200)
-
+    for i in range(0,10):
+        print(simulator.get_next())
+    
     time, flow, volume, pressure = simulator.get_all()
 
     fig = plt.figure()
