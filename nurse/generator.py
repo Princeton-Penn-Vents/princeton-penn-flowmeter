@@ -95,44 +95,25 @@ class LocalGenerator(Generator):
         return self.axistime
 
 
-class DisconGenerator(Generator):
-    status = Status.DISCON
-
-    def get_data(self):
-        pass
-
-    def analyze(self):
-        pass
-
-    @property
-    def flow(self):
-        return []
-
-    @property
-    def volume(self):
-        return []
-
-    @property
-    def pressure(self):
-        return []
-
-    @property
-    def time(self):
-        return []
-
-
 class RemoteGenerator(Generator):
-    def __init__(self, ip="127.0.0.1", port="8123"):
+    def __init__(self, *, ip="127.0.0.1", port=None):
         self.ip = ip
         self.port = port
-        self.status = Status.OK
+        if port is not None:
+            self.status = Status.OK
+        else:
+            self.status = Status.DISCON
 
     def get_data(self):
+        # If no valid port, don't try (disconnected)
+        if self.port is None:
+            return
+
         try:
             r = requests.get(f"http://{self.ip}:{self.port}")
         except requests.exceptions.ConnectionError:
             self.status = Status.DISCON
-            return [], []
+            return
 
         root = json.loads(r.text)
         self._time = np.asarray(root["data"]["timestamps"])
@@ -145,16 +126,16 @@ class RemoteGenerator(Generator):
 
     @property
     def flow(self):
-        return self._flow
+        return self._flow if self.status is not Status.DISCON else []
 
     @property
     def volume(self):
-        return self._volume
+        return self._volume if self.status is not Status.DISCON else []
 
     @property
     def pressure(self):
-        return self._pressure
+        return self._pressure if self.status is not Status.DISCON else []
 
     @property
     def time(self):
-        return self._time
+        return self._time if self.status is not Status.DISCON else []

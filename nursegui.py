@@ -12,7 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-from nurse.generator import Status, LocalGenerator, RemoteGenerator, DisconGenerator
+from nurse.generator import Status, LocalGenerator, RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
@@ -60,7 +60,7 @@ class GraphicsView(pg.GraphicsView):
 
 
 class PatientSensor(QtWidgets.QWidget):
-    def __init__(self, i, *, remote):
+    def __init__(self, i, *, ip, port):
         super().__init__()
 
         outer_layout = QtWidgets.QVBoxLayout()
@@ -134,11 +134,8 @@ class PatientSensor(QtWidgets.QWidget):
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
 
-        if remote:
-            if i == 0:
-                self.flow = RemoteGenerator()
-            else:
-                self.flow = DisconGenerator()
+        if port is not None:
+            self.flow = RemoteGenerator(ip=ip, port=port+i)
         else:
             self.flow = LocalGenerator(status)
 
@@ -200,7 +197,7 @@ class PatientSensor(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, remote, **kwargs):
+    def __init__(self, *args, ip, port, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -227,7 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.centralwidget.setLayout(layout)
 
-        self.graphs = [PatientSensor(i, remote=remote) for i in range(20)]
+        self.graphs = [PatientSensor(i, ip=ip, port=port) for i in range(20)]
         for i, graph in enumerate(self.graphs):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
@@ -242,9 +239,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close()
 
 
-def main(argv, *, remote, fullscreen):
+def main(argv, *, ip, port, fullscreen):
     app = QtWidgets.QApplication(argv)
-    main = MainWindow(remote=remote)
+    main = MainWindow(ip=ip, port=port)
     if fullscreen:
         main.showFullScreen()
     else:
@@ -254,9 +251,10 @@ def main(argv, *, remote, fullscreen):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--remote", action="store_true")
+    parser.add_argument("--ip", default='127.0.0.1', help="Select an ip address")
+    parser.add_argument("--port", type=int, help="Select a starting port (8100 recommended)")
     parser.add_argument("--fullscreen", action="store_true")
     arg, unparsed_args = parser.parse_known_args()
     main(
-        argv=sys.argv[:1] + unparsed_args, remote=arg.remote, fullscreen=arg.fullscreen
+        argv=sys.argv[:1] + unparsed_args, ip=arg.ip, port=arg.port, fullscreen=arg.fullscreen
     )

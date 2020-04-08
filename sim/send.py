@@ -21,32 +21,33 @@ def main(sim,timer):
 
 # Ugly, better if the handler had options
 # start_time = time.time()
+class Handler(http.server.BaseHTTPRequestHandler):
+    def __init__(self,parent,version_num,*args,**kwargs):
+        self.parent=parent
+        self.version_num=version_num
+        super().__init__(*args,**kwargs)
+        
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+
+    def do_GET(self):
+        self.do_HEAD()
+        self.wfile.write(main(self.parent.sims[self.version_num], self.parent.start_time))#time.time() - start_time))
+
 
 class OurServer():
+    def serve_on_port(self, server_address, i):
+        self.handler= partial(Handler, self, i)
+        self.httpd = http.server.ThreadingHTTPServer(server_address, self.handler)
+        self.httpd.serve_forever()
+
     def __init__(self,args):
         self.done = False
         self.start_time = datetime.now().timestamp()
         self.sims=start_sims(args.n,self.start_time,12000)
 
-        def serve_on_port(server_address):
-            self.handler= partial(Handler, self, i)
-            self.httpd = http.server.ThreadingHTTPServer(server_address, self.handler)
-            self.httpd.serve_forever()
-
-        class Handler(http.server.BaseHTTPRequestHandler):
-            def __init__(self,parent,version_num,*args,**kwargs):
-                self.parent=parent
-                self.version_num=version_num
-                super().__init__(*args,**kwargs)
-                
-            def do_HEAD(self):
-                self.send_response(200)
-                self.send_header("Content-type", "application/json")
-                self.end_headers()
-
-            def do_GET(self):
-                self.do_HEAD()
-                self.wfile.write(main(self.parent.sim[version_num], self.parent.start_time))#time.time() - start_time))
 
         if args.n>1:
             pool = []
@@ -54,7 +55,7 @@ class OurServer():
                 port=args.port+i
                 print(f"Serving on http://127.0.0.1:{port}")
                 server_address = ("localhost", port)
-                pool.append(Thread(target=serve_on_port, args=[server_address]))
+                pool.append(Thread(target=self.serve_on_port, args=[server_address, i]))
 
             for t in pool:
                 t.start()
@@ -63,9 +64,10 @@ class OurServer():
                 t.join()
 
         else:
+            port=args.port
             print(f"Serving on http://127.0.0.1:{port}")
             server_address = ("localhost", port)
-            serve_on_port(server_address)
+            self.serve_on_port(server_address, 0)
 
 
      
