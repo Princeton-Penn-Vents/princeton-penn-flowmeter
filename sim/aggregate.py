@@ -18,7 +18,7 @@ def aggregate_for_nursing(time_stamp,jsons):
         nurse_info["data"]["timestamps"].append(j_info["t"])
         nurse_info["data"]["pressures"].append(j_info["P"])
         nurse_info["data"]["flows"].append(j_info["F"])
-       
+
     return json.dumps(nurse_info).encode("ascii")
 
 if __name__ == "__main__":
