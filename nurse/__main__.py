@@ -2,7 +2,6 @@
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
-from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -101,12 +100,13 @@ class AlertWidget(QtWidgets.QWidget):
         self.setLayout(column_layout)
 
         self.name_btn = QtWidgets.QPushButton(str(i + 1))
-        # self.name_btn.setAlignment(QtCore.Qt.AlignCenter)
-        column_layout.addWidget(self.name_btn)
+        column_layout.addWidget(self.name_btn, 2)
 
         self.alert = QtWidgets.QLabel("DISCON")
         self.alert.setAlignment(QtCore.Qt.AlignCenter)
-        column_layout.addWidget(self.alert)
+        column_layout.addWidget(self.alert, 2)
+
+        column_layout.addStretch(6)
 
 
 
@@ -126,14 +126,32 @@ class PatientSensor(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         upper.setLayout(layout)
 
-        self.graph = pg.PlotWidget()
-        self.graph.setLabel("left", "Flow", units="L/m")
-        # Time inferred
-        # self.graph.setLabel("bottom", "Time", units="seconds")
-        layout.addWidget(self.graph)
+        graphview = pg.GraphicsView(parent=self)
+        graphlayout = pg.GraphicsLayout()
+        graphlayout.setContentsMargins(0, 0, 0, 0)
+        graphview.setCentralWidget(graphlayout)
+
+        layout.addWidget(graphview, 7)
+
+        self.graph_flow = graphlayout.addPlot(x=[], y=[], name="Flow")
+        self.graph_flow.setLabel("left", "F", units="L/m")
+        self.graph_flow.setMouseEnabled(False, False)
+
+        graphlayout.nextRow()
+
+        self.graph_pressure = graphlayout.addPlot(x=[], y=[], name="Pressure")
+        self.graph_pressure.setLabel("left", "P", units="cm/w")
+        self.graph_pressure.setMouseEnabled(False, False)
+
+        graphlayout.nextRow()
+
+        self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
+        self.graph_volume.setLabel("left", "V", units="L")
+        self.graph_volume.setMouseEnabled(False, False)
+
 
         self.alert = AlertWidget(i)
-        layout.addWidget(self.alert)
+        layout.addWidget(self.alert, 3)
 
         lower = QtWidgets.QWidget()
         outer_layout.addWidget(lower)
@@ -188,21 +206,30 @@ class PatientSensor(QtWidgets.QWidget):
             self.flow = RemoteGenerator(port=port)
 
     def set_plot(self):
-        color = COLOR[self.alert.status]
+        pen = pg.mkPen(color=(120, 255, 50), width=2)
+        self.curve_flow = self.graph_flow.plot(*self.flow.calc_flow(), pen=pen)
+        pen = pg.mkPen(color=(255, 120, 50), width=2)
+        self.curve_pressure = self.graph_pressure.plot(*self.flow.calc_flow(), pen=pen)
+        pen = pg.mkPen(color=(50, 120, 255), width=2)
+        self.curve_volume = self.graph_volume.plot(*self.flow.calc_flow(), pen=pen)
+        # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
-        pen = pg.mkPen(color=color, width=5)
-        self.curve = self.graph.plot(*self.flow.calc_flow(), pen=pen)
-        # self.graph.setRange(xRange=(-1000, 0), yRange=(-3, 10))
+        self.graph_flow.setXLink(self.graph_pressure)
+        self.graph_flow.setXLink(self.graph_volume)
+        self.graph_flow.hideAxis('bottom')
+        self.graph_pressure.hideAxis('bottom')
 
         pen = pg.mkPen(color=(220, 220, 50), width=3)
 
-        self.upper = self.graph.addLine(y=8, pen=pen)
-        self.lower = self.graph.addLine(y=-2, pen=pen)
+        self.upper = self.graph_flow.addLine(y=8, pen=pen)
+        self.lower = self.graph_flow.addLine(y=-2, pen=pen)
 
     @Slot()
     def update_plot(self):
         self.flow.tick()
-        self.curve.setData(*self.flow.calc_flow())
+        self.curve_flow.setData(*self.flow.calc_flow())
+        self.curve_pressure.setData(*self.flow.calc_flow())
+        self.curve_volume.setData(*self.flow.calc_flow())
         self.alert.status = self.flow.status
 
         for key in self.widget_lookup:
@@ -215,8 +242,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
+        self.resize(1920, 1080)
 
-        pg.setConfigOptions(antialias=True)
+        # May be expensive, probably only enable if we multithread the draw
+        # pg.setConfigOptions(antialias=True)
 
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(0)
@@ -239,7 +268,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.graphs = [PatientSensor(i) for i in range(20)]
         for i, graph in enumerate(self.graphs):
-            layout.addWidget(self.graphs[i], *reversed(divmod(i, 5)))
+            layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
