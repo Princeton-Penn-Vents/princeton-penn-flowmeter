@@ -6,9 +6,13 @@
 {"v":1,"t":1234,"P":12.332,"F":-1.23,"temp":23.3}
 ```
 
-Note that this is 1 per line, produced 50 times per second.
-Order does not matter in JSON. `"v":1` is for version 1 - we could later
-add a new version.
+One [JSON object](https://www.json.org/json-en.html) per line of text (delimited by `"\n"`, no `"\n"` allowed within a JSON object) at a rate of roughly 50 Hz. Field names are case-sensitive.
+
+   * The `"v"` field (mandatory) is the version of the protocol; always `1`. Future versions are also integers (and version updates will be rare).
+   * The `"t"` field (mandatory) is a time relative to an unspecified constant, which does not change through the interval in which the data collection box is connected to the nurse's station (with a given port number). This time is an integer in milliseconds.
+   * The `"P"` field (mandatory) is [intrapleural pressure](https://en.wikipedia.org/wiki/Intrapleural_pressure) (difference between pressure in lungs and atmospheric pressure) in cm H2O. Positive pressure is greater than atmospheric; negative is less than atmospheric.
+   * The `"F"` field (mandatory) is the flow rate in mL/sec. The volume can be computed by strictly integrating this field with respect to time. Positive flow is into the lungs; negative flow is out.
+   * The `"temp"` field is optional, and in fact is only populated in about 1 out of 50 lines (1 Hz). It is the the temperature of the flow sensor in degrees C.
 
 ## Data format (patient -> nurse)
 
