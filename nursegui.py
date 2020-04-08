@@ -38,13 +38,12 @@ class LocalGenerator:
         self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
         self.time = np.arange(0,len(self.flow),1)
         self.axistime = np.flip(self.time / 50)  # ticks per second
+        # Ramp up to 500ml in 50 ticks, then simple ramp down in 100
+        tvolume = np.concatenate((10 * np.arange(0,50,1),5*np.arange(100,0,-1)))
+        self.volume = np.concatenate((tvolume,tvolume,tvolume,tvolume,tvolume,tvolume)) 
+        self.volume = self.volume * np.random.uniform(0.98, 1.02, len(self.volume))
 
     def calc_flow(self):
-        #v = (
-        #    (np.mod(self.time + self.current, 100) / 10 - 2)
-        #    * self.random
-        #    * (0.6 if self.status == Status.ALERT else 1)
-        #)
         v = (
             self.flow
             * (0.6 if self.status == Status.ALERT else 1)
@@ -53,14 +52,28 @@ class LocalGenerator:
             v[-min(self.current, len(self.time)) :] = 0
         return self.axistime, v
 
+    def calc_volume(self):
+        v = (
+            self.volume
+            * (0.6 if self.status == Status.ALERT else 1)
+        )
+        if self.status == Status.DISCON:
+            v[-min(self.current, len(self.time)) :] = 0
+        return self.axistime, v
+
+
     def tick(self):
         self.current += 10
         self.flow = np.roll(self.flow, -10)
+        self.volume = np.roll(self.volume, -10)
 
 class DisconGenerator:
     status = Status.DISCON
 
     def calc_flow(self):
+        return [], []
+
+    def calc_volume(self):
         return [], []
 
     def tick(self):
@@ -89,6 +102,19 @@ class RemoteGenerator:
 
         return time, flow
 
+    # A hack
+    def calc_volume(self):
+        try:
+            r = requests.get(f"http://{self.ip}:{self.port}")
+        except requests.exceptions.ConnectionError:
+            self.status = Status.DISCON
+            return [], []
+
+        root = json.loads(r.text)
+        time = np.asarray(root["data"]["timestamps"])
+        flow = np.asarray(root["data"]["flows"])
+
+        return time, flow
 
 class AlertWidget(QtWidgets.QWidget):
     @property
@@ -156,7 +182,7 @@ class PatientSensor(QtWidgets.QWidget):
         graphlayout.nextRow()
 
         self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
-        self.graph_volume.setLabel("left", "V", units="L")
+        self.graph_volume.setLabel("left", "V", units="mL")
         self.graph_volume.setMouseEnabled(False, False)
         self.graph_volume.invertX()
 
@@ -220,7 +246,7 @@ class PatientSensor(QtWidgets.QWidget):
         pen = pg.mkPen(color=(255, 120, 50), width=2)
         self.curve_pressure = self.graph_pressure.plot(*self.flow.calc_flow(), pen=pen)
         pen = pg.mkPen(color=(50, 120, 255), width=2)
-        self.curve_volume = self.graph_volume.plot(*self.flow.calc_flow(), pen=pen)
+        self.curve_volume = self.graph_volume.plot(*self.flow.calc_volume(), pen=pen)
         # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
         self.graph_flow.setXLink(self.graph_pressure)
@@ -238,7 +264,7 @@ class PatientSensor(QtWidgets.QWidget):
         self.flow.tick()
         self.curve_flow.setData(*self.flow.calc_flow())
         self.curve_pressure.setData(*self.flow.calc_flow())
-        self.curve_volume.setData(*self.flow.calc_flow())
+        self.curve_volume.setData(*self.flow.calc_volume())
         self.alert.status = self.flow.status
 
         for key in self.widget_lookup:
