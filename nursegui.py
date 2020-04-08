@@ -9,6 +9,7 @@ import os
 import enum
 import json
 import requests
+import argparse
 from pathlib import Path
 
 DIR = Path(__file__).parent.absolute()
@@ -31,41 +32,41 @@ class LocalGenerator:
     def __init__(self, status: Status):
         self.status = status
         self.current = 0
-        ramp=np.array([0.1,  0.8807970779778823, 0.96, 0.9975273768433653, 0.9996646498695336])
-        decay=-1.0 * np.exp(-1.0 * np.arange(0,3,0.03))
-        breath = 10 * np.concatenate((ramp,np.full(35,1),np.flip(ramp), -1.0*ramp,decay))
-        self.flow = np.concatenate((breath,breath,breath,breath,breath,breath))
+        ramp = np.array(
+            [0.1, 0.8807970779778823, 0.96, 0.9975273768433653, 0.9996646498695336]
+        )
+        decay = -1.0 * np.exp(-1.0 * np.arange(0, 3, 0.03))
+        breath = 10 * np.concatenate(
+            (ramp, np.full(35, 1), np.flip(ramp), -1.0 * ramp, decay)
+        )
+        self.flow = np.concatenate((breath, breath, breath, breath, breath, breath))
         self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
-        self.time = np.arange(0,len(self.flow),1)
+        self.time = np.arange(0, len(self.flow), 1)
         self.axistime = np.flip(self.time / 50)  # ticks per second
         # Ramp up to 500ml in 50 ticks, then simple ramp down in 100
-        tvolume = np.concatenate((10 * np.arange(0,50,1),5*np.arange(100,0,-1)))
-        self.volume = np.concatenate((tvolume,tvolume,tvolume,tvolume,tvolume,tvolume)) 
+        tvolume = np.concatenate((10 * np.arange(0, 50, 1), 5 * np.arange(100, 0, -1)))
+        self.volume = np.concatenate(
+            (tvolume, tvolume, tvolume, tvolume, tvolume, tvolume)
+        )
         self.volume = self.volume * np.random.uniform(0.98, 1.02, len(self.volume))
 
     def calc_flow(self):
-        v = (
-            self.flow
-            * (0.6 if self.status == Status.ALERT else 1)
-        )
+        v = self.flow * (0.6 if self.status == Status.ALERT else 1)
         if self.status == Status.DISCON:
             v[-min(self.current, len(self.time)) :] = 0
         return self.axistime, v
 
     def calc_volume(self):
-        v = (
-            self.volume
-            * (0.6 if self.status == Status.ALERT else 1)
-        )
+        v = self.volume * (0.6 if self.status == Status.ALERT else 1)
         if self.status == Status.DISCON:
             v[-min(self.current, len(self.time)) :] = 0
         return self.axistime, v
-
 
     def tick(self):
         self.current += 10
         self.flow = np.roll(self.flow, -10)
         self.volume = np.roll(self.volume, -10)
+
 
 class DisconGenerator:
     status = Status.DISCON
@@ -116,6 +117,7 @@ class RemoteGenerator:
 
         return time, flow
 
+
 class AlertWidget(QtWidgets.QWidget):
     @property
     def status(self):
@@ -143,9 +145,18 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout.addStretch(6)
 
 
+class GraphicsView(pg.GraphicsView):
+    def __init__(self, *args, i, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_plot = i
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            print(f"Clicked {self.current_plot + 1}")
+
 
 class PatientSensor(QtWidgets.QWidget):
-    def __init__(self, i):
+    def __init__(self, i, *, remote):
         super().__init__()
 
         outer_layout = QtWidgets.QVBoxLayout()
@@ -161,7 +172,7 @@ class PatientSensor(QtWidgets.QWidget):
         upper.setLayout(layout)
         #upper.setStyleSheet("background-color: #FEFFCF;");
 
-        graphview = pg.GraphicsView(parent=self)
+        graphview = GraphicsView(parent=self, i=i)
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
         graphview.setCentralWidget(graphlayout)
@@ -186,7 +197,6 @@ class PatientSensor(QtWidgets.QWidget):
         self.graph_volume.setLabel("left", "V", units="mL")
         self.graph_volume.setMouseEnabled(False, False)
         self.graph_volume.invertX()
-
 
         self.alert = AlertWidget(i)
         layout.addWidget(self.alert, 3)
@@ -221,10 +231,12 @@ class PatientSensor(QtWidgets.QWidget):
             self.widget_lookup[self.info_strings[j]] = j
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
-        if i == 4:
-            self.flow = DisconGenerator()
-        elif i == 3:
-            self.flow = RemoteGenerator()
+
+        if remote:
+            if i == 0:
+                self.flow = RemoteGenerator()
+            else:
+                self.flow = DisconGenerator()
         else:
             self.flow = LocalGenerator(status)
 
@@ -246,20 +258,22 @@ class PatientSensor(QtWidgets.QWidget):
         pen = pg.mkPen(color=(120, 255, 50), width=2)
         self.curve_flow = self.graph_flow.plot(*self.flow.calc_flow(), pen=pen)
         pen = pg.mkPen(color=(255, 120, 50), width=2)
-        self.curve_pressure = self.graph_pressure.plot(*self.flow.calc_volume(), pen=pen)
+        self.curve_pressure = self.graph_pressure.plot(
+            *self.flow.calc_volume(), pen=pen
+        )
         pen = pg.mkPen(color=(50, 120, 255), width=2)
         self.curve_volume = self.graph_volume.plot(*self.flow.calc_volume(), pen=pen)
         # self.graph_flow.setRange(xRange=(-1000, 0), yRange=(-3, 10))
 
         self.graph_flow.setXLink(self.graph_pressure)
         self.graph_flow.setXLink(self.graph_volume)
-        self.graph_flow.hideAxis('bottom')
-        self.graph_pressure.hideAxis('bottom')
+        self.graph_flow.hideAxis("bottom")
+        self.graph_pressure.hideAxis("bottom")
 
         pen = pg.mkPen(color=(220, 220, 50), width=3)
 
-        #self.upper = self.graph_flow.addLine(y=8, pen=pen)
-        #self.lower = self.graph_flow.addLine(y=-2, pen=pen)
+        # self.upper = self.graph_flow.addLine(y=8, pen=pen)
+        # self.lower = self.graph_flow.addLine(y=-2, pen=pen)
 
     @Slot()
     def update_plot(self):
@@ -276,7 +290,7 @@ class PatientSensor(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, remote, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -289,7 +303,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Avoid wiggles when updating
-        for i in range(4):
+        for i in range(5):
             layout.setColumnStretch(i, 3)
 
         self.centralwidget = QtWidgets.QWidget(self)
@@ -303,7 +317,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.centralwidget.setLayout(layout)
 
-        self.graphs = [PatientSensor(i) for i in range(20)]
+        self.graphs = [PatientSensor(i, remote=remote) for i in range(20)]
         for i, graph in enumerate(self.graphs):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
@@ -313,13 +327,26 @@ class MainWindow(QtWidgets.QMainWindow):
             graph.qTimer.timeout.connect(graph.update_plot)
             graph.qTimer.start()
 
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    main = MainWindow()
-    main.show()
+
+def main(argv, *, remote, fullscreen):
+    app = QtWidgets.QApplication(argv)
+    main = MainWindow(remote=remote)
+    if fullscreen:
+        main.showFullScreen()
+    else:
+        main.show()
     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--remote", action="store_true")
+    parser.add_argument("--fullscreen", action="store_true")
+    arg, unparsed_args = parser.parse_known_args()
+    main(
+        argv=sys.argv[:1] + unparsed_args, remote=arg.remote, fullscreen=arg.fullscreen
+    )
