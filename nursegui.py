@@ -22,6 +22,7 @@ COLOR = {
     Status.DISCON: (50, 50, 220),
 }
 
+
 class AlertWidget(QtWidgets.QWidget):
     @property
     def status(self):
@@ -135,7 +136,7 @@ class PatientSensor(QtWidgets.QWidget):
         status = Status.OK if i % 7 != 1 else Status.ALERT
 
         if port is not None:
-            self.flow = RemoteGenerator(ip=ip, port=port+i)
+            self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             self.flow = LocalGenerator(status)
 
@@ -251,10 +252,15 @@ def main(argv, *, ip, port, fullscreen):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", default='127.0.0.1', help="Select an ip address")
-    parser.add_argument("--port", type=int, help="Select a starting port (8100 recommended)")
+    parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
+    parser.add_argument(
+        "--port", type=int, help="Select a starting port (8100 recommended)"
+    )
     parser.add_argument("--fullscreen", action="store_true")
     arg, unparsed_args = parser.parse_known_args()
     main(
-        argv=sys.argv[:1] + unparsed_args, ip=arg.ip, port=arg.port, fullscreen=arg.fullscreen
+        argv=sys.argv[:1] + unparsed_args,
+        ip=arg.ip,
+        port=arg.port,
+        fullscreen=arg.fullscreen,
     )

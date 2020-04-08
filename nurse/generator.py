@@ -1,9 +1,9 @@
-
 import abc
 import enum
 import json
 import numpy as np
 import requests
+
 
 class Status(enum.Enum):
     OK = enum.auto()
