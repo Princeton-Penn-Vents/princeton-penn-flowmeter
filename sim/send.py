@@ -49,17 +49,26 @@ class OurServer():
                 self.wfile.write(main(self.parent.sim[version_num], self.parent.start_time))#time.time() - start_time))
 
         if args.n>1:
-            for i in range(args.n-1):
+            pool = []
+            for i in range(args.n):
                 port=args.port+i
                 print(f"Serving on http://127.0.0.1:{port}")
                 server_address = ("localhost", port)
-                Thread(serve_on_port(server_address)).start()
-        i=args.n-1
-        port=args.port+i
-        print(f"Serving on http://127.0.0.1:{port}")
-        server_address = ("localhost", port)
-        serve_on_port(server_address)
-      
+                pool.append(Thread(target=serve_on_port, args=[server_address]))
+
+            for t in pool:
+                t.start()
+
+            for t in pool:
+                t.join()
+
+        else:
+            print(f"Serving on http://127.0.0.1:{port}")
+            server_address = ("localhost", port)
+            serve_on_port(server_address)
+
+
+     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8123, help="First port to serve on")
