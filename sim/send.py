@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import partial
 
 def main(sim,timer):
-    d = sim.get_batch(60) # one minute
+    d = sim.get_batch(60) # one minute until nursing gui collects data
     #enrich with stuff that comes from the analysis
     d["alarms"] = {}
     #enrich with stuff that comes from the overall patient server

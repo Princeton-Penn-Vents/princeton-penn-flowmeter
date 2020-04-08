@@ -10,7 +10,7 @@ def constant_compliance(**kwargs):
 class VentSim:
     def __init__(self,curr_time,sim_time_max,params={}):
         self.current_bin = 0
-        self.sampling_rate = params.get("sampling_rate",100.)
+        self.sampling_rate = params.get("sampling_rate",50.)
         self.breathing_rate = params.get("breathing_rate",13.0)
         self.max_flow = params.get("max_flow",12.0)
         self.tidal_volume = params.get("tidal_volume",0.6)
@@ -20,6 +20,7 @@ class VentSim:
         self.recovery_tau = params.get("recovery",15)
         self.compliance_func = params.get("compliance_func",constant_compliance)
         self.v0 = params.get("starting_volume",0.0)
+        self.breath_sigma = params.get("breath_variation",1.) 
         
         self.precompute()
         
@@ -36,11 +37,12 @@ class VentSim:
         array of breath start times
         """
 
-        max_breaths = (
-            1.2 * self.sim_time / self.breathing_rate
-        )  # safety margin for fluctuating this later
+        max_breaths = 1.2 * self.sim_time / self.breathing_rate # safety margin for fluctuating this later
 
-        breath_starts = np.arange(0, max_breaths * self.breathing_rate, self.breathing_rate)
+        deltas=np.random.normal(self.breathing_rate,self.breath_sigma,int(max_breaths))
+        breath_starts = np.cumsum(deltas)
+        
+        #breath_starts = np.arange(0, max_breaths * self.breathing_rate, self.breathing_rate)
         return breath_starts 
 
     def nominal_flow(self):
