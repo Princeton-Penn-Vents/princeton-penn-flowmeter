@@ -9,6 +9,7 @@ import os
 import enum
 import json
 import requests
+import argparse
 from pathlib import Path
 
 DIR = Path(__file__).parent.absolute()
@@ -145,7 +146,7 @@ class AlertWidget(QtWidgets.QWidget):
 
 
 class PatientSensor(QtWidgets.QWidget):
-    def __init__(self, i):
+    def __init__(self, i, *, remote):
         super().__init__()
 
         outer_layout = QtWidgets.QVBoxLayout()
@@ -219,10 +220,12 @@ class PatientSensor(QtWidgets.QWidget):
             self.widget_lookup[self.info_strings[j]] = j
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
-        if i == 4:
-            self.flow = DisconGenerator()
-        elif i == 3:
-            self.flow = RemoteGenerator()
+
+        if remote:
+            if i == 0:
+                self.flow = RemoteGenerator()
+            else:
+                self.flow = DisconGenerator()
         else:
             self.flow = LocalGenerator(status)
 
@@ -274,7 +277,7 @@ class PatientSensor(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, remote, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -301,7 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.centralwidget.setLayout(layout)
 
-        self.graphs = [PatientSensor(i) for i in range(20)]
+        self.graphs = [PatientSensor(i, remote=remote) for i in range(20)]
         for i, graph in enumerate(self.graphs):
             layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
@@ -312,12 +315,19 @@ class MainWindow(QtWidgets.QMainWindow):
             graph.qTimer.start()
 
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    main = MainWindow()
-    main.show()
+def main(argv, *, remote, fullscreen):
+    app = QtWidgets.QApplication(argv)
+    main = MainWindow(remote=remote)
+    if fullscreen:
+        main.showFullScreen()
+    else:
+        main.show()
     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--remote", action="store_true")
+    parser.add_argument("--fullscreen", action="store_true")
+    arg, unparsed_args = parser.parse_known_args()
+    main(argv=sys.argv[:1] + unparsed_args, remote=arg.remote, fullscreen=arg.fullscreen)
