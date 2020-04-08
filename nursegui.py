@@ -37,7 +37,7 @@ class LocalGenerator:
         self.flow = np.concatenate((breath,breath,breath,breath,breath,breath))
         self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
         self.time = np.arange(0,len(self.flow),1)
-        self.axistime = self.time / 50  # ticks per second
+        self.axistime = np.flip(self.time / 50)  # ticks per second
 
     def calc_flow(self):
         #v = (
@@ -144,18 +144,21 @@ class PatientSensor(QtWidgets.QWidget):
         self.graph_flow = graphlayout.addPlot(x=[], y=[], name="Flow")
         self.graph_flow.setLabel("left", "F", units="L/m")
         self.graph_flow.setMouseEnabled(False, False)
+        self.graph_flow.invertX()
 
         graphlayout.nextRow()
 
         self.graph_pressure = graphlayout.addPlot(x=[], y=[], name="Pressure")
         self.graph_pressure.setLabel("left", "P", units="cm/w")
         self.graph_pressure.setMouseEnabled(False, False)
+        self.graph_pressure.invertX()
 
         graphlayout.nextRow()
 
         self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
         self.graph_volume.setLabel("left", "V", units="L")
         self.graph_volume.setMouseEnabled(False, False)
+        self.graph_volume.invertX()
 
 
         self.alert = AlertWidget(i)
