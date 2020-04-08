@@ -315,6 +315,10 @@ class MainWindow(QtWidgets.QMainWindow):
             graph.qTimer.timeout.connect(graph.update_plot)
             graph.qTimer.start()
 
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
+
 
 def main(argv, *, remote, fullscreen):
     app = QtWidgets.QApplication(argv)
