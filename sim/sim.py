@@ -21,6 +21,7 @@ class VentSim:
         self.compliance_func = params.get("compliance_func",constant_compliance)
         self.v0 = params.get("starting_volume",0.0)
         self.breath_sigma = params.get("breath_variation",1.) 
+        self.max_breath_interval = params.get("max_breath_interval",15.0) 
         
         self.precompute()
         
@@ -40,6 +41,7 @@ class VentSim:
         max_breaths = 1.2 * self.sim_time / self.breathing_rate # safety margin for fluctuating this later
 
         deltas=np.random.normal(self.breathing_rate,self.breath_sigma,int(max_breaths))
+        deltas=np.minimum(deltas,self.max_breath_interval)
         breath_starts = np.cumsum(deltas)
         
         #breath_starts = np.arange(0, max_breaths * self.breathing_rate, self.breathing_rate)
