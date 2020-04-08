@@ -58,6 +58,7 @@ class GraphicsView(pg.GraphicsView):
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
             print(f"Clicked {self.current_plot + 1}")
+        super().mousePressEvent(event)
 
 
 class PatientSensor(QtWidgets.QWidget):
@@ -211,6 +212,14 @@ class PatientGrid(QtWidgets.QWidget):
         for i in range(5):
             layout.setColumnStretch(i, 3)
 
+        self.setLayout(layout)
+
+
+class MainStack(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        layout = QtWidgets.QStackLayout()
         self.setLayout(layout)
 
 
