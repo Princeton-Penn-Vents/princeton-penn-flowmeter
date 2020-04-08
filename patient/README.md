@@ -6,14 +6,19 @@
 {"v":1,"t":1234,"P":12.332,"F":-1.23,"temp":23.3}
 ```
 
-Note that this is 1 per line, produced 50 times per second.
-Order does not matter in JSON.
+One [JSON object](https://www.json.org/json-en.html) per line of text (delimited by `"\n"`, no `"\n"` allowed within a JSON object) at a rate of roughly 50 Hz. Field names are case-sensitive.
+
+   * The `"v"` field (mandatory) is the version of the protocol; always `1`. Future versions are also integers (and version updates will be rare).
+   * The `"t"` field (mandatory) is time as a floating-point number of seconds relative to an unspecified constant, which does not change through the interval in which the data collection box is connected to the nurse's station (with a given port number). Nominally, it is the number of seconds since Jan 1, 1970, but the offset isn't guaranteed.
+   * The `"P"` field (mandatory) is [intrapleural pressure](https://en.wikipedia.org/wiki/Intrapleural_pressure) (difference between pressure in lungs and atmospheric pressure) in cm H2O (floating point). Positive pressure is greater than atmospheric; negative is less than atmospheric.
+   * The `"F"` field (mandatory) is the flow rate in mL/sec (floating point). The volume can be computed by strictly integrating this field with respect to time. Positive flow is into the lungs; negative flow is out.
+   * The `"temp"` field is optional, and in fact is only populated in about 1 out of 50 lines (1 Hz). It is the the temperature of the flow sensor in degrees C (floating point).
 
 ## Data format (patient -> nurse)
 
-Note: comments inserted for clarity - JSON does not allow comments
+Note: comments inserted for clarity only - JSON does not allow comments.
 
-```json
+```yaml
 {
   "version": 1,
   "source": "Sim.send",
@@ -22,9 +27,9 @@ Note: comments inserted for clarity - JSON does not allow comments
   },
   "calibration": {
     # Calibration parameters here
-  }
+  },
   "time":1234.343,   # Current packet timestamp
-  "alarms":{
+  "alarms": {
     "MinFlow": false,
     # Status of patient alarms here
   },

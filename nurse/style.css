@@ -9,7 +9,7 @@ QLabel {
 AlertWidget > QLabel {
   background-color: yellow;
   font: bold;
-  font-size: 30px;
+  font-size: 20px;
   color: black;
   border-radius: 3px;
 }
@@ -19,18 +19,17 @@ AlertWidget > QPushButton {
   color: white;
   font: bold;
   font-size: 30px;
-  background-color: black;
+  background-color: transparent;
 }
 
-AlertWidget[status="OK"] > QLabel, QPushButton {
-  background-color: black; /* #97DE79; (151,222,121) */
+AlertWidget[status="OK"] > QLabel {
+  background-color: transparent; /* #97DE79; (151,222,121) */
 }
 
-AlertWidget[status="ALERT"] > QLabel, QPushButton {
-  /* background-color: #FF1080; (255, 16, 128) */
+AlertWidget[status="ALERT"] > QLabel {
   background-color: #ED4337; /* (237, 67, 55) */
 }
 
-AlertWidget[status="DISCON"] > QLabel, QPushButton {
+AlertWidget[status="DISCON"] > QLabel {
   background-color: #4CB3EF ;   /* (76,179,239) */
 }
