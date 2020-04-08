@@ -11,7 +11,7 @@ class VentSim:
     def __init__(self,curr_time,sim_time_max,params={}):
         self.current_bin = 0
         self.sampling_rate = params.get("sampling_rate",100.)
-        self.breathing_rate = params.get("breathing_rate",12.0)
+        self.breathing_rate = params.get("breathing_rate",13.0)
         self.max_flow = params.get("max_flow",12.0)
         self.tidal_volume = params.get("tidal_volume",0.6)
         self.peep = params.get("peep",4)
@@ -71,7 +71,6 @@ class VentSim:
         exp_zero_bins = flow_start_bins[1:]
         exp_min_bins = flow_end_bins[:-1]
         times = np.arange(0, 1.2 * self.sim_time, 1.0 / self.sampling_rate)
-        #print(current_time)
         
         for i in range(len(exp_min_bins)):
             if exp_min_bins[i] < bins:
@@ -98,7 +97,7 @@ class VentSim:
         return pressure
 
     def get_next(self):
-        assert self.current_bin >= len(self.times):, "out of simulated data -ask developer to implement automatic extentions"
+        assert self.current_bin < len(self.times), "out of simulated data -ask developer to implement automatic extentions"
         d = {
             "v" : 1,
             "t" : self.curr_time + self.times[self.current_bin],
@@ -110,17 +109,17 @@ class VentSim:
         return d
 
     def get_batch(self,nSeconds):
-        nbins=nSeconds * self.sampling_rate
-        assert self.current_bin+nbins > len(self.times):, "out of simulated data -ask developer to implement automatic extentions"
+        nbins=int(nSeconds * self.sampling_rate)
+        assert self.current_bin+nbins <= len(self.times), "out of simulated data -ask developer to implement automatic extentions"
 
         d = {
             "version" : 1,
             "source" : "simulation",
-            "parameters" = {},
-            "data" = {
-                "timestamps" : self.curr_time + self.times[self.current_bin:self.current_bin+nbins],
-                "flows" : self.flow[self.current_bin:self.current_bin+nbins],
-                "pressures" : self.pressure[self.current_bin:self.current_bin+nbins]
+            "parameters" : {},
+            "data" : {
+                "timestamps" : (self.curr_time + self.times[self.current_bin:self.current_bin+nbins]).tolist(),
+                "flows" : self.flow[self.current_bin:self.current_bin+nbins].tolist(),
+                "pressures" : self.pressure[self.current_bin:self.current_bin+nbins].tolist()
                 }
             }
 

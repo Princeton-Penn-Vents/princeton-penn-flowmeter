@@ -76,8 +76,8 @@ class RemoteGenerator:
             return [], []
 
         root = json.loads(r.text)
-        time = np.asarray(root["data"]["time"])
-        flow = np.asarray(root["data"]["flow"])
+        time = np.asarray(root["data"]["timestamps"])
+        flow = np.asarray(root["data"]["flows"])
 
         return time, flow
 
