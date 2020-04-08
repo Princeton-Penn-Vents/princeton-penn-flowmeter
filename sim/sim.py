@@ -98,10 +98,34 @@ class VentSim:
         return pressure
 
     def get_next(self):
-        return 1
+        assert self.current_bin >= len(self.times):, "out of simulated data -ask developer to implement automatic extentions"
+        d = {
+            "v" : 1,
+            "t" : self.curr_time + self.times[self.current_bin],
+            "F" : self.flow[self.current_bin],
+            "P" : self.pressure[self.current_bin],
+            "temp" : 23.3
+            }
+        self.current_bin += 1
+        return d
 
     def get_batch(self,nSeconds):
-        return 1
+        nbins=nSeconds * self.sampling_rate
+        assert self.current_bin+nbins > len(self.times):, "out of simulated data -ask developer to implement automatic extentions"
+
+        d = {
+            "version" : 1,
+            "source" : "simulation",
+            "parameters" = {},
+            "data" = {
+                "timestamps" : self.curr_time + self.times[self.current_bin:self.current_bin+nbins],
+                "flows" : self.flow[self.current_bin:self.current_bin+nbins],
+                "pressures" : self.pressure[self.current_bin:self.current_bin+nbins]
+                }
+            }
+
+        self.current_bin += nbins
+        return d
 
     def get_all(self):
         return self.times,self.flow,self.volume,self.pressure
