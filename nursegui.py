@@ -30,24 +30,32 @@ COLOR = {
 class LocalGenerator:
     def __init__(self, status: Status):
         self.status = status
-        self.time = np.linspace(-1000, 0, 1000)
         self.current = 0
-        self.random = np.random.uniform(0.9, 1.1, len(self.time))
+        ramp=np.array([0.1,  0.8807970779778823, 0.96, 0.9975273768433653, 0.9996646498695336])
+        decay=-1.0 * np.exp(-1.0 * np.arange(0,3,0.03))
+        breath = 10 * np.concatenate((ramp,np.full(35,1),np.flip(ramp), -1.0*ramp,decay))
+        self.flow = np.concatenate((breath,breath,breath,breath,breath,breath))
+        self.flow = self.flow * np.random.uniform(0.98, 1.02, len(self.flow))
+        self.time = np.arange(0,len(self.flow),1)
+        self.axistime = self.time / 50  # ticks per second
 
     def calc_flow(self):
+        #v = (
+        #    (np.mod(self.time + self.current, 100) / 10 - 2)
+        #    * self.random
+        #    * (0.6 if self.status == Status.ALERT else 1)
+        #)
         v = (
-            (np.mod(self.time + self.current, 100) / 10 - 2)
-            * self.random
+            self.flow
             * (0.6 if self.status == Status.ALERT else 1)
         )
         if self.status == Status.DISCON:
             v[-min(self.current, len(self.time)) :] = 0
-        return self.time, v
+        return self.axistime, v
 
     def tick(self):
-        self.current += 5
-        self.random = np.roll(self.random, 5)
-
+        self.current += 10
+        self.flow = np.roll(self.flow, -10)
 
 class DisconGenerator:
     status = Status.DISCON
@@ -219,8 +227,8 @@ class PatientSensor(QtWidgets.QWidget):
 
         pen = pg.mkPen(color=(220, 220, 50), width=3)
 
-        self.upper = self.graph_flow.addLine(y=8, pen=pen)
-        self.lower = self.graph_flow.addLine(y=-2, pen=pen)
+        #self.upper = self.graph_flow.addLine(y=8, pen=pen)
+        #self.lower = self.graph_flow.addLine(y=-2, pen=pen)
 
     @Slot()
     def update_plot(self):
