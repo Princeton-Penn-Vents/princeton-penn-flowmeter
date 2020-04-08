@@ -159,18 +159,16 @@ class PatientSensor(QtWidgets.QWidget):
         lower.setLayout(lower_layout)
 
         self.info_strings = [
-            "MinFlow (L/m):",
-            "MaxFlow (L/m):",
+            "Something (L/m):",
             "AveMinFlow (L/m):",
-            "TimeWindow (s):",
             "AveFlow (L/m):",
             "CurrentFlow (L/m):",
         ]
 
         # dummy
-        self.info_vals = [12.2, 12.2, 12.2, 20.0, 12.2, 20.0]
+        self.info_vals = [12.2, 20.0, 12.2, 20.0]
 
-        nCols = 3
+        nCols = 2
         self.info_widgets = []
         self.val_widgets = []
         self.widget_lookup = {}
