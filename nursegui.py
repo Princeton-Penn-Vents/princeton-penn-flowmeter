@@ -61,8 +61,8 @@ class GraphicsView(pg.GraphicsView):
 
 
 class PatientSensor(QtWidgets.QWidget):
-    def __init__(self, i, *, ip, port):
-        super().__init__()
+    def __init__(self, i, *args, ip, port, **kwargs):
+        super().__init__(*args, **kwargs)
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -75,7 +75,7 @@ class PatientSensor(QtWidgets.QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         upper.setLayout(layout)
-        #upper.setStyleSheet("background-color: #FEFFCF;");
+        # upper.setStyleSheet("background-color: #FEFFCF;");
 
         graphview = GraphicsView(parent=self, i=i)
         graphlayout = pg.GraphicsLayout()
@@ -107,7 +107,7 @@ class PatientSensor(QtWidgets.QWidget):
         layout.addWidget(self.alert, 3)
 
         lower = QtWidgets.QWidget()
-        #lower.setStyleSheet("background-color: #FEFFCF;");
+        # lower.setStyleSheet("background-color: #FEFFCF;");
         outer_layout.addWidget(lower)
         lower_layout = QtWidgets.QGridLayout()
         lower.setLayout(lower_layout)
@@ -199,14 +199,9 @@ class PatientSensor(QtWidgets.QWidget):
             self.val_widgets[val].setText(str(int(v)))
 
 
-class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, ip, port, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-        self.setObjectName("MainWindow")
-        self.resize(1920, 1080)
-
-        # May be expensive, probably only enable if we multithread the draw
-        # pg.setConfigOptions(antialias=True)
+class PatientGrid(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(0)
@@ -216,20 +211,33 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(5):
             layout.setColumnStretch(i, 3)
 
-        self.centralwidget = QtWidgets.QWidget(self)
-        self.setObjectName("maingrid")
+        self.setLayout(layout)
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, *args, ip, port, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setObjectName("MainWindow")
+        self.resize(1920, 1080)
+
+        # May be expensive, probably only enable if we multithread the draw
+        # pg.setConfigOptions(antialias=True)
+        pg.setConfigOption("background", (0, 0, 0, 0))
 
         # Replace with proper importlib.resources if made a package
         with open(DIR / "nurse" / "style.css") as f:
             self.setStyleSheet(f.read())
 
-        self.setCentralWidget(self.centralwidget)
+        centralwidget = PatientGrid(self)
+        self.setCentralWidget(centralwidget)
 
-        self.centralwidget.setLayout(layout)
-
-        self.graphs = [PatientSensor(i, ip=ip, port=port) for i in range(20)]
+        self.graphs = [
+            PatientSensor(i, ip=ip, port=port, parent=centralwidget) for i in range(20)
+        ]
         for i, graph in enumerate(self.graphs):
-            layout.addWidget(self.graphs[i], *reversed(divmod(i, 4)))
+            self.centralWidget().layout().addWidget(
+                self.graphs[i], *reversed(divmod(i, 4))
+            )
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
