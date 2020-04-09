@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtWidgets, QtCore
+import signal
+
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
 
 import pyqtgraph as pg
@@ -261,13 +263,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close()
 
 
-def main(argv, *, ip, port, fullscreen):
+def _interrupt_handler(signum, frame):
+    QtGui.QApplication.quit()
+
+
+def main(argv, *, ip, port, fullscreen, no_display):
     app = QtWidgets.QApplication(argv)
     main = MainWindow(ip=ip, port=port)
-    if fullscreen:
-        main.showFullScreen()
+    if no_display:
+        # if there's no display, KeyboardInterrupt is the only way to quit
+        signal.signal(signal.SIGINT, _interrupt_handler)
     else:
-        main.show()
+        if fullscreen:
+            main.showFullScreen()
+        else:
+            main.show()
     sys.exit(app.exec_())
 
 
@@ -278,10 +288,12 @@ if __name__ == "__main__":
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
     parser.add_argument("--fullscreen", action="store_true")
+    parser.add_argument("--no-display", action="store_true")
     arg, unparsed_args = parser.parse_known_args()
     main(
         argv=sys.argv[:1] + unparsed_args,
         ip=arg.ip,
         port=arg.port,
         fullscreen=arg.fullscreen,
+        no_display=arg.no_display,
     )
