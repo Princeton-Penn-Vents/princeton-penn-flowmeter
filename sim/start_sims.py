@@ -12,7 +12,7 @@ def start_sims(nSim, start_time, sim_time):
         params = {}
         # 50% change of the patient breathing on their own
         if random.random() < 0.5:
-            params["breath_variation"] = 0.1
+            params["breath_variation"] = 100. #milliseconds
         params["tidal_volume"] = 0.5 + random.random() * 0.2
 
         sim = VentSim(start_time, sim_time, params)

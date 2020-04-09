@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def main(sim, timer):
-    d = sim.get_batch(60)  # one minute until nursing gui collects data
+    d = sim.get_batch(60000)  # one minute until nursing gui collects data
     # enrich with stuff that comes from the analysis
     d["alarms"] = {}
     # enrich with stuff that comes from the overall patient server
@@ -49,8 +49,8 @@ class OurServer:
 
     def __init__(self, args):
         self.done = False
-        self.start_time = datetime.now().timestamp()
-        self.sims = start_sims(args.n, self.start_time, 12000)
+        self.start_time = int(1000*datetime.now().timestamp()) #milliseconds
+        self.sims = start_sims(args.n, self.start_time, 12000000) #milliseconds
         ip = args.bind
 
         if args.n > 1:

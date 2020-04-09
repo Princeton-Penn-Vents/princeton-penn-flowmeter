@@ -11,8 +11,8 @@ def constant_compliance(**kwargs):
 class VentSim:
     def __init__(self, curr_time, sim_time_max, params={}):
         self.current_bin = 0
-        self.sampling_rate = params.get("sampling_rate", 50.0)
-        self.breathing_rate = params.get("breathing_rate", 13.0)
+        self.sample_length = params.get("sample_length", 20.0)
+        self.breathing_rate = params.get("breathing_rate", 13000.0)
         self.max_flow = params.get("max_flow", 12.0)
         self.tidal_volume = params.get("tidal_volume", 0.6)
         self.peep = params.get("peep", 4)
@@ -21,15 +21,15 @@ class VentSim:
         self.recovery_tau = params.get("recovery", 15)
         self.compliance_func = params.get("compliance_func", constant_compliance)
         self.v0 = params.get("starting_volume", 0.0)
-        self.breath_sigma = params.get("breath_variation", 1.0)
-        self.max_breath_interval = params.get("max_breath_interval", 15.0)
+        self.breath_sigma = params.get("breath_variation", 1000.0)
+        self.max_breath_interval = params.get("max_breath_interval", 15000.0)
 
         self.precompute()
 
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
-        self.times = np.arange(0, 1.2 * self.sim_time, 1.0 / self.sampling_rate)[
+        self.times = np.arange(0, 1.2 * self.sim_time, self.sample_length)[
             : len(self.flow)
         ]
         self.volume = self.nominal_volume()
@@ -68,15 +68,15 @@ class VentSim:
         # bins = int(self.sim_time * self.sampling_rate)
         bins = int(
             self.breath_starts[np.where(self.breath_starts > self.sim_time)][0]
-            * self.sampling_rate
+            / self.sample_length
         )
         flow = np.zeros(bins)
 
-        flow_start_bins = (self.breath_starts) * self.sampling_rate
+        flow_start_bins = (self.breath_starts) // self.sample_length
 
         # max_flow is in L/minute
-        flow_end_bins = flow_start_bins + self.tidal_volume * self.sampling_rate / (
-            self.max_flow / 60.0
+        flow_end_bins = flow_start_bins + self.tidal_volume / self.sample_length / (
+            self.max_flow / 60000.0
         )
 
         flow_start_bins = flow_start_bins.astype(int)
@@ -92,7 +92,8 @@ class VentSim:
 
         exp_zero_bins = flow_start_bins[1:]
         exp_min_bins = flow_end_bins[:-1]
-        times = np.arange(0, 1.2 * self.sim_time, 1.0 / self.sampling_rate)
+        times = np.arange(0, 1.2 * self.sim_time, self.sample_length)
+        #later times = times.astype(int)
 
         for i in range(len(exp_min_bins)):
             if exp_min_bins[i] < bins:
@@ -109,7 +110,7 @@ class VentSim:
         return flow
 
     def nominal_volume(self):
-        return np.cumsum(self.flow) * (1.0 / self.sampling_rate) + self.v0
+        return np.cumsum(self.flow) * (self.sample_length) + self.v0
 
     def nominal_pressure(self):
         # We can add **kwargs and join it with locals if we need to go further up the chain
@@ -125,7 +126,7 @@ class VentSim:
             self.extend()
         d = {
             "v": 1,
-            "t": self.curr_time + self.times[self.current_bin],
+            "t": int(self.curr_time + self.times[self.current_bin]),
             "F": self.flow[self.current_bin],
             "P": self.pressure[self.current_bin],
             "temp": 23.3,
@@ -134,7 +135,7 @@ class VentSim:
         return d
 
     def get_batch(self, nSeconds):
-        nbins = int(nSeconds * self.sampling_rate)
+        nbins = int(nSeconds / self.sample_length)
         if self.current_bin + nbins > len(self.times):
             self.extend()
 
@@ -146,7 +147,7 @@ class VentSim:
                 "timestamps": (
                     self.curr_time
                     + self.times[self.current_bin : self.current_bin + nbins]
-                ).tolist(),
+                ).astype(int).tolist(),
                 "flows": self.flow[
                     self.current_bin : self.current_bin + nbins
                 ].tolist(),
@@ -160,7 +161,7 @@ class VentSim:
         return d
 
     def get_all(self):
-        return self.times, self.flow, self.volume, self.pressure
+        return self.times.astype(int), self.flow, self.volume, self.pressure
 
 
 if __name__ == "__main__":
@@ -170,10 +171,10 @@ if __name__ == "__main__":
 
     from datetime import datetime
 
-    now_time = datetime.now().timestamp()
+    now_time = 1000*datetime.now().timestamp()
     print(now_time)
 
-    simulator = VentSim(now_time, 1200)
+    simulator = VentSim(now_time, 1200000)
     for i in range(0, 10):
         print(simulator.get_next())
 

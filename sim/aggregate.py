@@ -25,13 +25,13 @@ if __name__ == "__main__":
 
     from datetime import datetime
 
-    now_time = datetime.now().timestamp()
+    now_time = int(1000*datetime.now().timestamp())
 
-    sim = VentSim(now_time, 1000)
+    sim = VentSim(now_time, 1000000)
     jsons = []
-    for i in range(100):
+    for i in range(3000):
         d = sim.get_next()
         jsons.append(json.dumps(d).encode("ascii"))
     output = aggregate_for_nursing(now_time, jsons)
-
+    print(len(output))
     print(json.loads(output))
