@@ -3,6 +3,7 @@ import enum
 import json
 import numpy as np
 import requests
+import nurse.analysis
 from sim.rolling import Rolling, new_elements
 from sim.start_sims import start_sims
 from datetime import datetime
@@ -78,7 +79,7 @@ class LocalGenerator(Generator):
         self._volume.inject(volume[-to_add:])
 
     def analyze(self):
-        pass
+        nurse.analysis.analyze(self)
 
     @property
     def flow(self):
@@ -97,7 +98,7 @@ class LocalGenerator(Generator):
         if len(self._time) > 0:
             return -(np.asarray(self._time) - self._time[-1]) / 1000
         else:
-            return []
+            return np.array([])
 
 
 class RemoteGenerator(Generator):
