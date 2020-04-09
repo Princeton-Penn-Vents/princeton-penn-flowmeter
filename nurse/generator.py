@@ -4,6 +4,8 @@ import json
 import numpy as np
 import requests
 from sim.rolling import Rolling, new_elements
+from sim.start_sims import start_sims
+from datetime import datetime
 
 
 class Status(enum.Enum):
@@ -52,48 +54,50 @@ class Generator(abc.ABC):
 class LocalGenerator(Generator):
     def __init__(self, status: Status):
         self.status = status
-        self.current = 0
-        ramp = np.array(
-            [0.1, 0.8807970779778823, 0.96, 0.9975273768433653, 0.9996646498695336]
-        )
-        decay = -1.0 * np.exp(-1.0 * np.arange(0, 3, 0.03))
-        breath = 10 * np.concatenate(
-            (ramp, np.full(35, 1), np.flip(ramp), -1.0 * ramp, decay)
-        )
-        self._flow = np.concatenate((breath, breath, breath, breath, breath, breath))
-        self._flow = self._flow * np.random.uniform(0.98, 1.02, len(self._flow))
-        self._time = np.arange(0, len(self._flow), 1)
-        self.axistime = np.flip(self._time / 50)  # ticks per second
-        # Ramp up to 500ml in 50 ticks, then simple ramp down in 100
-        tvolume = np.concatenate((10 * np.arange(0, 50, 1), 5 * np.arange(100, 0, -1)))
-        self._volume = np.concatenate(
-            (tvolume, tvolume, tvolume, tvolume, tvolume, tvolume)
-        )
-        self._volume = self._volume * np.random.uniform(0.98, 1.02, len(self._volume))
+
+        self._time = Rolling(window_size=30 * 50)
+        self._flow = Rolling(window_size=30 * 50)
+        self._pressure = Rolling(window_size=30 * 50)
+        self._volume = Rolling(window_size=30 * 50)
+
+        self._start_time = int(1000 * datetime.now().timestamp())
+        (self._sim,) = start_sims(1, self._start_time, 12000000)
 
     def get_data(self):
-        self.current += 10
-        self._flow = np.roll(self._flow, -10)
-        self._volume = np.roll(self._volume, -10)
+        t = int(datetime.now().timestamp()*1000)
+        root = self._sim.get_from_timestamp(t, 5000)
+        time = root["data"]["timestamps"]
+        flow = root["data"]["flows"]
+        pressure = root["data"]["pressures"]
+        volume = self._pressure
+
+        to_add = new_elements(self._time, time)
+        self._time.inject(time[-to_add:])
+        self._flow.inject(flow[-to_add:])
+        self._pressure.inject(pressure[-to_add:])
+        self._volume.inject(volume[-to_add:])
 
     def analyze(self):
         pass
 
     @property
     def flow(self):
-        return self._flow * (0.6 if self.status == Status.ALERT else 1)
+        return np.asarray(self._flow) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def volume(self):
-        return self._volume * (0.6 if self.status == Status.ALERT else 1)
+        return np.asarray(self._volume) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def pressure(self):
-        return self._volume * (0.6 if self.status == Status.ALERT else 1)
+        return np.asarray(self._pressure) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def time(self):
-        return self.axistime
+        if len(self._time) > 0:
+            return -(np.asarray(self._time) - self._time[-1]) / 1000
+        else:
+            return []
 
 
 class RemoteGenerator(Generator):
@@ -105,10 +109,10 @@ class RemoteGenerator(Generator):
         else:
             self.status = Status.DISCON
 
-        self._time = Rolling(window_size=30*50)
-        self._flow = Rolling(window_size=30*50)
-        self._pressure= Rolling(window_size=30*50)
-        self._volume= Rolling(window_size=30*50)
+        self._time = Rolling(window_size=30 * 50)
+        self._flow = Rolling(window_size=30 * 50)
+        self._pressure = Rolling(window_size=30 * 50)
+        self._volume = Rolling(window_size=30 * 50)
 
     def get_data(self):
         # If no valid port, don't try (disconnected)
