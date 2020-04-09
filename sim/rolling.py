@@ -97,6 +97,9 @@ def new_elements(rolling, addition):
     that are past the end of the first array.
     """
 
+    if len(rolling) < 1:
+        return len(addition)
+
     final_value = rolling[-1]
     ind = np.searchsorted(addition, final_value)
     if ind == len(addition):

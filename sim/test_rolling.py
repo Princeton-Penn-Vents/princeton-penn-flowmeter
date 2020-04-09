@@ -109,3 +109,6 @@ def test_new_elements():
     assert new_elements(r, [2, 3]) <= 0
     assert new_elements(r, [8, 9]) == 2
     assert new_elements(r, [3, 8, 9]) == 2
+
+    r = Rolling(window_size=5)
+    assert new_elements(r, [3, 8, 9]) == 3
