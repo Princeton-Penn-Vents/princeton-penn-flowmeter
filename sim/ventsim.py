@@ -110,7 +110,7 @@ class VentSim:
         return flow
 
     def nominal_volume(self):
-        return np.cumsum(self.flow) * (self.sample_length / 1000.) + self.v0
+        return np.cumsum(self.flow) * (self.sample_length / 1000.0) + self.v0
 
     def nominal_pressure(self):
         # We can add **kwargs and join it with locals if we need to go further up the chain
