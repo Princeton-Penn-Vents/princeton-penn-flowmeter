@@ -191,7 +191,9 @@ class RemoteGenerator(Generator):
         if self.status is Status.DISCON:
             return []
         if len(self._time) > 0:
-            return -(np.asarray(self._time)/1000 - datetime.now().timestamp())
+            return -(
+                (np.asarray(self._time) - self.time[-1]) / 1000
+            )  # Could be datetime.now().timestamp() if clocks accurate, but oddly doesn't work on the pi. Maybe another truncation issue.
 
     def close(self):
         self._thread.signal_end.set()
