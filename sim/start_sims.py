@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .sim import VentSim
+from .ventsim import VentSim
 import random
 
 

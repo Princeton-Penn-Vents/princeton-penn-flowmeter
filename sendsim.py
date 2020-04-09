@@ -7,7 +7,7 @@ import argparse
 import json
 from datetime import datetime
 from functools import partial
-from start_sims import start_sims
+from sim.start_sims import start_sims
 from concurrent.futures import ThreadPoolExecutor
 
 

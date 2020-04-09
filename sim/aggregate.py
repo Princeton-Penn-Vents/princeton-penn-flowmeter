@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import json
 
 
@@ -21,7 +21,7 @@ def aggregate_for_nursing(time_stamp, jsons):
 
 
 if __name__ == "__main__":
-    from sim import VentSim
+    from ventsim import VentSim
 
     from datetime import datetime
 
