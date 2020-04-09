@@ -171,9 +171,9 @@ class PatientSensor(QtWidgets.QWidget):
         self.curve_volume = self.graph_volume.plot(
             self.flow.time, self.flow.volume, pen=pen
         )
-        self.graph_flow.setRange(xRange=(-30, 0))
-        self.graph_pressure.setRange(xRange=(-30, 0))
-        self.graph_volume.setRange(xRange=(-30, 0))
+        self.graph_flow.setRange(xRange=(30, 0))
+        self.graph_pressure.setRange(xRange=(30, 0))
+        self.graph_volume.setRange(xRange=(30, 0))
 
         self.graph_flow.setXLink(self.graph_pressure)
         self.graph_flow.setXLink(self.graph_volume)

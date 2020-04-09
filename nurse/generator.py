@@ -153,5 +153,4 @@ class RemoteGenerator(Generator):
         if self.status is Status.DISCON:
             return []
         if len(self._time) > 0:
-            print(self._time)
-            return (np.asarray(self._time) - self._time[-1]) / 1000
+            return -(np.asarray(self._time) - self._time[-1]) / 1000
