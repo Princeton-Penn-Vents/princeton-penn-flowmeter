@@ -12,8 +12,8 @@ class VentSim:
     def __init__(self, curr_time, sim_time_max, params={}):
         self.current_bin = 0
         self.sample_length = params.get("sample_length", 20.0)
-        self.breathing_rate = params.get("breathing_rate", 13000.0)
-        self.max_flow = params.get("max_flow", 12.0)
+        self.breath_interval = params.get("breath_interval", 7000.0)
+        self.max_flow = params.get("max_flow", 15.0)
         self.tidal_volume = params.get("tidal_volume", 0.6)
         self.peep = params.get("peep", 4)
         self.curr_time = curr_time
@@ -21,8 +21,8 @@ class VentSim:
         self.recovery_tau = params.get("recovery", 15)
         self.compliance_func = params.get("compliance_func", constant_compliance)
         self.v0 = params.get("starting_volume", 0.0)
-        self.breath_sigma = params.get("breath_variation", 1000.0)
-        self.max_breath_interval = params.get("max_breath_interval", 15000.0)
+        self.breath_sigma = params.get("breath_variation", 300.0)
+        self.max_breath_interval = params.get("max_breath_interval", 9000.0)
 
         self.precompute()
 
@@ -47,10 +47,10 @@ class VentSim:
         """
 
         max_breaths = (
-            1.2 * self.sim_time / self.breathing_rate
+            1.2 * self.sim_time / self.breath_interval
         )  # safety margin for fluctuating this later
         deltas = np.random.normal(
-            self.breathing_rate, self.breath_sigma, int(max_breaths)
+            self.breath_interval, self.breath_sigma, int(max_breaths)
         )
         deltas = np.minimum(deltas, self.max_breath_interval)
         breath_starts = np.append(
@@ -134,8 +134,8 @@ class VentSim:
         self.current_bin += 1
         return d
 
-    def get_batch(self, nSeconds):
-        nbins = int(nSeconds / self.sample_length)
+    def get_batch(self, nMilliSeconds):
+        nbins = int(nMilliSeconds / self.sample_length)
         if self.current_bin + nbins > len(self.times):
             self.extend()
 
@@ -163,6 +163,34 @@ class VentSim:
     def get_all(self):
         return self.times.astype(int), self.flow, self.volume, self.pressure
 
+    def get_from_timestamp(self,t,nMilliSeconds):
+        lbin=np.searchsorted(self.times,t-self.curr_time,side="left")
+        if lbin == len(self.times):
+            self.extend()
+            lbin=np.searchsorted(self.times,t-self.curr_time,side="left")
+            assert lbin==len(self.times), "something wrong in timestamps - or use more simulation chunks"
+                
+        nbins= int(nMilliSeconds / self.sample_length)
+        if lbin<nbins:
+            fbin=0
+        else:
+            fbin=lbin-nbins
+
+        d = {
+            "version": 1,
+            "source": "simulation",
+            "parameters": {},
+            "data": {
+                "timestamps": (
+                    self.curr_time
+                    + self.times[fbin:lbin]
+                ).astype(int).tolist(),
+                "flows": self.flow[fbin:lbin].tolist(),
+                "pressures": self.pressure[fbin:lbin].tolist(),
+            },
+        }
+        return d
+                
 
 if __name__ == "__main__":
 
@@ -178,6 +206,12 @@ if __name__ == "__main__":
     for i in range(0, 10):
         print(simulator.get_next())
 
+    import time
+    print("testing get from timestamp features")
+    
+    time.sleep(5)
+    d = simulator.get_from_timestamp(1000*datetime.now().timestamp(),10000)
+    print(len(d["data"]["timestamps"]))
     time, flow, volume, pressure = simulator.get_all()
 
     fig = plt.figure()
