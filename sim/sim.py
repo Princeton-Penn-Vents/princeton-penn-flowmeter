@@ -29,7 +29,7 @@ class VentSim:
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
-        self.times = np.arange(0, 1.2 * self.sim_time, self.sample_length)[
+        self.times = np.arange(0, 1.2 * self.sim_time, self.sample_length, dtype=np.int64)[
             : len(self.flow)
         ]
         self.volume = self.nominal_volume()
