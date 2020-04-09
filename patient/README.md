@@ -1,7 +1,7 @@
 ## Scripts for running simulation in patient mode
 python3 patient_sim.py | python3 read_patient_sim.py
 
-patient_sim.py reads simulation data at real-time speed, sends it via json to stdout
+patient_sim.py reads simulation data at pseudo real-time speed, sends it via json to stdout. This runs for 40 seconds and then stops.
 read_patient_sim.py reads stdin picks up the jsons that are sensor data and adds them to rolling buffers
 
 ## Data format (sensor -> patient event loop):
