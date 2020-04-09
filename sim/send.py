@@ -62,7 +62,6 @@ class OurServer:
 
         else:
             port = args.port
-            print(f"Serving on http://{ip}:{port}")
             server_address = (ip, port)
             self.serve_on_port(server_address, 0)
 

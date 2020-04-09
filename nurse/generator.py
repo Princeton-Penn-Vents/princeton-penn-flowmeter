@@ -3,6 +3,7 @@ import enum
 import json
 import numpy as np
 import requests
+from sim.rolling import Rolling, new_elements
 
 
 class Status(enum.Enum):
@@ -104,6 +105,11 @@ class RemoteGenerator(Generator):
         else:
             self.status = Status.DISCON
 
+        self._time = Rolling(window_size=30*50)
+        self._flow = Rolling(window_size=30*50)
+        self._pressure= Rolling(window_size=30*50)
+        self._volume= Rolling(window_size=30*50)
+
     def get_data(self):
         # If no valid port, don't try (disconnected)
         if self.port is None:
@@ -116,26 +122,36 @@ class RemoteGenerator(Generator):
             return
 
         root = json.loads(r.text)
-        self._time = np.asarray(root["data"]["timestamps"])
-        self._flow = np.asarray(root["data"]["flows"])
-        self._pressure = np.asarray(root["data"]["pressures"])
-        self._volume = self._pressure
+        time = np.asarray(root["data"]["timestamps"])
+        flow = np.asarray(root["data"]["flows"])
+        pressure = np.asarray(root["data"]["pressures"])
+        volume = self._pressure
+
+        to_add = new_elements(self._time, time)
+        self._time.inject(time[-to_add:])
+        self._flow.inject(flow[-to_add:])
+        self._pressure.inject(pressure[-to_add:])
+        self._volume.inject(volume[-to_add:])
 
     def analyze(self):
         pass
 
     @property
     def flow(self):
-        return self._flow if self.status is not Status.DISCON else []
+        return np.asarray(self._flow) if self.status is not Status.DISCON else []
 
     @property
     def volume(self):
-        return self._volume if self.status is not Status.DISCON else []
+        return np.asarray(self._volume) if self.status is not Status.DISCON else []
 
     @property
     def pressure(self):
-        return self._pressure if self.status is not Status.DISCON else []
+        return np.asarray(self._pressure) if self.status is not Status.DISCON else []
 
     @property
     def time(self):
-        return self._time if self.status is not Status.DISCON else []
+        if self.status is Status.DISCON:
+            return []
+        if len(self._time) > 0:
+            print(self._time)
+            return (np.asarray(self._time) - self._time[-1]) / 1000
