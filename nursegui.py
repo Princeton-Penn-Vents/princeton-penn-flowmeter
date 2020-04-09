@@ -260,6 +260,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
+    def closeEvent(self, event):
+        for graph in self.graphs:
+            graph.flow.close()
+        super().closeEvent(event)
+
 
 def main(argv, *, ip, port, fullscreen):
     app = QtWidgets.QApplication(argv)

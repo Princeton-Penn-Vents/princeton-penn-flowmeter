@@ -1,11 +1,14 @@
+from datetime import datetime
 import abc
 import enum
 import json
 import numpy as np
 import requests
+import threading
+import time
+
 from sim.rolling import Rolling, new_elements
 from sim.start_sims import start_sims
-from datetime import datetime
 
 
 class Status(enum.Enum):
@@ -21,12 +24,68 @@ COLOR = {
 }
 
 
+class GeneratorThread(threading.Thread):
+    def __init__(self, address):
+        self._address = address
+
+        self._time = Rolling(window_size=30 * 50)
+        self._flow = Rolling(window_size=30 * 50)
+        self._pressure = Rolling(window_size=30 * 50)
+        self._volume = Rolling(window_size=30 * 50)
+
+        self._lock = threading.Lock()
+
+        self.signal_end = threading.Event()
+        self.status = Status.DISCON
+
+        super().__init__()
+
+    def run(self):
+        # If no valid port, don't try (disconnected)
+        if self._address is None:
+            return
+
+        while not self.signal_end.is_set():
+            try:
+                r = requests.get(self._address)
+            except requests.exceptions.ConnectionError:
+                with self._lock:
+                    self.status = Status.DISCON
+                return
+
+            root = json.loads(r.text)
+            times = np.asarray(root["data"]["timestamps"])
+            flow = np.asarray(root["data"]["flows"])
+            pressure = np.asarray(root["data"]["pressures"])
+            volume = self._pressure
+
+            with self._lock:
+                if self.status == Status.DISCON:
+                    self.status = Status.OK
+                to_add = new_elements(self._time, times)
+                self._time.inject(times[-to_add:])
+                self._flow.inject(flow[-to_add:])
+                self._pressure.inject(pressure[-to_add:])
+                self._volume.inject(volume[-to_add:])
+
+            time.sleep(1)
+
+    def get_data(self):
+        with self._lock:
+            return (
+                self.status,
+                np.asarray(self._time).copy(),
+                np.asarray(self._flow).copy(),
+                np.asarray(self._pressure).copy(),
+                np.asarray(self._volume).copy(),
+            )
+
+
 class Generator(abc.ABC):
     @abc.abstractmethod
     def get_data(self):
         pass
 
-    @abc.abstractmethod
     def analyze(self):
         pass
 
@@ -50,6 +109,9 @@ class Generator(abc.ABC):
     def volume(self):
         pass
 
+    def close(self):
+        pass
+
 
 class LocalGenerator(Generator):
     def __init__(self, status: Status):
@@ -64,7 +126,7 @@ class LocalGenerator(Generator):
         (self._sim,) = start_sims(1, self._start_time, 12000000)
 
     def get_data(self):
-        t = int(datetime.now().timestamp()*1000)
+        t = int(datetime.now().timestamp() * 1000)
         root = self._sim.get_from_timestamp(t, 5000)
         time = root["data"]["timestamps"]
         flow = root["data"]["flows"]
@@ -76,9 +138,6 @@ class LocalGenerator(Generator):
         self._flow.inject(flow[-to_add:])
         self._pressure.inject(pressure[-to_add:])
         self._volume.inject(volume[-to_add:])
-
-    def analyze(self):
-        pass
 
     @property
     def flow(self):
@@ -102,43 +161,18 @@ class LocalGenerator(Generator):
 
 class RemoteGenerator(Generator):
     def __init__(self, *, ip="127.0.0.1", port=None):
-        self.ip = ip
-        self.port = port
-        if port is not None:
-            self.status = Status.OK
-        else:
-            self.status = Status.DISCON
-
-        self._time = Rolling(window_size=30 * 50)
-        self._flow = Rolling(window_size=30 * 50)
-        self._pressure = Rolling(window_size=30 * 50)
-        self._volume = Rolling(window_size=30 * 50)
+        self._thread = GeneratorThread(address=f"http://{ip}:{port}")
+        self._thread.start()
+        self.status = Status.DISCON
 
     def get_data(self):
-        # If no valid port, don't try (disconnected)
-        if self.port is None:
-            return
-
-        try:
-            r = requests.get(f"http://{self.ip}:{self.port}")
-        except requests.exceptions.ConnectionError:
-            self.status = Status.DISCON
-            return
-
-        root = json.loads(r.text)
-        time = np.asarray(root["data"]["timestamps"])
-        flow = np.asarray(root["data"]["flows"])
-        pressure = np.asarray(root["data"]["pressures"])
-        volume = self._pressure
-
-        to_add = new_elements(self._time, time)
-        self._time.inject(time[-to_add:])
-        self._flow.inject(flow[-to_add:])
-        self._pressure.inject(pressure[-to_add:])
-        self._volume.inject(volume[-to_add:])
-
-    def analyze(self):
-        pass
+        (
+            self.status,
+            self._time,
+            self._flow,
+            self._pressure,
+            self._volume,
+        ) = self._thread.get_data()
 
     @property
     def flow(self):
@@ -158,3 +192,6 @@ class RemoteGenerator(Generator):
             return []
         if len(self._time) > 0:
             return -(np.asarray(self._time) - self._time[-1]) / 1000
+
+    def close(self):
+        self._thread.signal_end.set()
