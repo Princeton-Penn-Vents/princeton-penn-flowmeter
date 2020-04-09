@@ -68,47 +68,6 @@ pi.callback(pinSW, pigpio.FALLING_EDGE, rotarySW_callback)
 # PEC16 rotary end of setup
 # ------------------
 # ------------------
-# LCD display setup
-# ------------------
-# check devices with sudo i2cdetect -y 1 (or -y <port>) makes a grid of addresses
-# I2CbusLCD = 1
-# Get I2C bus
-# busLCD = smbus.SMBus(I2CbusLCD)
-# DEVICE_LCD_Slave = 0x78
-# busLCD.write_byte(DEVICE_LCD_Slave)
-# Comsend = 0x00
-# busLCD.write_byte(Comsend)
-# busLCD.write_byte(0x38)
-# time.sleep(0.01)
-# busLCD.write_byte(0x39)
-# time.sleep(0.01)
-# busLCD.write_byte(0x14)
-# busLCD.write_byte(0x78)
-# busLCD.write_byte(0x5E)
-# busLCD.write_byte(0x6D)
-# busLCD.write_byte(0x0C)
-# busLCD.write_byte(0x01)
-# busLCD.write_byte(0x06)
-# time.sleep(0.01)
-# Datasend = 0x40
-# vals = [
-#    0b01001000,
-#    0b01000101,
-#    0b01001100,
-#    0b01001100,
-#    0b00100000,
-#    0b01010111,
-#    0b01001111,
-#    0b01010010,
-#    0b01001100,
-#    0b01000100,
-#    0b00100001,
-# ]
-# busLCD.write_i2c_block_data(DEVICE_LCD_Slave, Datasend, vals)
-# ------------------
-# LCD display end of setup
-# ------------------
-# ------------------
 # RBG backlight display setup
 # ------------------
 # setup pins for RGB backlight
@@ -132,3 +91,5 @@ while True:
     signal.pause()
     # time.sleep(1)  # 1 second
     # update display with alarmThreshold1 and setThreshold1 status
+
+pi.stop()
