@@ -12,11 +12,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def main(sim, timer):
-    d = sim.get_batch(60000)  # one minute until nursing gui collects data
+    t_now=int(1000*datetime.now().timestamp())
+    d = sim.get_from_timestamp(t_now,5000)
     # enrich with stuff that comes from the analysis
     d["alarms"] = {}
     # enrich with stuff that comes from the overall patient server
-    d["time"] = d["data"]["timestamps"][-1]
+    d["time"] = t_now
     return json.dumps(d).encode("ascii")
 
 
