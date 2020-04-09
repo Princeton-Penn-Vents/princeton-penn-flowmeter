@@ -29,7 +29,8 @@ git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
 cd princeton-penn-flowmeter
 sudo apt update
 sudo apt upgrade
-sudo apt install python3-pyqt5 # Required on the base system, included in NOOBs
-sudo apt install vim # for my sanity
-sudo python3 -m pip install pyqtgraph
+sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
+sudo apt install vim # for my sanity for development
+sudo python3 -m pip install pyqtgraph pyzmq
+python3 -m pip install black pytest # Useful for development, skip for productoin
 ```

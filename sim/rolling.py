@@ -2,8 +2,14 @@ import numpy as np
 
 
 class Rolling:
-    def __init__(self, init=None, *, window_size):
-        self._values = np.empty((window_size * 2,), dtype=np.double)
+    def __init__(self, init=None, *, window_size, dtype=None):
+        if dtype is None:
+            if init:
+                dtype = np.asarray(init).dtype
+            else:
+                dtype = np.double
+
+        self._values = np.empty((window_size * 2,), dtype=dtype)
         self._start = 0
         self._window_size = window_size
         self._current_size = 0
