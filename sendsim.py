@@ -12,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def main(sim, timer):
-    t_now=int(1000*datetime.now().timestamp())
-    d = sim.get_from_timestamp(t_now,5000)
+    t_now = int(1000 * datetime.now().timestamp())
+    d = sim.get_from_timestamp(t_now, 5000)
     # enrich with stuff that comes from the analysis
     d["alarms"] = {}
     # enrich with stuff that comes from the overall patient server
@@ -50,8 +50,8 @@ class OurServer:
 
     def __init__(self, args):
         self.done = False
-        self.start_time = int(1000*datetime.now().timestamp()) #milliseconds
-        self.sims = start_sims(args.n, self.start_time, 12000000) #milliseconds
+        self.start_time = int(1000 * datetime.now().timestamp())  # milliseconds
+        self.sims = start_sims(args.n, self.start_time, 12000000)  # milliseconds
         ip = args.bind
 
         if args.n > 1:

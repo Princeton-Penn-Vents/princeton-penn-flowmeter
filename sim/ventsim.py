@@ -29,9 +29,9 @@ class VentSim:
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
-        self.times = np.arange(0, 1.2 * self.sim_time, self.sample_length, dtype=np.int64)[
-            : len(self.flow)
-        ]
+        self.times = np.arange(
+            0, 1.2 * self.sim_time, self.sample_length, dtype=np.int64
+        )[: len(self.flow)]
         self.volume = self.nominal_volume()
         self.pressure = self.nominal_pressure()
 
@@ -93,7 +93,7 @@ class VentSim:
         exp_zero_bins = flow_start_bins[1:]
         exp_min_bins = flow_end_bins[:-1]
         times = np.arange(0, 1.2 * self.sim_time, self.sample_length)
-        #later times = times.astype(int)
+        # later times = times.astype(int)
 
         for i in range(len(exp_min_bins)):
             if exp_min_bins[i] < bins:
@@ -147,7 +147,9 @@ class VentSim:
                 "timestamps": (
                     self.curr_time
                     + self.times[self.current_bin : self.current_bin + nbins]
-                ).astype(int).tolist(),
+                )
+                .astype(int)
+                .tolist(),
                 "flows": self.flow[
                     self.current_bin : self.current_bin + nbins
                 ].tolist(),
@@ -163,34 +165,35 @@ class VentSim:
     def get_all(self):
         return self.times.astype(int), self.flow, self.volume, self.pressure
 
-    def get_from_timestamp(self,t,nMilliSeconds):
-        lbin=np.searchsorted(self.times,t-self.curr_time,side="left")
+    def get_from_timestamp(self, t, nMilliSeconds):
+        lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
         if lbin == len(self.times):
             self.extend()
-            lbin=np.searchsorted(self.times,t-self.curr_time,side="left")
-            assert lbin==len(self.times), "something wrong in timestamps - or use more simulation chunks"
-                
-        nbins= int(nMilliSeconds / self.sample_length)
-        if lbin<nbins:
-            fbin=0
+            lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
+            assert lbin == len(
+                self.times
+            ), "something wrong in timestamps - or use more simulation chunks"
+
+        nbins = int(nMilliSeconds / self.sample_length)
+        if lbin < nbins:
+            fbin = 0
         else:
-            fbin=lbin-nbins
+            fbin = lbin - nbins
 
         d = {
             "version": 1,
             "source": "simulation",
             "parameters": {},
             "data": {
-                "timestamps": (
-                    self.curr_time
-                    + self.times[fbin:lbin]
-                ).astype(int).tolist(),
+                "timestamps": (self.curr_time + self.times[fbin:lbin])
+                .astype(int)
+                .tolist(),
                 "flows": self.flow[fbin:lbin].tolist(),
                 "pressures": self.pressure[fbin:lbin].tolist(),
             },
         }
         return d
-                
+
 
 if __name__ == "__main__":
 
@@ -199,7 +202,7 @@ if __name__ == "__main__":
 
     from datetime import datetime
 
-    now_time = 1000*datetime.now().timestamp()
+    now_time = 1000 * datetime.now().timestamp()
     print(now_time)
 
     simulator = VentSim(now_time, 1200000)
@@ -207,10 +210,11 @@ if __name__ == "__main__":
         print(simulator.get_next())
 
     import time
+
     print("testing get from timestamp features")
-    
+
     time.sleep(5)
-    d = simulator.get_from_timestamp(1000*datetime.now().timestamp(),10000)
+    d = simulator.get_from_timestamp(1000 * datetime.now().timestamp(), 10000)
     print(len(d["data"]["timestamps"]))
     time, flow, volume, pressure = simulator.get_all()
 

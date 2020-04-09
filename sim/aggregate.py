@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     from datetime import datetime
 
-    now_time = int(1000*datetime.now().timestamp())
+    now_time = int(1000 * datetime.now().timestamp())
 
     sim = VentSim(now_time, 1000000)
     jsons = []
