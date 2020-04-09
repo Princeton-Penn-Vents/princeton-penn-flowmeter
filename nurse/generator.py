@@ -28,7 +28,7 @@ class GeneratorThread(threading.Thread):
     def __init__(self, address):
         self._address = address
 
-        self._time = Rolling(window_size=30 * 50)
+        self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
         self._volume = Rolling(window_size=30 * 50)
@@ -117,7 +117,7 @@ class LocalGenerator(Generator):
     def __init__(self, status: Status):
         self.status = status
 
-        self._time = Rolling(window_size=30 * 50)
+        self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
         self._volume = Rolling(window_size=30 * 50)

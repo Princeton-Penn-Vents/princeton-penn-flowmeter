@@ -24,6 +24,10 @@ Open the settings (Raspberry menu -> `Preferences` -> `Raspberry Pi Configuratio
 In the display tab, select "Disable" for `Screen Blanking`. Check the Interfaces tab to
 see if there is anything you want to enable.
 
+For a patient box, you need: I2C enabled, SPI enabled, GPIO enabled.
+
+
+
 ```bash
 git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
 cd princeton-penn-flowmeter
@@ -33,4 +37,36 @@ sudo apt install python3-pyqt5 python3-zmq # Required on the base system, includ
 sudo apt install vim # for my sanity for development
 sudo python3 -m pip install pyqtgraph pyzmq
 python3 -m pip install black pytest # Useful for development, skip for productoin
+```
+
+
+--- 
+
+## Patient box
+
+#### pigpio requires:
+
+```bash
+sudo apt-get update (before install, if needed)
+sudo apt-get install pigpio python-pigpio python3-pigpio (install once)
+sudo pigpiod (on each boot)
+sudo killall pigpiod (for cleanup, if needed)
+import pigpio
+```
+
+#### smbus requires:
+
+```bash
+# or manually sudo vi /etc/modprobe.d/raspi-blacklist.conf
+# the underlying device is the i2c-bcm2708 (comment out blacklist)
+sudo apt-get install i2c-tools
+sudo install python-smbus
+import smbus
+```
+
+#### spidev requires:
+
+```bash
+lsmod | grep spi (check that spidev and spi_bcm2708 are running)
+spidev is there by default
 ```
