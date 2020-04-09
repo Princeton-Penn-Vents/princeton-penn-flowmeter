@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 from functools import partial
 from start_sims import start_sims
-from threading import Thread
+from concurrent.futures import ThreadPoolExecutor
 
 
 def main(sim, timer):
@@ -42,6 +42,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 class OurServer:
     def serve_on_port(self, server_address, i):
+        print(f"Serving on http://{server_address[0]}:{server_address[1]}")
         self.handler = partial(Handler, self, i)
         self.httpd = http.server.ThreadingHTTPServer(server_address, self.handler)
         self.httpd.serve_forever()
@@ -53,18 +54,10 @@ class OurServer:
         ip = args.bind
 
         if args.n > 1:
-            pool = []
-            for i in range(args.n):
-                port = args.port + i
-                print(f"Serving on http://{ip}:{port}")
-                server_address = (ip, port)
-                pool.append(Thread(target=self.serve_on_port, args=[server_address, i]))
-
-            for t in pool:
-                t.start()
-
-            for t in pool:
-                t.join()
+            print("Serving; press Control-C multiple times to quit")
+            addresses = ((ip, args.port + i) for i in range(args.n))
+            with ThreadPoolExecutor(max_workers=args.n) as e:
+                e.map(self.serve_on_port, addresses, range(args.n))
 
         else:
             port = args.port
@@ -76,7 +69,9 @@ class OurServer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
-    parser.add_argument("--bind", default="0.0.0.0", help="Binding address (default: all)")
+    parser.add_argument(
+        "--bind", default="0.0.0.0", help="Binding address (default: all)"
+    )
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
     args = parser.parse_args()
     print(args)
