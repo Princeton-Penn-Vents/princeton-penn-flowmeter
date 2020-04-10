@@ -100,7 +100,7 @@ print("{} {:.4f} {:.4f}".format(time.time(), (float)(dp / dpsf), (float)(temp / 
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
     #  global dpsf
-    ts = time.time()
+    ts = int(1000 * time.time())
     nbytes = 3
     tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
     btmpdataSDP3 = tmpdataSDP3[1]

@@ -4,12 +4,13 @@ import http.server
 import json
 from datetime import datetime
 
-from patient.rotarty_lcd import RotaryLCD
+from patient.rotary import DICT
+from patient.rotary_lcd import RotaryLCD
 from patient.collector import Collector
 from sim.rolling import get_last
 
 # Initialize LCD
-rotary = RotaryLCD()
+rotary = RotaryLCD(DICT)
 rotary.display()
 
 # Initialize Collector
@@ -49,5 +50,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(prepare()))
 
 
+server_address = ("0.0.0.0", 8100)
 httpd = http.server.ThreadingHTTPServer(server_address, Handler)
 httpd.serve_forever()
