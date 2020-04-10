@@ -23,6 +23,7 @@ AlertWidget[status="OK"] > QPushButton {
   height: 80px;
   width: 16px;
   padding: 2px;
+  border: none;
 }
 
 AlertWidget[status="ALERT"] > QPushButton {
@@ -33,6 +34,7 @@ AlertWidget[status="ALERT"] > QPushButton {
   height: 80px;
   width: 16px;
   padding: 2px;
+  border: none;
 }
 
 AlertWidget[status="DISCON"] > QPushButton {
@@ -43,6 +45,7 @@ AlertWidget[status="DISCON"] > QPushButton {
   height: 80px;
   width: 16px;
   padding: 2px;
+  border: none;
 }
 
 AlertWidget[status="OK"] > QLabel {

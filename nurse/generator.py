@@ -1,6 +1,7 @@
 import abc
 import enum
 
+import nurse.analysis
 
 class Status(enum.Enum):
     OK = enum.auto()
@@ -21,7 +22,7 @@ class Generator(abc.ABC):
         pass
 
     def analyze(self):
-        pass
+        self._breaths = nurse.analysis.measure_breaths(self)
 
     @property
     @abc.abstractmethod
