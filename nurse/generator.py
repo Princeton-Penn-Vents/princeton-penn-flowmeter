@@ -31,7 +31,7 @@ class Generator(abc.ABC):
         pass
 
     def analyze(self):
-        self._volume = scipy.integrate.cumtrapz(self.flow * 1000, self.time / 60.0, initial=0)
+        self._volume = scipy.integrate.cumtrapz(self.flow * 1000, self.timestamp / 60.0, initial=0)
 
         breaths = nurse.analysis.measure_breaths(self)
         self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(self._breaths, breaths)

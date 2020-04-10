@@ -199,6 +199,8 @@ def moving_average(cumulative, key, value, alpha=0.1):
         return alpha*value + (1.0 - alpha)*cumulative[key]
 
 def cumulative(cumulative, updated, new_breaths):
+    cumulative = dict(cumulative)
+
     for breath in updated + new_breaths:
         timestamp = None
         if "empty timestamp" in breath and (timestamp is None or timestamp < breath["empty timestamp"]):
@@ -217,7 +219,17 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["last breath timestamp"] = timestamp
                 this_is_new = True
 
-        if this_is_new and "time since last" in breath:
-            cumulative["breath interval"] = moving_average(cumulative, "breath interval", breath["time since last"])
+        if this_is_new:
+            if "time since last" in breath:
+                cumulative["breath interval"] = moving_average(cumulative, "breath interval", breath["time since last"])
+                cumulative["breath rate"] = 60.0 / cumulative["breath interval"]
+            if "max pressure" in breath:
+                cumulative["PIP"] = moving_average(cumulative, "PIP", breath["max pressure"])
+            if "empty pressure" in breath:
+                cumulative["PEEP"] = moving_average(cumulative, "PEEP", breath["empty pressure"])
+            if "expiratory tidal volume" in breath:
+                cumulative["TVe"] = moving_average(cumulative, "TVe", breath["expiratory tidal volume"])
+            if "inspiratory tidal volume" in breath:
+                cumulative["TVi"] = moving_average(cumulative, "TVi", breath["inspiratory tidal volume"])
 
     return cumulative
