@@ -267,14 +267,20 @@ class MainWindow(QtWidgets.QMainWindow):
             graph.flow.close()
         super().closeEvent(event)
 
+def _interrupt_handler(signum, frame):
+    QtGui.QApplication.quit()
 
-def main(argv, *, fullscreen, **kwargs):
+def main(argv, *, fullscreen, no_display,  **kwargs):
     app = QtWidgets.QApplication(argv)
     main = MainWindow(**kwargs)
-    if fullscreen:
-        main.showFullScreen()
-    else:
-        main.show()
+    if no_display:
+        # if there's no display, KeyboardInterrupt is the only way to quit
+        signal.signal(signal.SIGINT, _interrupt_handler)
+    else:    
+        if fullscreen:
+            main.showFullScreen()
+        else:
+            main.show()
     sys.exit(app.exec_())
 
 
@@ -288,11 +294,14 @@ if __name__ == "__main__":
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
     parser.add_argument("--fullscreen", action="store_true")
+    parser.add_argument("--no-display", action="store_true")
+    
     arg, unparsed_args = parser.parse_known_args()
     main(
         argv=sys.argv[:1] + unparsed_args,
         ip=arg.ip,
         port=arg.port,
         fullscreen=arg.fullscreen,
+        no_display=arg.no_display,
         refresh=arg.refresh,
     )
