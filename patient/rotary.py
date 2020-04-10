@@ -61,7 +61,7 @@ class SelectionSetting(Setting):
 
     def up(self):
         with self._lock:
-            if self._value < len(self._listing):
+            if self._value < len(self._listing) - 1:
                 self._value += 1
                 return True
             else:
@@ -128,13 +128,13 @@ class Rotary:
                     self.dict[self.items[self.current]].up()  # ClockWise
                 else:
                     self.dict[self.items[self.current]].down()  # CounterClockWise
-            print("Changed {self.items[self.current]}")
+            print(f"Changed {self.items[self.current]}")
             print(rotary)
 
         def rotary_switch(ch, _level, _tick):
             if ch == pinSW:
                 self.current = (self.current + 1) % len(self.dict)
-            print("Changed to {self.items[self.current]}")
+            print(f"Changed to {self.items[self.current]}")
             print(rotary)
 
         pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
@@ -154,7 +154,7 @@ class Rotary:
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"
         for key, value in self.dict.items():
-            out = f"  {key} : {value}\n"
+            out += f"  {key} : {value}\n"
         return out + "\n)"
 
 
