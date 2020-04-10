@@ -1,5 +1,6 @@
 import abc
 import enum
+import numpy as np
 
 import nurse.analysis
 

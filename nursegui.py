@@ -163,7 +163,7 @@ class PatientSensor(QtGui.QFrame):
             try:
                 port = int(number)
             except ValueError:
-                self.flow = DisconGenerator()
+                self.flow = LocalGenerator(Status.DISCON)
                 return
             self.flow = RemoteGenerator(port=port)
 

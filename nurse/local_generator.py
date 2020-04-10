@@ -7,7 +7,8 @@ from nurse.generator import Generator, Status
 
 
 class LocalGenerator(Generator):
-    def __init__(self, status: Status):
+    def __init__(self, status: Status = Status.OK):
+        super().__init__()
         self.status = status
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
@@ -31,14 +32,20 @@ class LocalGenerator(Generator):
 
     @property
     def flow(self):
+        if self.status == Status.DISCON:
+            return []
         return np.asarray(self._flow) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def pressure(self):
+        if self.status == Status.DISCON:
+            return []
         return np.asarray(self._pressure) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def time(self):
+        if self.status == Status.DISCON:
+            return []
         if len(self._time) > 0:
             return -(np.asarray(self._time) - self._time[-1]) / 1000
         else:
