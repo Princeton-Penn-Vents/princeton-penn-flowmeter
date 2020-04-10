@@ -77,4 +77,31 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **inhale compliance (ml/cm-H₂O):** the EWMA of **inhale compliance** from breath records.
    * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
 
+## Alarms
 
+Alarms are like cumulative measurements in that they are a fixed number of fields that change in place, rather than a growing sequence like the breath records. Alarms are raised when a cumulative value exceeds a predefined threshold, and they are "sticky" in the sense that once an analysis creates an alarm, subsequent analyses do not remove it, even if the quantity returns to a suitable value. Other processes might remove alarms.
+
+An alarm is either undefined (no values out of bounds) or a record with the following fields:
+
+   * **first timestamp (sec):** the **realtime** when the parameter first went out of bounds.
+   * **last timestamp (sec):** the **realtime** when the parameter was last observed out of bounds.
+   * **extreme:** the most extreme value observed. For alarms of upper bounds, the **extreme** is the maximum value, and for alarms of lower bounds, the **extreme** is the minimum value.
+
+Thresholds for all alarms are derived from the rotary dial.
+
+The following alarms are defined:
+
+   * **PIP Max:** upper bound on the cumulative **PIP** value.
+   * **PIP Min:** lower bound on the cumulative **PIP** value.
+   * **PEEP Max:** upper bound on the cumulative **PEEP** value.
+   * **PEEP Min:** lower bound on the cumulative **PEEP** value.
+   * **TVe Max:** upper bound on the cumulative **TVe** value.
+   * **TVe Min:** lower bound on the cumulative **TVe** value.
+   * **TVi Max:** upper bound on the cumulative **TVi** value.
+   * **TVi Min:** lower bound on the cumulative **TVi** value.
+
+## Status of analysis products in the workflow
+
+Currently, all of the above-mentioned analysis products are computed in the full workflow (every time the `Generator.analyze` method is called) and the results are attached to the `Generator` object. No further action is performed, such as passing them downstream to the nurse GUI.
+
+**FIXME:** These analysis products must be passed downstream to the nurse GUI!
