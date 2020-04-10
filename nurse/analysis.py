@@ -99,8 +99,8 @@ def find_breaths(A, B, C, D):
 def measure_breaths(generator):
     time = -generator.time
     flow = generator.flow
-    volume = generator.volume
-    # volume = scipy.integrate.cumtrapz(flow, -time / 60.0, initial=0)
+    volume = scipy.integrate.cumtrapz(flow, -time / 60.0, initial=0)
+    generator._volume = volume
     pressure = generator.pressure
 
     try:

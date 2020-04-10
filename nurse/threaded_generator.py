@@ -16,7 +16,6 @@ class GeneratorThread(threading.Thread):
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
-        self._volume = Rolling(window_size=30 * 50)
 
         self._lock = threading.Lock()
 
@@ -42,7 +41,6 @@ class GeneratorThread(threading.Thread):
             times = np.asarray(root["data"]["timestamps"])
             flow = np.asarray(root["data"]["flows"])
             pressure = np.asarray(root["data"]["pressures"])
-            volume = self._pressure
 
             with self._lock:
                 if self.status == Status.DISCON:
@@ -51,7 +49,6 @@ class GeneratorThread(threading.Thread):
                 self._time.inject(times[-to_add:])
                 self._flow.inject(flow[-to_add:])
                 self._pressure.inject(pressure[-to_add:])
-                self._volume.inject(volume[-to_add:])
 
             time.sleep(1)
 
@@ -62,7 +59,6 @@ class GeneratorThread(threading.Thread):
                 np.asarray(self._time).copy(),
                 np.asarray(self._flow).copy(),
                 np.asarray(self._pressure).copy(),
-                np.asarray(self._volume).copy(),
             )
 
     def analyze(self):

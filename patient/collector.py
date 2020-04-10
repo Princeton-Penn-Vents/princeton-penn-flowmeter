@@ -88,6 +88,10 @@ if __name__ == "__main__":
     coll.close()
 
 
+# Sadly, since we are not making this a full proper python package (at the moment),
+# we have to do the following to run this file for testing:
+# PYTHONPATH=$PWD ./patient/collector.py
+
 # For full project:
 
 # poll the device input for current values (at least every second)

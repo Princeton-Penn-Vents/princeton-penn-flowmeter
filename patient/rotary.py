@@ -83,7 +83,7 @@ class SelectionSetting(Setting):
 
 DICT = {
     "MaxFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
-    "MaxFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
+    "MinFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
     "AveFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
     "AvgFlow Window": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
 }

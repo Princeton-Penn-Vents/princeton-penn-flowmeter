@@ -17,6 +17,9 @@ COLOR = {
 
 
 class Generator(abc.ABC):
+    def __init__(self):
+        self._volume = np.array([], dtype=np.double)
+
     @abc.abstractmethod
     def get_data(self):
         pass
@@ -40,9 +43,8 @@ class Generator(abc.ABC):
         pass
 
     @property
-    @abc.abstractmethod
     def volume(self):
-        pass
+        return self._volume
 
     def close(self):
         pass

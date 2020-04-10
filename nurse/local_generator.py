@@ -13,7 +13,6 @@ class LocalGenerator(Generator):
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
-        self._volume = Rolling(window_size=30 * 50)
 
         self._start_time = int(1000 * datetime.now().timestamp())
         (self._sim,) = start_sims(1, self._start_time, 12000000)
@@ -24,21 +23,15 @@ class LocalGenerator(Generator):
         time = root["data"]["timestamps"]
         flow = root["data"]["flows"]
         pressure = root["data"]["pressures"]
-        volume = self._pressure
 
         to_add = new_elements(self._time, time)
         self._time.inject(time[-to_add:])
         self._flow.inject(flow[-to_add:])
         self._pressure.inject(pressure[-to_add:])
-        self._volume.inject(volume[-to_add:])
 
     @property
     def flow(self):
         return np.asarray(self._flow) * (0.6 if self.status == Status.ALERT else 1)
-
-    @property
-    def volume(self):
-        return np.asarray(self._volume) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
     def pressure(self):
