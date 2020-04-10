@@ -47,7 +47,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.do_HEAD()
-        self.wfile.write(json.dumps(prepare()))
+        self.wfile.write(json.dumps(prepare()).encode("ascii"))
 
 
 server_address = ("0.0.0.0", 8100)
