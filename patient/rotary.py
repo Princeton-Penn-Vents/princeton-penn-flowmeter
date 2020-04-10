@@ -154,6 +154,11 @@ class Rotary:
         self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
         self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
 
+    @property
+    def current_key(self):
+        with self._lock:
+            return self._listing[self.current]
+
     def __getitem__(self, item):
         return self.config[item]
 
