@@ -134,6 +134,8 @@ def measure_breaths(generator):
             breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
+            if i >= 2:
+                breath["min pressure"] = np.min(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
 
         elif which == 2:
             breath["full timestamp"] = t
@@ -148,6 +150,8 @@ def measure_breaths(generator):
             breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
+            if i >= 2:
+                breath["max pressure"] = np.max(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
 
     if len(breath) != 0:
         breaths.append(breath)
