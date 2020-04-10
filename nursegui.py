@@ -270,6 +270,10 @@ class MainStack(QtWidgets.QWidget):
             graph.qTimer.timeout.connect(graph.update_plot)
             graph.qTimer.start()
 
+    def closeEvent(self):
+        for graph in self.graphs:
+            graph.flow.close()
+
 
 class HeaderWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -305,8 +309,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close()
 
     def closeEvent(self, event):
-        for graph in self.graphs:
-            graph.flow.close()
+        self.centralWidget().closeEvent()
         super().closeEvent(event)
 
 def _interrupt_handler(signum, frame):
