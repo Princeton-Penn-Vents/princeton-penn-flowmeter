@@ -157,3 +157,35 @@ def measure_breaths(generator):
         breaths.append(breath)
 
     return breaths
+
+def combine_breaths(generator, old_breaths, new_breaths):
+    breaths = list(old_breaths)
+    new_breaths = list(new_breaths)
+
+    first_to_check = max(0, len(breaths) - len(new_breaths) - 1)
+    for i in range(first_to_check, len(breaths)):
+        drop = []
+        for j in range(len(new_breaths)):
+            # the smoothing sigma is 0.2 sec (see smooth_derivative), so cut at 3*0.2
+            same = False
+            if "empty timestamp" in breaths[i]  and "empty timestamp" in new_breaths[j]:
+                same = same or abs(breaths[i]["empty timestamp"]  - new_breaths[j]["empty timestamp"])  < 3*0.2
+            if "inhale timestamp" in breaths[i] and "inhale timestamp" in new_breaths[j]:
+                same = same or abs(breaths[i]["inhale timestamp"] - new_breaths[j]["inhale timestamp"]) < 3*0.2
+            if "full timestamp" in breaths[i]   and "full timestamp" in new_breaths[j]:
+                same = same or abs(breaths[i]["full timestamp"]   - new_breaths[j]["full timestamp"])   < 3*0.2
+            if "exhale timestamp" in breaths[i] and "exhale timestamp" in new_breaths[j]:
+                same = same or abs(breaths[i]["exhale timestamp"] - new_breaths[j]["exhale timestamp"]) < 3*0.2
+
+            if same:
+                # take all fields that are defined in either old or new, but preferring new if it's in both
+                breaths[i] = {**breaths[i], **new_breaths[j]}  # Python>=3.5
+                drop.append(j)
+                break
+
+        for j in drop[::-1]:
+            del new_breaths[j]
+
+    breaths.extend(new_breaths)
+
+    return breaths

@@ -1,6 +1,7 @@
 import abc
 import enum
 
+import numpy as np
 import scipy.integrate
 
 import nurse.analysis
@@ -21,6 +22,8 @@ COLOR = {
 class Generator(abc.ABC):
     def __init__(self):
         self._volume = np.array([], dtype=np.double)
+        self._breaths = []
+        self._alarms = {}
 
     @abc.abstractmethod
     def get_data(self):
@@ -28,7 +31,9 @@ class Generator(abc.ABC):
 
     def analyze(self):
         self._volume = scipy.integrate.cumtrapz(self.flow, self.time / 60.0, initial=0)
-        self._breaths = nurse.analysis.measure_breaths(self)
+
+        new_breaths = nurse.analysis.measure_breaths(self)
+        self._breaths = nurse.analysis.combine_breaths(self, self._breaths, new_breaths)
 
     @property
     @abc.abstractmethod
@@ -53,6 +58,14 @@ class Generator(abc.ABC):
     @property
     def volume(self):
         return self._volume
+
+    @property
+    def breaths(self):
+        return self._breaths
+
+    @property
+    def alarms(self):
+        return self._alarms
 
     def close(self):
         pass

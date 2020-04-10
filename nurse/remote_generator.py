@@ -8,6 +8,8 @@ from nurse.threaded_generator import GeneratorThread
 
 class LocalGenerator(Generator):
     def __init__(self, status: Status):
+        super(LocalGenerator, self).__init__()
+
         self.status = status
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
@@ -54,6 +56,8 @@ class LocalGenerator(Generator):
 
 class RemoteGenerator(Generator):
     def __init__(self, *, ip="127.0.0.1", port=None):
+        super(RemoteGenerator, self).__init__()
+
         self._thread = GeneratorThread(address=f"http://{ip}:{port}")
         self._thread.start()
         self.status = Status.DISCON

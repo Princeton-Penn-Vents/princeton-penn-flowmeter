@@ -8,6 +8,8 @@ from nurse.generator import Generator, Status
 
 class LocalGenerator(Generator):
     def __init__(self, status: Status):
+        super(LocalGenerator, self).__init__()
+
         self.status = status
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
