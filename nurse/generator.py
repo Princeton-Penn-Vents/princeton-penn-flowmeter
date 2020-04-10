@@ -79,7 +79,8 @@ class LocalGenerator(Generator):
         self._volume.inject(volume[-to_add:])
 
     def analyze(self):
-        nurse.analysis.analyze(self)
+        self._breaths = nurse.analysis.measure_breaths(self)
+        print(self._breaths)
 
     @property
     def flow(self):

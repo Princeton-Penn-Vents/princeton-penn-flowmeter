@@ -2,8 +2,6 @@ import numpy as np
 import scipy.integrate
 import scipy.signal
 
-favorite = None
-
 def smooth_derivative(times, values, sig=0.2):
     window_width = int(np.ceil(6*sig/np.min(times[1:] - times[:-1])))
     windowed_times  = np.lib.stride_tricks.as_strided(times,
@@ -46,20 +44,20 @@ def find_breaths(A, B, C, D):
     D = np.sort(D)
 
     if len(A) == 0 or len(B) == 0 or len(C) == 0 or len(D) == 0:
-        return 0, (A, B, C, D)
+        return []
 
     # where does the cycle start?
-    first = which = np.argmin([A[0], B[0], C[0], D[0]])
+    which = np.argmin([A[0], B[0], C[0], D[0]])
 
     ins = [A, B, C, D]
-    outs = ([], [], [], [])
+    outs = []
     while len(A) > 0 or len(B) > 0 or len(C) > 0 or len(D) > 0:
         if len(ins[which]) > 1 and all(len(ins[i]) > 0 for i in range(4)):
             nextwhich = np.argmin([ins[i][1 if i == which else 0] for i in range(4)])
 
             # normal case: A -> B -> C -> D -> ... cycle
             if nextwhich == (which + 1) % 4:
-                outs[which].append(ins[which][0])
+                outs.append((which, ins[which][0]))
                 ins[which] = ins[which][1:]
 
             # too many of one type: A -> B -> B -> B -> C -> D -> ...
@@ -72,20 +70,23 @@ def find_breaths(A, B, C, D):
                     combine.append(ins[which][0])
                     ins[which] = ins[which][1:]
 
-                outs[which].append(np.mean(combine))
+                outs.append((which, np.mean(combine)))
 
             # missing one type: A -> C -> D -> ...
             else:
                 fill_value = 0.5*(ins[which][0] + ins[nextwhich][0])
                 ins[(which + 1) % 4] = np.concatenate((np.array([fill_value]), ins[(which + 1) % 4]))
 
-                outs[which].append(ins[which][0])
+                outs.append((which, ins[which][0]))
                 ins[which] = ins[which][1:]
 
         # edge condition: less than one cycle left
         elif len(ins[which]) > 0:
-            outs[which].append(ins[which][0])
+            popped = ins[which][0]
             ins[which] = ins[which][1:]
+
+            if len(outs) > 0 and (outs[-1][0] + 1) % 4 == which:
+                outs.append((which, popped))
 
         else:
             break
@@ -93,49 +94,63 @@ def find_breaths(A, B, C, D):
         which = (which + 1) % 4
         A, B, C, D = ins
 
-    return first, outs
+    return outs
 
-def analyze(generator):
-    global favorite
-    if favorite is None:
-        favorite = generator
+def measure_breaths(generator):
+    time = -generator.time
+    flow = generator.flow
+    volume = generator.volume
+    # volume = scipy.integrate.cumtrapz(flow, -time / 60.0, initial=0)
+    pressure = generator.pressure
 
-    if generator is favorite:
-        time = -generator.time
-        flow = generator.flow
-        volume = scipy.integrate.cumtrapz(flow, time / 60.0)
-        pressure = generator.pressure
-        
+    try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
-        first, (A, B, C, D) = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
-
+        smooth_time_v, smooth_volume, smooth_dvolume = smooth_derivative(time, volume)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
+    except ValueError:
+        return []
 
-        breaths = []
-        if len(A) > 0 and len(B) > 0 and len(C) > 0 and len(D) > 0:
-            for i in range(min(len(A), len(B), len(C), len(D))):
-                breath = {}
-                for j in range(4):
-                    which = (first + j) % 4
-                    if which == 2:
-                        breath["peak pressure"] = pressure[np.argmin(abs(time - C[i]))]
+    breath_times = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
 
-                breaths.append(breath)
+    breaths = []
+    breath = {}
+    for i, (which, t) in enumerate(breath_times):
+        index = np.argmin(abs(time - t))
 
-        # import pprint
-        # pprinter = pprint.PrettyPrinter()
-        # pprinter.pprint(breaths)
-                
-        #     open("/tmp/flow.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(time, flow)))
-        #     open("/tmp/smooth_flow.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(smooth_time, smooth_flow)))
+        if which == 0:
+            breath["empty time"] = -t
+            breath["empty pressure"] = pressure[index]
+            breath["empty volume"] = volume[index]
+            if "full volume" in breath:
+                breath["tidal volume"] = breath["full volume"] - breath["empty volume"]
+            if len(breaths) > 0 and "empty time" in breaths[-1]:
+                breath["time since last"] = breath["empty time"] - breaths[-1]["empty time"]
 
-        #     smooth_time, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
+            breaths.append(breath)
+            breath = {}
 
-        #     open("/tmp/pressure.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(time, pressure)))
-        #     open("/tmp/smooth_pressure.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(smooth_time, smooth_pressure)))
-        #     open("/tmp/A.dat", "w").write("\n".join("%g, 0" % (x,) for x in A))
-        #     open("/tmp/B.dat", "w").write("\n".join("%g, 0" % (x,) for x in B))
-        #     open("/tmp/C.dat", "w").write("\n".join("%g, 0" % (x,) for x in C))
-        #     open("/tmp/D.dat", "w").write("\n".join("%g, 0" % (x,) for x in D))
+        elif which == 1:
+            breath["inhale flow"] = flow[index]
+            breath["inhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
+            breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
+            breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
+            if i >= 2:
+                breath["inhale duration"] = t - breath_times[i - 2][1]
 
-        #     raise Exception("STOP")
+        elif which == 2:
+            breath["full time"] = -t
+            breath["full pressure"] = pressure[index]
+            breath["full volume"] = volume[index]
+
+        elif which == 3:
+            breath["exhale flow"] = flow[index]
+            breath["exhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
+            breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
+            breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
+            if i >= 2:
+                breath["exhale duration"] = t - breath_times[i - 2][1]
+
+    if len(breath) != 0:
+        breaths.append(breath)
+
+    return breaths
