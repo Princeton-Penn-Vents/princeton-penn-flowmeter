@@ -107,10 +107,11 @@ def measure_breaths(generator):
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
         smooth_time_v, smooth_volume, smooth_dvolume = smooth_derivative(time, volume)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
+
+        breath_times = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
+
     except ValueError:
         return []
-
-    breath_times = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
 
     breaths = []
     breath = {}
