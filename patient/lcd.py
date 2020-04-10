@@ -60,7 +60,8 @@ class LCD:
         self.ctrl(0x01)
 
     def close(self):
-        self.pi.i2c_close(self.hLCD)
+        if hasattr(self, 'hLCD'):
+            self.pi.i2c_close(self.hLCD)
         self.pi.stop()
         self.pi = None
 

@@ -10,7 +10,7 @@ except ImportError:
 
 class RotaryLCD(Rotary):
     def __init__(self, config):
-        super().__init__()
+        super().__init__(config)
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
         for key in config:
