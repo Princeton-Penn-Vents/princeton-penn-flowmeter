@@ -18,6 +18,9 @@ class Setting:
     def __repr__(self):
         return f"{self.__class__.__name__}({self})"
 
+    def __format__(self, format_spec):
+        return str(self).__format__(format_spec)
+
 
 class IncrSetting(Setting):
     def __init__(self, default, *, min, max, incr, unit=None):
