@@ -46,10 +46,10 @@ def find_breaths(A, B, C, D):
     D = np.sort(D)
 
     if len(A) == 0 or len(B) == 0 or len(C) == 0 or len(D) == 0:
-        return A, B, C, D
+        return 0, (A, B, C, D)
 
     # where does the cycle start?
-    which = np.argmin([A[0], B[0], C[0], D[0]])
+    first = which = np.argmin([A[0], B[0], C[0], D[0]])
 
     ins = [A, B, C, D]
     outs = ([], [], [], [])
@@ -67,7 +67,7 @@ def find_breaths(A, B, C, D):
                 combine = [ins[which][0]]
                 ins[which] = ins[which][1:]
                 while True:
-                    if np.argmin([ins[i][0] for i in range(4)]) != which:
+                    if any(len(x) == 0 for x in ins) or np.argmin([ins[i][0] for i in range(4)]) != which:
                         break
                     combine.append(ins[which][0])
                     ins[which] = ins[which][1:]
@@ -93,7 +93,7 @@ def find_breaths(A, B, C, D):
         which = (which + 1) % 4
         A, B, C, D = ins
 
-    return outs
+    return first, outs
 
 def analyze(generator):
     global favorite
@@ -105,12 +105,27 @@ def analyze(generator):
         flow = generator.flow
         volume = scipy.integrate.cumtrapz(flow, time / 60.0)
         pressure = generator.pressure
+        
+        smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
+        first, (A, B, C, D) = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
 
-        # print(len(time))
-        # if len(time) == 1500:
-        #     smooth_time, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
-        #     A, B, C, D = find_breaths(*find_roots(smooth_time, smooth_flow, smooth_dflow))
+        smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
 
+        breaths = []
+        if len(A) > 0 and len(B) > 0 and len(C) > 0 and len(D) > 0:
+            for i in range(min(len(A), len(B), len(C), len(D))):
+                breath = {}
+                for j in range(4):
+                    which = (first + j) % 4
+                    if which == 2:
+                        breath["peak pressure"] = pressure[np.argmin(abs(time - C[i]))]
+
+                breaths.append(breath)
+
+        # import pprint
+        # pprinter = pprint.PrettyPrinter()
+        # pprinter.pprint(breaths)
+                
         #     open("/tmp/flow.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(time, flow)))
         #     open("/tmp/smooth_flow.dat", "w").write("\n".join("%g, %g" % (x, y) for x, y in zip(smooth_time, smooth_flow)))
 
