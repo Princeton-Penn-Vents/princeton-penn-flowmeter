@@ -42,4 +42,4 @@ class LocalGenerator(Generator):
         if len(self._time) > 0:
             return -(np.asarray(self._time) - self._time[-1]) / 1000
         else:
-            return []
+            return np.array([], dtype=np.double)
