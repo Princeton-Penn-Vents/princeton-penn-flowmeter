@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtWidgets, QtCore
+import signal
+
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
 
 import pyqtgraph as pg
