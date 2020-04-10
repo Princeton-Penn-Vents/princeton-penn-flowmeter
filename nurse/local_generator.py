@@ -8,7 +8,7 @@ from nurse.generator import Generator, Status
 
 class LocalGenerator(Generator):
     def __init__(self, status: Status):
-        super(LocalGenerator, self).__init__()
+        super().__init__()
 
         self.status = status
 

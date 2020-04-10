@@ -5,6 +5,7 @@ import numpy as np
 import scipy.integrate
 
 import nurse.analysis
+import patient.rotary
 
 class Status(enum.Enum):
     OK = enum.auto()
@@ -25,6 +26,7 @@ class Generator(abc.ABC):
         self._breaths = []
         self._cumulative = {}
         self._alarms = {}
+        self._rotary = patient.rotary.MockRotary(patient.rotary.DICT)
 
     @abc.abstractmethod
     def get_data(self):
@@ -33,10 +35,13 @@ class Generator(abc.ABC):
     def analyze(self):
         self._volume = scipy.integrate.cumtrapz(self.flow * 1000, self.timestamp / 60.0, initial=0)
 
-        breaths = nurse.analysis.measure_breaths(self)
+        breaths = nurse.analysis.measure_breaths(self.timestamp, self.flow, self.volume, self.pressure)
+
         self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(self._breaths, breaths)
 
         self._cumulative = nurse.analysis.cumulative(self._cumulative, updated, new_breaths)
+
+        self._alarms = nurse.analysis.alarms(self._rotary, self._alarms, updated, new_breaths, self._cumulative)
 
     @property
     @abc.abstractmethod

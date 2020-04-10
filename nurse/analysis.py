@@ -94,12 +94,7 @@ def find_breaths(A, B, C, D):
 
     return outs
 
-def measure_breaths(generator):
-    time = generator.timestamp
-    flow = generator.flow
-    volume = generator.volume
-    pressure = generator.pressure
-
+def measure_breaths(time, flow, volume, pressure):
     try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
@@ -192,7 +187,8 @@ def combine_breaths(old_breaths, new_breaths):
 
     return breaths, updated, new_breaths
 
-def moving_average(cumulative, key, value, alpha=0.1):
+# default alpha is 0.3: value changes after about 3 breaths
+def moving_average(cumulative, key, value, alpha=0.3):
     if key not in cumulative:
         return value
     else:
@@ -231,5 +227,59 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["TVe"] = moving_average(cumulative, "TVe", breath["expiratory tidal volume"])
             if "inspiratory tidal volume" in breath:
                 cumulative["TVi"] = moving_average(cumulative, "TVi", breath["inspiratory tidal volume"])
+            if "inhale compliance" in breath:
+                cumulative["inhale compliance"] = moving_average(cumulative, "inhale compliance", breath["inhale compliance"])
+            if "exhale compliance" in breath:
+                cumulative["exhale compliance"] = moving_average(cumulative, "exhale compliance", breath["exhale compliance"])
 
     return cumulative
+
+def alarm_record(old_record, timestamp, value, ismax):
+    if old_record is None:
+        return  {"first timestamp": timestamp, "last timestamp": timestamp, "extreme": value}
+    else:
+        record = dict(old_record)
+        record["last timestamp"] = timestamp
+        if ismax and value > record["extreme"]:
+            record["extreme"] = value
+        elif not ismax and value < record["extreme"]:
+            record["extreme"] = value
+        return record
+
+def alarms(rotary, alarms, updated, new_breaths, cumulative):
+    alarms = dict(alarms)
+
+    if "PIP" in cumulative:
+        assert rotary["PIP Max"].unit == "cm-H2O"
+        if "PIP" in cumulative and cumulative["PIP"] > rotary["PIP Max"].value:
+            alarms["PIP Max"] = alarm_record(alarms.get("PIP Max"), cumulative["last breath timestamp"], cumulative["PIP"], True)
+
+        assert rotary["PIP Min"].unit == "cm-H2O"
+        if "PIP" in cumulative and cumulative["PIP"] < rotary["PIP Min"].value:
+            alarms["PIP Min"] = alarm_record(alarms.get("PIP Min"), cumulative["last breath timestamp"], cumulative["PIP"], False)
+
+        assert rotary["PEEP Max"].unit == "cm-H2O"
+        if "PEEP" in cumulative and cumulative["PEEP"] > rotary["PEEP Max"].value:
+            alarms["PEEP Max"] = alarm_record(alarms.get("PEEP Max"), cumulative["last breath timestamp"], cumulative["PEEP"], True)
+
+        assert rotary["PEEP Min"].unit == "cm-H2O"
+        if "PEEP" in cumulative and cumulative["PEEP"] < rotary["PEEP Min"].value:
+            alarms["PEEP Min"] = alarm_record(alarms.get("PEEP Min"), cumulative["last breath timestamp"], cumulative["PEEP"], False)
+
+        assert rotary["TVe Max"].unit == "ml"
+        if "TVe" in cumulative and cumulative["TVe"] > rotary["TVe Max"].value:
+            alarms["TVe Max"] = alarm_record(alarms.get("TVe Max"), cumulative["last breath timestamp"], cumulative["TVe"], True)
+
+        assert rotary["TVe Min"].unit == "ml"
+        if "TVe" in cumulative and cumulative["TVe"] < rotary["TVe Min"].value:
+            alarms["TVe Min"] = alarm_record(alarms.get("TVe Min"), cumulative["last breath timestamp"], cumulative["TVe"], False)
+
+        assert rotary["TVi Max"].unit == "ml"
+        if "TVi" in cumulative and cumulative["TVi"] > rotary["TVi Max"].value:
+            alarms["TVi Max"] = alarm_record(alarms.get("TVi Max"), cumulative["last breath timestamp"], cumulative["TVi"], True)
+
+        assert rotary["TVi Min"].unit == "ml"
+        if "TVi" in cumulative and cumulative["TVi"] < rotary["TVi Min"].value:
+            alarms["TVi Min"] = alarm_record(alarms.get("TVi Min"), cumulative["last breath timestamp"], cumulative["TVi"], False)
+
+    return alarms
