@@ -48,6 +48,8 @@ class CollectorThread(threading.Thread):
 
 class Collector(Generator):
     def __init__(self):
+        super().__init__()
+
         self._thread = CollectorThread()
         self._thread.start()
 
