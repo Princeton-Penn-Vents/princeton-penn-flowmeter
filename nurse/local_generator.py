@@ -44,8 +44,7 @@ class LocalGenerator(Generator):
 
     @property
     def timestamps(self):
-        if self.status != Status.DISCON and  len(self._time) > 0:
+        if self.status != Status.DISCON and len(self._time) > 0:
             return np.asarray(self._time)
         else:
             return np.array([], dtype=np.double)
-

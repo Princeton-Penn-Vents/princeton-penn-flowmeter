@@ -131,10 +131,13 @@ def find_breaths(A, B, C, D):
 
     return outs
 
+
 def measure_breaths(time, flow, volume, pressure):
     try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
-        smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
+        smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(
+            time, pressure
+        )
 
         turning_points = find_roots(smooth_time_f, smooth_flow, smooth_dflow)
 
@@ -153,9 +156,14 @@ def measure_breaths(time, flow, volume, pressure):
             breath["empty pressure"] = pressure[index]
             breath["empty volume"] = volume[index]
             if i >= 2:
-                breath["inspiratory tidal volume"] = volume[np.argmin(abs(time - breath_times[i - 2][1]))] - breath["empty volume"]
+                breath["inspiratory tidal volume"] = (
+                    volume[np.argmin(abs(time - breath_times[i - 2][1]))]
+                    - breath["empty volume"]
+                )
             if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
-                breath["time since last"] = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
+                breath["time since last"] = (
+                    breath["empty timestamp"] - breaths[-1]["empty timestamp"]
+                )
 
             breaths.append(breath)
             breath = {}
@@ -163,36 +171,48 @@ def measure_breaths(time, flow, volume, pressure):
         elif which == 1:
             breath["inhale timestamp"] = t
             breath["inhale flow"] = flow[index]
-            breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
+            breath["inhale dV/dt"] = (
+                smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
+            )
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["inhale compliance"] = (
                 breath["inhale dV/dt"] / breath["inhale dP/dt"]
             )
             if i >= 2:
-                breath["min pressure"] = np.min(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
+                breath["min pressure"] = np.min(
+                    pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
+                )
 
         elif which == 2:
             breath["full timestamp"] = t
             breath["full pressure"] = pressure[index]
             breath["full volume"] = volume[index]
             if i >= 2:
-                breath["expiratory tidal volume"] = breath["full volume"] - volume[np.argmin(abs(time - breath_times[i - 2][1]))]
+                breath["expiratory tidal volume"] = (
+                    breath["full volume"]
+                    - volume[np.argmin(abs(time - breath_times[i - 2][1]))]
+                )
 
         elif which == 3:
             breath["exhale timestamp"] = t
             breath["exhale flow"] = flow[index]
-            breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
+            breath["exhale dV/dt"] = (
+                smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
+            )
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["exhale compliance"] = (
                 breath["exhale dV/dt"] / breath["exhale dP/dt"]
             )
             if i >= 2:
-                breath["max pressure"] = np.max(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
+                breath["max pressure"] = np.max(
+                    pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
+                )
 
     if len(breath) != 0:
         breaths.append(breath)
 
     return breaths
+
 
 def combine_breaths(old_breaths, new_breaths):
     breaths = list(old_breaths)
@@ -205,14 +225,47 @@ def combine_breaths(old_breaths, new_breaths):
         for j in range(len(new_breaths)):
             # the smoothing sigma is 0.2 sec (see smooth_derivative), so cut at 3*0.2
             same = False
-            if "empty timestamp" in breaths[i]  and "empty timestamp" in new_breaths[j]:
-                same = same or abs(breaths[i]["empty timestamp"]  - new_breaths[j]["empty timestamp"])  < 3*0.2
-            if "inhale timestamp" in breaths[i] and "inhale timestamp" in new_breaths[j]:
-                same = same or abs(breaths[i]["inhale timestamp"] - new_breaths[j]["inhale timestamp"]) < 3*0.2
-            if "full timestamp" in breaths[i]   and "full timestamp" in new_breaths[j]:
-                same = same or abs(breaths[i]["full timestamp"]   - new_breaths[j]["full timestamp"])   < 3*0.2
-            if "exhale timestamp" in breaths[i] and "exhale timestamp" in new_breaths[j]:
-                same = same or abs(breaths[i]["exhale timestamp"] - new_breaths[j]["exhale timestamp"]) < 3*0.2
+            if "empty timestamp" in breaths[i] and "empty timestamp" in new_breaths[j]:
+                same = (
+                    same
+                    or abs(
+                        breaths[i]["empty timestamp"]
+                        - new_breaths[j]["empty timestamp"]
+                    )
+                    < 3 * 0.2
+                )
+            if (
+                "inhale timestamp" in breaths[i]
+                and "inhale timestamp" in new_breaths[j]
+            ):
+                same = (
+                    same
+                    or abs(
+                        breaths[i]["inhale timestamp"]
+                        - new_breaths[j]["inhale timestamp"]
+                    )
+                    < 3 * 0.2
+                )
+            if "full timestamp" in breaths[i] and "full timestamp" in new_breaths[j]:
+                same = (
+                    same
+                    or abs(
+                        breaths[i]["full timestamp"] - new_breaths[j]["full timestamp"]
+                    )
+                    < 3 * 0.2
+                )
+            if (
+                "exhale timestamp" in breaths[i]
+                and "exhale timestamp" in new_breaths[j]
+            ):
+                same = (
+                    same
+                    or abs(
+                        breaths[i]["exhale timestamp"]
+                        - new_breaths[j]["exhale timestamp"]
+                    )
+                    < 3 * 0.2
+                )
 
             if same:
                 # take all fields that are defined in either old or new, but preferring new if it's in both
@@ -228,56 +281,88 @@ def combine_breaths(old_breaths, new_breaths):
 
     return breaths, updated, new_breaths
 
+
 # default alpha is 0.3: value changes after about 3 breaths
 def moving_average(cumulative, key, value, alpha=0.3):
     if key not in cumulative:
         return value
     else:
-        return alpha*value + (1.0 - alpha)*cumulative[key]
+        return alpha * value + (1.0 - alpha) * cumulative[key]
+
 
 def cumulative(cumulative, updated, new_breaths):
     cumulative = dict(cumulative)
 
     for breath in updated + new_breaths:
         timestamp = None
-        if "empty timestamp" in breath and (timestamp is None or timestamp < breath["empty timestamp"]):
+        if "empty timestamp" in breath and (
+            timestamp is None or timestamp < breath["empty timestamp"]
+        ):
             timestamp = breath["empty timestamp"]
-        if "inhale timestamp" in breath and (timestamp is None or timestamp < breath["inhale timestamp"]):
+        if "inhale timestamp" in breath and (
+            timestamp is None or timestamp < breath["inhale timestamp"]
+        ):
             timestamp = breath["inhale timestamp"]
-        if "full timestamp" in breath and (timestamp is None or timestamp < breath["full timestamp"]):
+        if "full timestamp" in breath and (
+            timestamp is None or timestamp < breath["full timestamp"]
+        ):
             timestamp = breath["full timestamp"]
-        if "exhale timestamp" in breath and (timestamp is None or timestamp < breath["exhale timestamp"]):
+        if "exhale timestamp" in breath and (
+            timestamp is None or timestamp < breath["exhale timestamp"]
+        ):
             timestamp = breath["exhale timestamp"]
 
         this_is_new = False
         if timestamp is not None:
             # the smoothing sigma is 0.2 sec (see smooth_derivative), so cut at 3*0.2
-            if "last breath timestamp" not in cumulative or cumulative["last breath timestamp"] + 3*0.2 < timestamp:
+            if (
+                "last breath timestamp" not in cumulative
+                or cumulative["last breath timestamp"] + 3 * 0.2 < timestamp
+            ):
                 cumulative["last breath timestamp"] = timestamp
                 this_is_new = True
 
         if this_is_new:
             if "time since last" in breath:
-                cumulative["breath interval"] = moving_average(cumulative, "breath interval", breath["time since last"])
+                cumulative["breath interval"] = moving_average(
+                    cumulative, "breath interval", breath["time since last"]
+                )
                 cumulative["breath rate"] = 60.0 / cumulative["breath interval"]
             if "max pressure" in breath:
-                cumulative["PIP"] = moving_average(cumulative, "PIP", breath["max pressure"])
+                cumulative["PIP"] = moving_average(
+                    cumulative, "PIP", breath["max pressure"]
+                )
             if "empty pressure" in breath:
-                cumulative["PEEP"] = moving_average(cumulative, "PEEP", breath["empty pressure"])
+                cumulative["PEEP"] = moving_average(
+                    cumulative, "PEEP", breath["empty pressure"]
+                )
             if "expiratory tidal volume" in breath:
-                cumulative["TVe"] = moving_average(cumulative, "TVe", breath["expiratory tidal volume"])
+                cumulative["TVe"] = moving_average(
+                    cumulative, "TVe", breath["expiratory tidal volume"]
+                )
             if "inspiratory tidal volume" in breath:
-                cumulative["TVi"] = moving_average(cumulative, "TVi", breath["inspiratory tidal volume"])
+                cumulative["TVi"] = moving_average(
+                    cumulative, "TVi", breath["inspiratory tidal volume"]
+                )
             if "inhale compliance" in breath:
-                cumulative["inhale compliance"] = moving_average(cumulative, "inhale compliance", breath["inhale compliance"])
+                cumulative["inhale compliance"] = moving_average(
+                    cumulative, "inhale compliance", breath["inhale compliance"]
+                )
             if "exhale compliance" in breath:
-                cumulative["exhale compliance"] = moving_average(cumulative, "exhale compliance", breath["exhale compliance"])
+                cumulative["exhale compliance"] = moving_average(
+                    cumulative, "exhale compliance", breath["exhale compliance"]
+                )
 
     return cumulative
 
+
 def alarm_record(old_record, timestamp, value, ismax):
     if old_record is None:
-        return  {"first timestamp": timestamp, "last timestamp": timestamp, "extreme": value}
+        return {
+            "first timestamp": timestamp,
+            "last timestamp": timestamp,
+            "extreme": value,
+        }
     else:
         record = dict(old_record)
         record["last timestamp"] = timestamp
@@ -287,40 +372,81 @@ def alarm_record(old_record, timestamp, value, ismax):
             record["extreme"] = value
         return record
 
+
 def alarms(rotary, alarms, updated, new_breaths, cumulative):
     alarms = dict(alarms)
 
     if "PIP" in cumulative:
         assert rotary["PIP Max"].unit == "cm-H2O"
         if "PIP" in cumulative and cumulative["PIP"] > rotary["PIP Max"].value:
-            alarms["PIP Max"] = alarm_record(alarms.get("PIP Max"), cumulative["last breath timestamp"], cumulative["PIP"], True)
+            alarms["PIP Max"] = alarm_record(
+                alarms.get("PIP Max"),
+                cumulative["last breath timestamp"],
+                cumulative["PIP"],
+                True,
+            )
 
         assert rotary["PIP Min"].unit == "cm-H2O"
         if "PIP" in cumulative and cumulative["PIP"] < rotary["PIP Min"].value:
-            alarms["PIP Min"] = alarm_record(alarms.get("PIP Min"), cumulative["last breath timestamp"], cumulative["PIP"], False)
+            alarms["PIP Min"] = alarm_record(
+                alarms.get("PIP Min"),
+                cumulative["last breath timestamp"],
+                cumulative["PIP"],
+                False,
+            )
 
         assert rotary["PEEP Max"].unit == "cm-H2O"
         if "PEEP" in cumulative and cumulative["PEEP"] > rotary["PEEP Max"].value:
-            alarms["PEEP Max"] = alarm_record(alarms.get("PEEP Max"), cumulative["last breath timestamp"], cumulative["PEEP"], True)
+            alarms["PEEP Max"] = alarm_record(
+                alarms.get("PEEP Max"),
+                cumulative["last breath timestamp"],
+                cumulative["PEEP"],
+                True,
+            )
 
         assert rotary["PEEP Min"].unit == "cm-H2O"
         if "PEEP" in cumulative and cumulative["PEEP"] < rotary["PEEP Min"].value:
-            alarms["PEEP Min"] = alarm_record(alarms.get("PEEP Min"), cumulative["last breath timestamp"], cumulative["PEEP"], False)
+            alarms["PEEP Min"] = alarm_record(
+                alarms.get("PEEP Min"),
+                cumulative["last breath timestamp"],
+                cumulative["PEEP"],
+                False,
+            )
 
         assert rotary["TVe Max"].unit == "ml"
         if "TVe" in cumulative and cumulative["TVe"] > rotary["TVe Max"].value:
-            alarms["TVe Max"] = alarm_record(alarms.get("TVe Max"), cumulative["last breath timestamp"], cumulative["TVe"], True)
+            alarms["TVe Max"] = alarm_record(
+                alarms.get("TVe Max"),
+                cumulative["last breath timestamp"],
+                cumulative["TVe"],
+                True,
+            )
 
         assert rotary["TVe Min"].unit == "ml"
         if "TVe" in cumulative and cumulative["TVe"] < rotary["TVe Min"].value:
-            alarms["TVe Min"] = alarm_record(alarms.get("TVe Min"), cumulative["last breath timestamp"], cumulative["TVe"], False)
+            alarms["TVe Min"] = alarm_record(
+                alarms.get("TVe Min"),
+                cumulative["last breath timestamp"],
+                cumulative["TVe"],
+                False,
+            )
 
         assert rotary["TVi Max"].unit == "ml"
         if "TVi" in cumulative and cumulative["TVi"] > rotary["TVi Max"].value:
-            alarms["TVi Max"] = alarm_record(alarms.get("TVi Max"), cumulative["last breath timestamp"], cumulative["TVi"], True)
+            alarms["TVi Max"] = alarm_record(
+                alarms.get("TVi Max"),
+                cumulative["last breath timestamp"],
+                cumulative["TVi"],
+                True,
+            )
 
         assert rotary["TVi Min"].unit == "ml"
         if "TVi" in cumulative and cumulative["TVi"] < rotary["TVi Min"].value:
-            alarms["TVi Min"] = alarm_record(alarms.get("TVi Min"), cumulative["last breath timestamp"], cumulative["TVi"], False)
+            alarms["TVi Min"] = alarm_record(
+                alarms.get("TVi Min"),
+                cumulative["last breath timestamp"],
+                cumulative["TVi"],
+                False,
+            )
 
     return alarms

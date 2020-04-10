@@ -108,7 +108,6 @@ DICT = {
 
 
 class MockRotary:
-
     def __init__(self, d):
         self.dict = d
 

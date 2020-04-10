@@ -31,6 +31,5 @@ class RemoteGenerator(Generator):
         else:
             return np.array([], dtype=np.double)
 
-
     def close(self):
         self._thread.signal_end.set()
