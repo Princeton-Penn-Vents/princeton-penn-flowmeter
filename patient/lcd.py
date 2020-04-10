@@ -72,5 +72,5 @@ class LCD:
 if __name__ == "__main__":
     lcd = LCD()
     lcd.upper("HELLO", pos="center")
-    lcd.upper("WORLD", pos="center")
+    lcd.lower("WORLD", pos="center")
     lcd.close()

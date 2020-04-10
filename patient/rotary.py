@@ -113,14 +113,15 @@ class Rotary:
 
         self.pi = pi
         self.current = 0
+        self.items = list(self.dict.keys)
 
         def rotary_turned(ch, _level, _tick):
             if ch == pinA:
                 levelB = pi.read(pinB)
                 if levelB:
-                    self.dict[self.current].up()  # ClockWise
+                    self.dict[self.items[self.current]].up()  # ClockWise
                 else:
-                    self.dict[self.current].down()  # CounterClockWise
+                    self.dict[self.items[self.current]].down()  # CounterClockWise
 
         def rotary_switch(ch, _level, _tick):
             if ch == pinSW:
