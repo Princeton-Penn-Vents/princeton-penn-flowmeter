@@ -20,6 +20,7 @@ AlertWidget > QPushButton {
   font: bold;
   font-size: 30px;
   background-color: transparent;
+  border: none;
 }
 
 AlertWidget[status="OK"] > QLabel {
