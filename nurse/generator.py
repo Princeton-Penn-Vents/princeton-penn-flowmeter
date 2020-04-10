@@ -1,11 +1,13 @@
 import abc
 import enum
+import numpy as np
 
 import numpy as np
 import scipy.integrate
 
 import nurse.analysis
 import patient.rotary
+
 
 class Status(enum.Enum):
     OK = enum.auto()

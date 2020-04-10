@@ -1,38 +1,70 @@
 import numpy as np
 
+
 def smooth_derivative(times, values, sig=0.2):
-    window_width = int(np.ceil(4*sig/np.min(times[1:] - times[:-1])))
-    windowed_times  = np.lib.stride_tricks.as_strided(times,
-                                                      (len(times) - window_width + 1, window_width),
-                                                      (times.itemsize, times.itemsize))
-    windowed_values = np.lib.stride_tricks.as_strided(values,
-                                                      (len(values) - window_width + 1, window_width),
-                                                      (values.itemsize, values.itemsize))
+    window_width = int(np.ceil(4 * sig / np.min(times[1:] - times[:-1])))
+    windowed_times = np.lib.stride_tricks.as_strided(
+        times,
+        (len(times) - window_width + 1, window_width),
+        (times.itemsize, times.itemsize),
+    )
+    windowed_values = np.lib.stride_tricks.as_strided(
+        values,
+        (len(values) - window_width + 1, window_width),
+        (values.itemsize, values.itemsize),
+    )
 
     centers = np.mean(windowed_times, axis=1)
     windowed_times_centered = windowed_times - centers[:, np.newaxis]
-    windowed_weights = np.exp(-0.5 * windowed_times_centered**2 / sig**2)
-    sumw   = np.sum(windowed_weights, axis=1)
-    sumwx  = np.sum(windowed_weights * windowed_times_centered, axis=1)
-    sumwy  = np.sum(windowed_weights * windowed_values, axis=1)
-    sumwxx = np.sum(windowed_weights * windowed_times_centered * windowed_times_centered, axis=1)
-    sumwxy = np.sum(windowed_weights * windowed_times_centered * windowed_values, axis=1)
-    delta     = (sumw*sumwxx) - (sumwx*sumwx)
-    intercept = ((sumwxx*sumwy) - (sumwx*sumwxy)) / delta
-    slope     = ((sumw*sumwxy) - (sumwx*sumwy)) / delta
-    
+    windowed_weights = np.exp(-0.5 * windowed_times_centered ** 2 / sig ** 2)
+    sumw = np.sum(windowed_weights, axis=1)
+    sumwx = np.sum(windowed_weights * windowed_times_centered, axis=1)
+    sumwy = np.sum(windowed_weights * windowed_values, axis=1)
+    sumwxx = np.sum(
+        windowed_weights * windowed_times_centered * windowed_times_centered, axis=1
+    )
+    sumwxy = np.sum(
+        windowed_weights * windowed_times_centered * windowed_values, axis=1
+    )
+    delta = (sumw * sumwxx) - (sumwx * sumwx)
+    intercept = ((sumwxx * sumwy) - (sumwx * sumwxy)) / delta
+    slope = ((sumw * sumwxy) - (sumwx * sumwy)) / delta
+
     return centers, intercept, slope
 
-def find_roots(times, values, derivative, threshold=0.02):
-    values_threshold = threshold*np.max(abs(values))
-    derivative_threshold = threshold*np.max(abs(derivative))
 
-    A, = np.nonzero((values[:-1] < 0) & (values[1:] >= 0) & (0.5*(derivative[:-1] + derivative[1:]) >= derivative_threshold))
-    B, = np.nonzero((derivative[:-1] >= 0) & (derivative[1:] < 0) & (0.5*(values[:-1] + values[1:]) >= values_threshold))
-    C, = np.nonzero((values[:-1] >= 0) & (values[1:] < 0) & (0.5*(derivative[:-1] + derivative[1:]) < -derivative_threshold))
-    D, = np.nonzero((derivative[:-1] < 0) & (derivative[1:] >= 0) & (0.5*(values[:-1] + values[1:]) < -values_threshold))
-    
-    return 0.5*(times[A] + times[A + 1]), 0.5*(times[B] + times[B + 1]), 0.5*(times[C] + times[C + 1]), 0.5*(times[D] + times[D + 1])
+def find_roots(times, values, derivative, threshold=0.02):
+    values_threshold = threshold * np.max(abs(values))
+    derivative_threshold = threshold * np.max(abs(derivative))
+
+    (A,) = np.nonzero(
+        (values[:-1] < 0)
+        & (values[1:] >= 0)
+        & (0.5 * (derivative[:-1] + derivative[1:]) >= derivative_threshold)
+    )
+    (B,) = np.nonzero(
+        (derivative[:-1] >= 0)
+        & (derivative[1:] < 0)
+        & (0.5 * (values[:-1] + values[1:]) >= values_threshold)
+    )
+    (C,) = np.nonzero(
+        (values[:-1] >= 0)
+        & (values[1:] < 0)
+        & (0.5 * (derivative[:-1] + derivative[1:]) < -derivative_threshold)
+    )
+    (D,) = np.nonzero(
+        (derivative[:-1] < 0)
+        & (derivative[1:] >= 0)
+        & (0.5 * (values[:-1] + values[1:]) < -values_threshold)
+    )
+
+    return (
+        0.5 * (times[A] + times[A + 1]),
+        0.5 * (times[B] + times[B + 1]),
+        0.5 * (times[C] + times[C + 1]),
+        0.5 * (times[D] + times[D + 1]),
+    )
+
 
 def find_breaths(A, B, C, D):
     # ensure that each type is sorted (though it probably already is)
@@ -63,7 +95,10 @@ def find_breaths(A, B, C, D):
                 combine = [ins[which][0]]
                 ins[which] = ins[which][1:]
                 while True:
-                    if any(len(x) == 0 for x in ins) or np.argmin([ins[i][0] for i in range(4)]) != which:
+                    if (
+                        any(len(x) == 0 for x in ins)
+                        or np.argmin([ins[i][0] for i in range(4)]) != which
+                    ):
                         break
                     combine.append(ins[which][0])
                     ins[which] = ins[which][1:]
@@ -72,8 +107,10 @@ def find_breaths(A, B, C, D):
 
             # missing one type: A -> C -> D -> ...
             else:
-                fill_value = 0.5*(ins[which][0] + ins[nextwhich][0])
-                ins[(which + 1) % 4] = np.concatenate((np.array([fill_value]), ins[(which + 1) % 4]))
+                fill_value = 0.5 * (ins[which][0] + ins[nextwhich][0])
+                ins[(which + 1) % 4] = np.concatenate(
+                    (np.array([fill_value]), ins[(which + 1) % 4])
+                )
 
                 outs.append((which, ins[which][0]))
                 ins[which] = ins[which][1:]
@@ -128,7 +165,9 @@ def measure_breaths(time, flow, volume, pressure):
             breath["inhale flow"] = flow[index]
             breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
-            breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
+            breath["inhale compliance"] = (
+                breath["inhale dV/dt"] / breath["inhale dP/dt"]
+            )
             if i >= 2:
                 breath["min pressure"] = np.min(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
 
@@ -144,7 +183,9 @@ def measure_breaths(time, flow, volume, pressure):
             breath["exhale flow"] = flow[index]
             breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
-            breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
+            breath["exhale compliance"] = (
+                breath["exhale dV/dt"] / breath["exhale dP/dt"]
+            )
             if i >= 2:
                 breath["max pressure"] = np.max(pressure[np.argmin(abs(time - breath_times[i - 2][1])):index])
 

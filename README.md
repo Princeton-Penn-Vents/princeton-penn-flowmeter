@@ -37,7 +37,7 @@ sudo apt install python3-pyqt5 python3-zmq # Required on the base system, includ
 sudo apt-install python3-scipy
 sudo apt install vim                       # For my sanity for development
 sudo python3 -m pip install pyqtgraph pyzmq
-python3 -m pip install black pytest        # Useful for development, skip for production
+python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
 

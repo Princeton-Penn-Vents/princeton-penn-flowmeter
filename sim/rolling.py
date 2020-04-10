@@ -97,6 +97,17 @@ class Rolling:
         return self._current_size
 
 
+def get_last(rolling, n):
+    """
+    Get the last N items or less if less available.abs
+    """
+
+    if n < len(rolling):
+        n = len(rolling)
+
+    return rolling[-n:]
+
+
 def new_elements(rolling, addition):
     """
     Given two sorted arrays, find the number of elements in the second array
