@@ -17,13 +17,12 @@ socket = context.socket(zmq.SUB)
 print("Collecting data")
 socket.connect("tcp://localhost:5556")
 
-socket.setsockopt_string(zmq.SUBSCRIBE, "ppv1")
+socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
 
 for i in range(100):
 
-    string = socket.recv_string()
-    j = json.loads(string[5:])
+    j = socket.recv_json()
     print(f"Received: {j}")
 
     if "max_pressure" in j:

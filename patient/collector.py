@@ -1,6 +1,9 @@
-from nurse.generator import Generator
+#!/usr/bin/env python3
 
-import json
+from nurse.generator import Generator
+from sim.rolling import Rolling
+import numpy as np
+
 import threading
 import zmq
 
@@ -24,11 +27,10 @@ class CollectorThread(threading.Thread):
         socket = context.socket(zmq.SUB)
 
         socket.connect("tcp://localhost:5556")
-        socket.setsockopt_string(zmq.SUBSCRIBE, "ppv1")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
         while not self.signal_end.is_set():
-            string = socket.recv_string()
-            j = json.loads(string[5:])
+            j = socket.recv_json()
 
             with self._lock:
                 self._time.inject(j["t"])
@@ -70,9 +72,12 @@ class Collector(Generator):
 
     def close(self):
         self._thread.signal_end.set()
+        self._thread.join()
 
 
 if __name__ == "__main__":
+    import time
+
     coll = Collector()
     time.sleep(5)
     coll.get_data()

@@ -9,7 +9,6 @@ import signal
 import pigpio
 import binascii
 import spidev
-import json
 import zmq
 
 # ------------------
@@ -108,7 +107,7 @@ def sdp3_handler(signum, frame):
     tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
     tmpADC = getADC(chanMP3V5004)
     d = {"v": 1, "t": ts, "P": tmpADC, "F": tmpdp}
-    socket.send_string(f"ppv1 {json.dumps(d)}")
+    socket.send_json(d)
     # print(d)
 
 

@@ -3,7 +3,6 @@
 # This simulates a sensor.
 
 from datetime import datetime
-import json
 import sys
 import time
 
@@ -38,7 +37,7 @@ try:
         if (nC % write_alarms_every) == 0:
             d = {**d, **alarms}
 
-        socket.send_string(f"ppv1 {json.dumps(d)}")
+        socket.send_json(d)
 
         time.sleep(1 / 50)
         nC += 1
