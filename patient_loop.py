@@ -14,20 +14,22 @@ rotary.display()
 
 # Initialize Collector
 collector = Collector()
+collector.set_rotary(rotary)
 
 passing_window = 100 * 5
 
 # Captures collector
 def prepare():
     collector.get_data()
+    collector.analyze()
 
     return {
         "version": 1,
         "time": datetime.now().timestamp(),
         "alarms": {},
         "data": {
-            "timestamps": get_last(collector.time, passing_window),
-            "flows": get_last(collector.flows, passing_window),
+            "timestamps": get_last(collector.timestamps, passing_window),
+            "flows": get_last(collector.flow, passing_window),
             "pressures": get_last(collector.pressure, passing_window),
         },
     }
@@ -47,5 +49,5 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(prepare()))
 
 
-httpd = http.server.threadinghttpserver(server_address, Handler)
+httpd = http.server.ThreadingHTTPServer(server_address, Handler)
 httpd.serve_forever()

@@ -30,14 +30,17 @@ class Generator(abc.ABC):
         self._alarms = {}
         self._rotary = patient.rotary.MockRotary(patient.rotary.DICT)
 
+    def set_rotary(self, rotary):
+        self._rotary = rotary
+
     @abc.abstractmethod
     def get_data(self):
         pass
 
     def analyze(self):
-        self._volume = scipy.integrate.cumtrapz(self.flow * 1000, self.timestamp / 60.0, initial=0)
+        self._volume = scipy.integrate.cumtrapz(self.flow * 1000, self.realtime / 60.0, initial=0)
 
-        breaths = nurse.analysis.measure_breaths(self.timestamp, self.flow, self.volume, self.pressure)
+        breaths = nurse.analysis.measure_breaths(self.realtime, self.flow, self.volume, self.pressure)
 
         self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(self._breaths, breaths)
 
@@ -46,13 +49,20 @@ class Generator(abc.ABC):
         self._alarms = nurse.analysis.alarms(self._rotary, self._alarms, updated, new_breaths, self._cumulative)
 
     @property
-    @abc.abstractmethod
     def time(self):
-        pass
+        timestamps = self.timestamps
+        if timestamps:
+            return -(timestamps - timestamps[-1]) / 1000
+        else:
+            return timestamps
+
+    @property
+    def realtime(self):
+        return self.timestamps / 1000
 
     @property
     @abc.abstractmethod
-    def timestamp(self):
+    def timestamps(self):
         pass
 
     @property

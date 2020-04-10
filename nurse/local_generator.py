@@ -43,17 +43,9 @@ class LocalGenerator(Generator):
         return np.asarray(self._pressure) * (0.6 if self.status == Status.ALERT else 1)
 
     @property
-    def time(self):
-        if self.status == Status.DISCON:
-            return []
-        if len(self._time) > 0:
-            return -(np.asarray(self._time) - self._time[-1]) / 1000
+    def timestamps(self):
+        if self.status != Status.DISCON and  len(self._time) > 0:
+            return np.asarray(self._time)
         else:
             return np.array([], dtype=np.double)
 
-    @property
-    def timestamp(self):
-        if len(self._time) > 0:
-            return np.asarray(self._time) / 1000
-        else:
-            return np.array([], dtype=np.double)

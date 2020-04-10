@@ -55,7 +55,7 @@ class Collector(Generator):
         (self._time, self._flow, self._pressure) = self._thread.get_data()
 
     @property
-    def time(self):
+    def timestamps(self):
         return self._time
 
     @property
@@ -65,10 +65,6 @@ class Collector(Generator):
     @property
     def pressure(self):
         return self._pressure
-
-    @property
-    def volume(self):
-        return self._pressure  # CHANGE!
 
     def close(self):
         self._thread.signal_end.set()

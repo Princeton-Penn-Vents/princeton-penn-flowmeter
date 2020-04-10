@@ -16,6 +16,9 @@ import numpy as np
 
 from nurse.local_generator import LocalGenerator
 from nurse.remote_generator import RemoteGenerator
+from nurse.generator import Generator
+
+gen : Generator
 
 if arg.port is not None:
     print("Remote: http://{arg.ip}:{arg.port}")
