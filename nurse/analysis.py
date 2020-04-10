@@ -131,7 +131,7 @@ def measure_breaths(generator):
         elif which == 1:
             breath["inhale timestamp"] = t
             breath["inhale flow"] = flow[index]
-            breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
+            breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
             if i >= 2:
@@ -147,7 +147,7 @@ def measure_breaths(generator):
         elif which == 3:
             breath["exhale timestamp"] = t
             breath["exhale flow"] = flow[index]
-            breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
+            breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
             if i >= 2:
