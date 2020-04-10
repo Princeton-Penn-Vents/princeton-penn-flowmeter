@@ -102,10 +102,11 @@ def measure_breaths(generator):
 
     try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
-        smooth_time_v, smooth_volume, smooth_dvolume = smooth_derivative(time, volume)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(time, pressure)
 
-        breath_times = find_breaths(*find_roots(smooth_time_f, smooth_flow, smooth_dflow))
+        turning_points = find_roots(smooth_time_f, smooth_flow, smooth_dflow)
+
+        breath_times = find_breaths(*turning_points)
 
     except ValueError:
         return []
@@ -130,7 +131,7 @@ def measure_breaths(generator):
         elif which == 1:
             breath["inhale timestamp"] = t
             breath["inhale flow"] = flow[index]
-            breath["inhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
+            breath["inhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
 
@@ -144,7 +145,7 @@ def measure_breaths(generator):
         elif which == 3:
             breath["exhale timestamp"] = t
             breath["exhale flow"] = flow[index]
-            breath["exhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
+            breath["exhale dV/dt"] = smooth_flow[np.argmin(abs(smooth_time_f - t))] / 60.0
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
 
