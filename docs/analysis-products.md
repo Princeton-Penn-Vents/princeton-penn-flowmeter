@@ -105,3 +105,7 @@ The following alarms are defined:
 Currently, all of the above-mentioned analysis products are computed in the full workflow (every time the `Generator.analyze` method is called) and the results are attached to the `Generator` object. No further action is performed, such as passing them downstream to the nurse GUI.
 
 **FIXME:** These analysis products must be passed downstream to the nurse GUI!
+
+## Future analysis products
+
+If the **volume** and **flow** are presented on a 2-dimensional plot, they form a phase diagram that is independent of breath starting time, unlike the time-series. This could be useful for characterizing the breath as a shape. These shapes could start and end on the **inhale**, **full**, **exhale**, **empty** turning points to avoid overlaps that clutter the display. However, only a few breaths can be displayed at a time, and the data can't be saved indefinitely because they require the full time-series.
