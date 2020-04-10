@@ -15,11 +15,34 @@ AlertWidget > QLabel {
 }
 
 
-AlertWidget > QPushButton {
+AlertWidget[status="OK"] > QPushButton {
   color: white;
   font: bold;
-  font-size: 30px;
-  background-color: transparent;
+  font-size: 20px;
+  background-color: #97DE79;
+  height: 80px;
+  width: 16px;
+  padding: 2px;
+}
+
+AlertWidget[status="ALERT"] > QPushButton {
+  color: white;
+  font: bold;
+  font-size: 20px;
+  background-color: #ED4337;
+  height: 80px;
+  width: 16px;
+  padding: 2px;
+}
+
+AlertWidget[status="DISCON"] > QPushButton {
+  color: white;
+  font: bold;
+  font-size: 20px;
+  background-color: #4CB3EF;
+  height: 80px;
+  width: 16px;
+  padding: 2px;
 }
 
 AlertWidget[status="OK"] > QLabel {
@@ -32,4 +55,16 @@ AlertWidget[status="ALERT"] > QLabel {
 
 AlertWidget[status="DISCON"] > QLabel {
   background-color: #4CB3EF ;   /* (76,179,239) */
+}
+
+PatientSensor[status="OK"] {
+    border: 1px #97DE79;
+}
+
+PatientSensor[status="ALERT"] {
+    border: 1px #ED4337;
+}
+
+PatientSensor[status="DISCON"] {
+    border: 1px #4CB3EF;
 }
