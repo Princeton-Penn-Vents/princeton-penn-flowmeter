@@ -12,7 +12,7 @@ class LCD:
         self.pi = pigpio.pi()
 
         # Get I2C bus handle
-        self.hLCD = pi.i2c_open(6, DEVICE_LCD)
+        self.hLCD = self.pi.i2c_open(6, DEVICE_LCD)
 
         # initialize
         time.sleep(0.04)  # wait 40ms

@@ -90,13 +90,14 @@ DICT = {
 
 
 class Rotary:
-    pinA = 17  # terminal A
-    pinB = 27  # terminal B
-    pinSW = 22  # switch
-    glitchFilter1 = 1  # 1 ms
-    glitchFilter10 = 10  # 10 ms
 
     def __init__(self, d):
+        pinA = 17  # terminal A
+        pinB = 27  # terminal B
+        pinSW = 22  # switch
+        glitchFilter1 = 1  # 1 ms
+        glitchFilter10 = 10  # 10 ms
+
         self.dict = d
 
         pi = pigpio.pi()
