@@ -1,6 +1,4 @@
 import numpy as np
-import scipy.integrate
-import scipy.signal
 
 def smooth_derivative(times, values, sig=0.2):
     window_width = int(np.ceil(6*sig/np.min(times[1:] - times[:-1])))
@@ -99,8 +97,7 @@ def find_breaths(A, B, C, D):
 def measure_breaths(generator):
     time = -generator.time
     flow = generator.flow
-    volume = scipy.integrate.cumtrapz(flow, -time / 60.0, initial=0)
-    generator._volume = volume
+    volume = generator.volume
     pressure = generator.pressure
 
     try:

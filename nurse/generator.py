@@ -1,6 +1,8 @@
 import abc
 import enum
 
+import scipy.integrate
+
 import nurse.analysis
 
 class Status(enum.Enum):
@@ -25,6 +27,7 @@ class Generator(abc.ABC):
         pass
 
     def analyze(self):
+        self._volume = scipy.integrate.cumtrapz(self.flow, self.time / 60.0, initial=0)
         self._breaths = nurse.analysis.measure_breaths(self)
 
     @property
