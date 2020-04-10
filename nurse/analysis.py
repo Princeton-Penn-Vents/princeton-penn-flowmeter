@@ -119,8 +119,8 @@ def measure_breaths(generator):
             breath["empty timestamp"] = t
             breath["empty pressure"] = pressure[index]
             breath["empty volume"] = volume[index]
-            if "full volume" in breath:
-                breath["tidal volume"] = breath["full volume"] - breath["empty volume"]
+            if i >= 2:
+                breath["inspiratory tidal volume"] = volume[np.argmin(abs(time - breath_times[i - 2][1]))] - breath["empty volume"]
             if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
                 breath["time since last"] = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
 
@@ -138,6 +138,8 @@ def measure_breaths(generator):
             breath["full timestamp"] = t
             breath["full pressure"] = pressure[index]
             breath["full volume"] = volume[index]
+            if i >= 2:
+                breath["expiratory tidal volume"] = breath["full volume"] - volume[np.argmin(abs(time - breath_times[i - 2][1]))]
 
         elif which == 3:
             breath["exhale timestamp"] = t
