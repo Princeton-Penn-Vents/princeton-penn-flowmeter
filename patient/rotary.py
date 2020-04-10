@@ -82,10 +82,16 @@ class SelectionSetting(Setting):
 
 
 DICT = {
-    "MaxFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
-    "MinFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
-    "AveFlow": IncrSetting(50, min=0, max=150, incr=5, unit="L/min"),
-    "AvgFlow Window": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
+    "PIP Max": IncrSetting(30, min=0, max=40, incr=1, unit="cm-H2O"),
+    "PIP Min": IncrSetting(10, min=0, max=20, incr=1, unit="cm-H2O"),
+    "PEEP Max": IncrSetting(8, min=0, max=15, incr=1, unit="cm-H20"),
+    "PEEP Min": IncrSetting(0, min=0, max=15, incr=1, unit="cm-H20"),
+    "TVe Max": IncrSetting(600, min=100, max=1000, incr=50, unit="ml"),
+    "TVe Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml"),
+    "TVi Max": IncrSetting(600, min=100, max=1000, incr=50, unit="ml"),
+    "TVi Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml"),
+    "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
+    "Alarm Reset": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
 }
 
 
