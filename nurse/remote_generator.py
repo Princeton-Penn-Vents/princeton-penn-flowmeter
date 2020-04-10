@@ -52,12 +52,7 @@ class RemoteGenerator(Generator):
         self.status = Status.DISCON
 
     def get_data(self):
-        (
-            self.status,
-            self._time,
-            self._flow,
-            self._pressure,
-        ) = self._thread.get_data()
+        (self.status, self._time, self._flow, self._pressure,) = self._thread.get_data()
 
     @property
     def flow(self):

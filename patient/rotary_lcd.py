@@ -46,6 +46,7 @@ class RotaryLCD(Rotary):
         self.lcd.close()
         super().close()
 
+
 if __name__ == "__main__":
     import time
 
@@ -55,4 +56,3 @@ if __name__ == "__main__":
         time.sleep(1)
 
     rotary.close()
-    

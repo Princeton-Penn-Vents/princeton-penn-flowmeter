@@ -3,6 +3,7 @@ import enum
 
 import nurse.analysis
 
+
 class Status(enum.Enum):
     OK = enum.auto()
     ALERT = enum.auto()

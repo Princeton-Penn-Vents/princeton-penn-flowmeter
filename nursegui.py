@@ -21,6 +21,7 @@ from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
+
 class AlertWidget(QtWidgets.QWidget):
     @property
     def status(self):
@@ -31,15 +32,15 @@ class AlertWidget(QtWidgets.QWidget):
         self.setProperty("status", value.name)
         self.name_btn.style().unpolish(self.name_btn)
         self.name_btn.style().polish(self.name_btn)
-        #the rest is in the style.css
-        
+        # the rest is in the style.css
+
     def __init__(self, i: int):
         super().__init__()
         column_layout = QtWidgets.QVBoxLayout()
         self.setLayout(column_layout)
 
-        self.name_btn = QtWidgets.QPushButton('\n'.join(str(i + 1)))
-        column_layout.addWidget(self.name_btn)#, 2)
+        self.name_btn = QtWidgets.QPushButton("\n".join(str(i + 1)))
+        column_layout.addWidget(self.name_btn)  # , 2)
 
 
 class GraphicsView(pg.GraphicsView):
@@ -66,11 +67,11 @@ class PatientSensor(QtGui.QFrame):
 
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
- #       frame = QtGui.QFrame()
- #       frame.setSpacing(0)
- #       frame.setContentsMargins(0, 0, 0, 0)
- #       self.setLayout(frame)
-        
+        #       frame = QtGui.QFrame()
+        #       frame.setSpacing(0)
+        #       frame.setContentsMargins(0, 0, 0, 0)
+        #       self.setLayout(frame)
+
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
         outer_layout.setContentsMargins(0, 0, 0, 0)
@@ -88,31 +89,31 @@ class PatientSensor(QtGui.QFrame):
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
         graphview.setCentralWidget(graphlayout)
-        layout.addWidget(graphview)#, 7)
+        layout.addWidget(graphview)  # , 7)
 
         self.graph_flow = graphlayout.addPlot(x=[], y=[], name="Flow")
-#        self.graph_flow.setLabel("left", "F", units="L/m")
+        #        self.graph_flow.setLabel("left", "F", units="L/m")
         self.graph_flow.setMouseEnabled(False, False)
         self.graph_flow.invertX()
 
         graphlayout.nextRow()
 
         self.graph_pressure = graphlayout.addPlot(x=[], y=[], name="Pressure")
-#        self.graph_pressure.setLabel("left", "P", units="cm H2O")
+        #        self.graph_pressure.setLabel("left", "P", units="cm H2O")
         self.graph_pressure.setMouseEnabled(False, False)
         self.graph_pressure.invertX()
 
         graphlayout.nextRow()
 
         self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
-#        self.graph_volume.setLabel("left", "V", units="mL")
+        #        self.graph_volume.setLabel("left", "V", units="mL")
         self.graph_volume.setMouseEnabled(False, False)
         self.graph_volume.invertX()
 
         self.alert = AlertWidget(i)
 
-        layout.addWidget(self.alert)#, 3)
-        
+        layout.addWidget(self.alert)  # , 3)
+
         lower = QtWidgets.QWidget()
         # lower.setStyleSheet("background-color: #FEFFCF;");
         outer_layout.addWidget(lower)
@@ -120,10 +121,10 @@ class PatientSensor(QtGui.QFrame):
         lower.setLayout(lower_layout)
 
         self.info_strings = [
-            "RR", #(L/m)
-            "TVe", #(mL)
-            "TVi", #(mL/m)
-            "PIP", #(cm H2O)
+            "RR",  # (L/m)
+            "TVe",  # (mL)
+            "TVi",  # (mL/m)
+            "PIP",  # (cm H2O)
         ]
 
         # dummy
@@ -136,8 +137,8 @@ class PatientSensor(QtGui.QFrame):
         for j in range(len(self.info_strings)):
             self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
             self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
-            self.info_widgets[-1].setContentsMargins(0,0,0,0)
-            self.val_widgets[-1].setContentsMargins(0,0,0,0)
+            self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
+            self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
             lower_layout.addWidget(self.info_widgets[-1], j // nCols, 2 * (j % nCols))
             lower_layout.addWidget(
                 self.val_widgets[-1], j // nCols, 1 + 2 * (j % nCols)
@@ -180,27 +181,27 @@ class PatientSensor(QtGui.QFrame):
         self.curve_volume = self.graph_volume.plot(
             self.flow.time, self.flow.volume, pen=pen
         )
-        #the y limits ought to be configurable.
-        yLims={}
-        yLims['flow']=(-30,30)
-        yLims['pressure']=(0,20)
-        yLims['volume']=(0,20)
+        # the y limits ought to be configurable.
+        yLims = {}
+        yLims["flow"] = (-30, 30)
+        yLims["pressure"] = (0, 20)
+        yLims["volume"] = (0, 20)
 
-        yTicks={}
-        yTicks['flow']=[-25,0,25]
-        yTicks['pressure']=[0,15]
-        yTicks['volume']=[0,15]
-        
-        self.graph_flow.setRange(xRange=(30, 0), yRange=yLims['flow'])
-        self.graph_pressure.setRange(xRange=(30, 0), yRange=yLims['pressure'])
-        self.graph_volume.setRange(xRange=(30, 0), yRange=yLims['volume'])
-        dy= [ (value,str(value)) for value in yTicks['flow'] ]
-        self.graph_flow.getAxis('left').setTicks( [ dy, []])
-        dy= [ (value,str(value)) for value in yTicks['pressure'] ]
-        self.graph_pressure.getAxis('left').setTicks( [ dy, []])
-        dy= [ (value,str(value)) for value in yTicks['volume'] ]
-        self.graph_volume.getAxis('left').setTicks( [ dy, []])
-        
+        yTicks = {}
+        yTicks["flow"] = [-25, 0, 25]
+        yTicks["pressure"] = [0, 15]
+        yTicks["volume"] = [0, 15]
+
+        self.graph_flow.setRange(xRange=(30, 0), yRange=yLims["flow"])
+        self.graph_pressure.setRange(xRange=(30, 0), yRange=yLims["pressure"])
+        self.graph_volume.setRange(xRange=(30, 0), yRange=yLims["volume"])
+        dy = [(value, str(value)) for value in yTicks["flow"]]
+        self.graph_flow.getAxis("left").setTicks([dy, []])
+        dy = [(value, str(value)) for value in yTicks["pressure"]]
+        self.graph_pressure.getAxis("left").setTicks([dy, []])
+        dy = [(value, str(value)) for value in yTicks["volume"]]
+        self.graph_volume.getAxis("left").setTicks([dy, []])
+
         self.graph_flow.setXLink(self.graph_pressure)
         self.graph_flow.setXLink(self.graph_volume)
         self.graph_flow.hideAxis("bottom")
@@ -243,26 +244,24 @@ class PatientGrid(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
+
 class MainStack(QtWidgets.QWidget):
     def __init__(self, *args, ip, port, refresh, **kwargs):
         super().__init__(*args, **kwargs)
-
 
         layout = QtWidgets.QVBoxLayout()
         headerwidget = HeaderWidget(self)
         layout.addWidget(headerwidget)
         patientwidget = PatientGrid(self)
         layout.addWidget(patientwidget)
-      
+
         self.setLayout(layout)
 
         self.graphs = [
             PatientSensor(i, ip=ip, port=port, parent=patientwidget) for i in range(20)
         ]
         for i, graph in enumerate(self.graphs):
-            patientwidget.layout().addWidget(
-                self.graphs[i], *reversed(divmod(i, 4))
-            )
+            patientwidget.layout().addWidget(self.graphs[i], *reversed(divmod(i, 4)))
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
@@ -281,11 +280,13 @@ class HeaderWidget(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        text1= QtWidgets.QLabel("Welcome - lets put our color legend and units here together with other drill down options")
+        text1 = QtWidgets.QLabel(
+            "Welcome - lets put our color legend and units here together with other drill down options"
+        )
         layout.addWidget(text1)
         self.setLayout(layout)
-        
-        
+
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, ip, port, refresh, **kwargs):
         super().__init__(*args, **kwargs)
@@ -300,9 +301,10 @@ class MainWindow(QtWidgets.QMainWindow):
         with open(DIR / "nurse" / "style.css") as f:
             self.setStyleSheet(f.read())
 
-        centralwidget = MainStack(self, *args, ip=ip, port=port, refresh=refresh, **kwargs)
+        centralwidget = MainStack(
+            self, *args, ip=ip, port=port, refresh=refresh, **kwargs
+        )
         self.setCentralWidget(centralwidget)
-
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -312,16 +314,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralWidget().closeEvent()
         super().closeEvent(event)
 
+
 def _interrupt_handler(signum, frame):
     QtGui.QApplication.quit()
 
-def main(argv, *, fullscreen, no_display,  **kwargs):
+
+def main(argv, *, fullscreen, no_display, **kwargs):
     app = QtWidgets.QApplication(argv)
     main = MainWindow(**kwargs)
     if no_display:
         # if there's no display, KeyboardInterrupt is the only way to quit
         signal.signal(signal.SIGINT, _interrupt_handler)
-    else:    
+    else:
         if fullscreen:
             main.showFullScreen()
         else:
@@ -340,7 +344,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--no-display", action="store_true")
-    
+
     arg, unparsed_args = parser.parse_known_args()
     main(
         argv=sys.argv[:1] + unparsed_args,

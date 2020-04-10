@@ -95,9 +95,8 @@ DICT = {
     "TVi Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml"),
     "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Alarm Reset": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
-    "Sensor ID": IncrSetting(1, min=1, max=20, incr=1), # REQUIRED
+    "Sensor ID": IncrSetting(1, min=1, max=20, incr=1),  # REQUIRED
 }
-
 
 
 class Rotary:
