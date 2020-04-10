@@ -11,9 +11,12 @@ class Setting:
         self.unit = unit
         self._lock = threading.Lock()
 
-    def __repr__(self):
+    def __str__(self):
         unit = "" if self.unit is None else f" {self.unit}"
-        return f"{self.__class__.__name__}({self.value}{unit})"
+        return f"{self.value}{unit}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self})"
 
 
 class IncrSetting(Setting):
@@ -92,56 +95,68 @@ DICT = {
     "TVi Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml"),
     "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Alarm Reset": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
+    "Sensor ID": IncrSetting(1, min=1, max=20, incr=1), # REQUIRED
 }
 
 
-class Rotary:
 
-    def __init__(self, d):
+class Rotary:
+    def turned_display(self, up):
+        "Override in subclass to customize"
+        dir = "up" if up else "down"
+        print(f"Changed {self.items[self.current]} {dir}")
+        print(rotary)
+
+    def pushed_display(self):
+        "Override in subclass to customize"
+        print(f"Changed to {self.items[self.current]}")
+        print(rotary)
+
+    def __init__(self, config):
         pinA = 17  # terminal A
         pinB = 27  # terminal B
         pinSW = 22  # switch
-        glitchFilter1 = 1  # 1 ms
-        glitchFilter10 = 10  # 10 ms
+        glitchFilter = 300  # ms
 
-        self.dict = d
+        self.config = config
 
-        pi = pigpio.pi()
-        pi.set_mode(pinA, pigpio.INPUT)
-        pi.set_pull_up_down(pinA, pigpio.PUD_UP)
-        pi.set_glitch_filter(pinA, glitchFilter1)
-        pi.set_mode(pinB, pigpio.INPUT)
-        pi.set_pull_up_down(pinB, pigpio.PUD_UP)
-        pi.set_glitch_filter(pinB, glitchFilter1)
-        pi.set_mode(pinSW, pigpio.INPUT)
-        pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
-        pi.set_glitch_filter(pinSW, glitchFilter10)
+        self.pi = pigpio.pi()
 
-        self.pi = pi
+        self.pi.set_mode(pinA, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinA, glitchFilter)
+
+        self.pi.set_mode(pinB, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinB, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinB, glitchFilter)
+
+        self.pi.set_mode(pinSW, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinSW, glitchFilter)
+
         self.current = 0
-        self.items = list(self.dict.keys())
+        self.items = list(self.config.keys())
 
         def rotary_turned(ch, _level, _tick):
             if ch == pinA:
-                levelB = pi.read(pinB)
+                levelB = self.pi.read(pinB)
                 if levelB:
-                    self.dict[self.items[self.current]].up()  # ClockWise
+                    self.config[self.items[self.current]].up()  # ClockWise
+                    self.turned_display(up=True)
                 else:
-                    self.dict[self.items[self.current]].down()  # CounterClockWise
-            print(f"Changed {self.items[self.current]}")
-            print(rotary)
+                    self.config[self.items[self.current]].down()  # CounterClockWise
+                    self.turned_display(up=False)
 
         def rotary_switch(ch, _level, _tick):
             if ch == pinSW:
-                self.current = (self.current + 1) % len(self.dict)
-            print(f"Changed to {self.items[self.current]}")
-            print(rotary)
+                self.current = (self.current + 1) % len(self.config)
+                self.pushed_display()
 
-        pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
-        pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
+        self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
+        self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
 
     def __getitem__(self, item):
-        return self.dict[item]
+        return self.config[item]
 
     def close(self):
         self.pi.stop()
@@ -149,11 +164,11 @@ class Rotary:
 
     def __del__(self):
         if self.pi is not None:
-            self.pi.stop()
+            self.close()
 
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"
-        for key, value in self.dict.items():
+        for key, value in self.config.items():
             out += f"  {key} : {value}\n"
         return out + "\n)"
 
