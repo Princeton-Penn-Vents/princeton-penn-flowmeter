@@ -65,5 +65,16 @@ When breath records are recomputed, they have to be matched with old breath reco
 
 ## Cumulative measurements
 
-The next data tier is that of cumulative measurements. Each of the following fields has a single value that gets updated with each run of the analysis, unlike the breath records, which accumulate as a growing list.
+The next data tier is that of cumulative measurements. Each of the following fields has a single value that gets updated with each run of the analysis, unlike the breath records, which accumulate as a growing list. Most are exponentially weighted moving averages (EWMA) of breath records with `alpha=0.3`, meaning that it takes about 3 consecutive breaths for a new trend to emerge.
+
+   * **last breath timestamp (sec):** the **realtime** of the latest breath recorded.
+   * **breath interval (sec):** the EWMA of **time since last** from breath records.
+   * **breath rate (1/min):** the reciprocal of **breath interval**, converted from seconds to minutes.
+   * **PIP (cm-H₂O):** the EWMA of **max pressure** from breath records.
+   * **PEEP (cm-H₂O):** the EWMA of **empty pressure** from breath records.
+   * **TVe (mL):** the EWMA of **expiratory tidal volume** from breath records.
+   * **TVi (mL):** the EWMA of **inspiratory tidal volume** from breath records.
+   * **inhale compliance (ml/cm-H₂O):** the EWMA of **inhale compliance** from breath records.
+   * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
+
 
