@@ -9,7 +9,7 @@ parser.add_argument(
     "--port", type=int, help="Select a starting port (8100 recommended)"
 )
 
-arg, unparsed_args = parser.parse_known_args()
+arg = parser.parse_args()
 
 import time
 import numpy as np
@@ -21,7 +21,7 @@ from nurse.generator import Generator
 gen: Generator
 
 if arg.port is not None:
-    print("Remote: http://{arg.ip}:{arg.port}")
+    print(f"Remote: http://{arg.ip}:{arg.port}")
     gen = RemoteGenerator(ip=arg.ip, port=arg.port)
 else:
     print("Local Generator")
@@ -35,9 +35,9 @@ while True:
     gen.get_data()
     gen.analyze()
 
-    with np.printoptions(threshold=6, precision=4, floatmode="fixed"):
+    with np.printoptions(threshold=6, precision=4, floatmode="fixed", linewidth=95):
         print(f"--- Current status ---")
-        print(f"gen.time:          {gen.time} ({len(gen.time)} length)")
+        print(f"gen.timestamps:    {gen.timestamps} ({len(gen.timestamps)} length)")
         print(f"gen.flow:          {gen.flow} ({len(gen.flow)} length)")
         print(f"gen.pressure:      {gen.pressure} ({len(gen.pressure)} length)")
         print(f"gen.volume (calc): {gen.volume} ({len(gen.volume)} length)")

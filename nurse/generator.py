@@ -38,30 +38,33 @@ class Generator(abc.ABC):
         pass
 
     def analyze(self):
-        self._volume = scipy.integrate.cumtrapz(
-            self.flow * 1000, self.realtime / 60.0, initial=0
-        )
+        realtime = self.realtime
 
-        breaths = nurse.analysis.measure_breaths(
-            self.realtime, self.flow, self.volume, self.pressure
-        )
+        if len(realtime) > 0:
+            self._volume = scipy.integrate.cumtrapz(
+                self.flow * 1000, realtime / 60.0, initial=0
+            )
 
-        self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
-            self._breaths, breaths
-        )
+            breaths = nurse.analysis.measure_breaths(
+                realtime, self.flow, self.volume, self.pressure
+            )
 
-        self._cumulative = nurse.analysis.cumulative(
-            self._cumulative, updated, new_breaths
-        )
+            self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
+                self._breaths, breaths
+            )
 
-        self._alarms = nurse.analysis.alarms(
-            self._rotary, self._alarms, updated, new_breaths, self._cumulative
-        )
+            self._cumulative = nurse.analysis.cumulative(
+                self._cumulative, updated, new_breaths
+            )
+
+            self._alarms = nurse.analysis.alarms(
+                self._rotary, self._alarms, updated, new_breaths, self._cumulative
+            )
 
     @property
     def time(self):
         timestamps = self.timestamps
-        if timestamps:
+        if len(timestamps) > 0:
             return -(timestamps - timestamps[-1]) / 1000
         else:
             return timestamps
