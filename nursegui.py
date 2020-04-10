@@ -12,7 +12,9 @@ import os
 import sys
 from pathlib import Path
 
-from nurse.generator import Status, LocalGenerator, RemoteGenerator
+from nurse.generator import Status
+from nurse.local_generator import LocalGenerator
+from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
@@ -226,7 +228,7 @@ class MainStack(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, ip, port, **kwargs):
+    def __init__(self, *args, ip, port, refresh, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -252,7 +254,7 @@ class MainWindow(QtWidgets.QMainWindow):
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
-            graph.qTimer.setInterval(1000)
+            graph.qTimer.setInterval(refresh)
             graph.qTimer.timeout.connect(graph.update_plot)
             graph.qTimer.start()
 
@@ -266,9 +268,9 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(event)
 
 
-def main(argv, *, ip, port, fullscreen):
+def main(argv, *, fullscreen, **kwargs):
     app = QtWidgets.QApplication(argv)
-    main = MainWindow(ip=ip, port=port)
+    main = MainWindow(**kwargs)
     if fullscreen:
         main.showFullScreen()
     else:
@@ -280,6 +282,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
     parser.add_argument(
+        "--refresh", default=1000, type=int, help="Screen refresh timer, in ms"
+    )
+    parser.add_argument(
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
     parser.add_argument("--fullscreen", action="store_true")
@@ -289,4 +294,5 @@ if __name__ == "__main__":
         ip=arg.ip,
         port=arg.port,
         fullscreen=arg.fullscreen,
+        refresh=arg.refresh,
     )

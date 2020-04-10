@@ -16,12 +16,12 @@ import zmq
 # output file setup
 # ------------------
 context = zmq.Context()
-socket = context.socket(zmq.PUB) # publish (broadcast)
+socket = context.socket(zmq.PUB)  # publish (broadcast)
 socket.bind("tcp://*:5556")
 ReadoutHz = 100.0
-#outputFileName = "patient.dat"
-#f = open(outputFileName, "w")
-#sys.stdout = f
+# outputFileName = "patient.dat"
+# f = open(outputFileName, "w")
+# sys.stdout = f
 # ------------------
 # output file end of setup
 # ------------------
@@ -32,7 +32,8 @@ ReadoutHz = 100.0
 spiMCP3008 = spidev.SpiDev()
 spiMCP3008.open(0, 0)
 spiMCP3008.max_speed_hz = 500000
-chanMP3V5004=0
+chanMP3V5004 = 0
+
 
 def getADC(channel):
     # Check channel valid
@@ -43,6 +44,7 @@ def getADC(channel):
     # Reformat
     adcOut = ((r[1] & 3) << 8) + r[2]
     return adcOut
+
 
 # ------------------
 # MCP3008 ADC end of setup
@@ -105,12 +107,13 @@ def sdp3_handler(signum, frame):
     btmpdataSDP3 = tmpdataSDP3[1]
     tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
     tmpADC = getADC(chanMP3V5004)
-    d = {"v":1, "t":ts, "P":tmpADC, "F":tmpdp}
+    d = {"v": 1, "t": ts, "P": tmpADC, "F": tmpdp}
     socket.send_string(f"ppv1 {json.dumps(d)}")
-    #print(d)
+    # print(d)
+
 
 signal.signal(signal.SIGALRM, sdp3_handler)
-signal.setitimer(signal.ITIMER_REAL, 1, 1.0/ReadoutHz)  # Readout in Hz
+signal.setitimer(signal.ITIMER_REAL, 1, 1.0 / ReadoutHz)  # Readout in Hz
 # ------------------
 # SDP3 diff pressure sensor end of setup
 # ------------------

@@ -9,9 +9,9 @@ import spidev
 # ------------------
 # output file setup
 # ------------------
-#outputFileName = "patient.dat"
-#f = open(outputFileName, "w")
-#sys.stdout = f
+# outputFileName = "patient.dat"
+# f = open(outputFileName, "w")
+# sys.stdout = f
 # ------------------
 # output file end of setup
 # ------------------
@@ -22,7 +22,8 @@ import spidev
 spiMCP3008 = spidev.SpiDev()
 spiMCP3008.open(0, 0)
 spiMCP3008.max_speed_hz = 500000
-chanMP3V5004=0
+chanMP3V5004 = 0
+
 
 def getADC(channel):
     # Check channel valid
@@ -34,6 +35,7 @@ def getADC(channel):
     adcOut = ((r[1] & 3) << 8) + r[2]
     return adcOut
 
+
 # ------------------
 # MCP3008 ADC end of setup
 # ------------------
@@ -43,6 +45,7 @@ def sdp3_handler(signum, frame):
     tmpADC = getADC(chanMP3V5004)
     print(ts, tmpADC)
 
+
 signal.signal(signal.SIGALRM, sdp3_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 0.01)  # 10Hz of readout
 
@@ -50,5 +53,5 @@ signal.setitimer(signal.ITIMER_REAL, 1, 0.01)  # 10Hz of readout
 #    wait for readout of diff pressure sensor and pressure sensor (signal interrupt handler)
 while True:
     signal.pause()
-    #time.sleep(1)  # 1 second
+    # time.sleep(1)  # 1 second
     # update display with alarmThreshold1 and setThreshold1 status

@@ -2,8 +2,6 @@
 
 import json
 import numpy as np
-import sys
-import time
 import zmq
 
 from sim.rolling import Rolling
