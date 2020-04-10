@@ -5,7 +5,7 @@ import numpy as np
 
 
 def constant_compliance(**kwargs):
-    return 0.4
+    return 0.1 # L / cm H2O
 
 
 class VentSim:
@@ -110,14 +110,15 @@ class VentSim:
         return flow
 
     def nominal_volume(self):
-        return np.cumsum(self.flow) * (self.sample_length / 1000.0) + self.v0
+        #convert to L from L/m
+        return np.cumsum(self.flow) * (self.sample_length / (60.0*1000.0)) + self.v0
 
     def nominal_pressure(self):
         # We can add **kwargs and join it with locals if we need to go further up the chain
         compliance_val = self.compliance_func
         pressure = np.zeros(len(self.volume))
         pressure[0] = self.peep
-        delta_p = (self.volume[1:] - self.volume[:-1]) * compliance_val()
+        delta_p = (self.volume[1:] - self.volume[:-1]) / compliance_val() #compliance is DeltaV/DeltaP
         pressure[1:] = pressure[0] + np.cumsum(delta_p)
         return pressure
 
