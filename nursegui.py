@@ -262,6 +262,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
+    def closeEvent(self, event):
+        for graph in self.graphs:
+            graph.flow.close()
+        super().closeEvent(event)
+
 
 def _interrupt_handler(signum, frame):
     QtGui.QApplication.quit()
