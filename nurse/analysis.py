@@ -1,7 +1,7 @@
 import numpy as np
 
 def smooth_derivative(times, values, sig=0.2):
-    window_width = int(np.ceil(6*sig/np.min(times[1:] - times[:-1])))
+    window_width = int(np.ceil(4*sig/np.min(times[1:] - times[:-1])))
     windowed_times  = np.lib.stride_tricks.as_strided(times,
                                                       (len(times) - window_width + 1, window_width),
                                                       (times.itemsize, times.itemsize))
