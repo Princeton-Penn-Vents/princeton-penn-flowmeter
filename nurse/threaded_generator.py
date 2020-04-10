@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import requests
+import nurse.analysis
 import threading
 import time
 
@@ -63,3 +64,6 @@ class GeneratorThread(threading.Thread):
                 np.asarray(self._pressure).copy(),
                 np.asarray(self._volume).copy(),
             )
+
+    def analyze(self):
+        self._breaths = nurse.analysis.measure_breaths(self)
