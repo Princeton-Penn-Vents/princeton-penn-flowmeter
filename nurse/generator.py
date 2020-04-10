@@ -23,6 +23,7 @@ class Generator(abc.ABC):
     def __init__(self):
         self._volume = np.array([], dtype=np.double)
         self._breaths = []
+        self._cumulative = {}
         self._alarms = {}
 
     @abc.abstractmethod
@@ -32,8 +33,10 @@ class Generator(abc.ABC):
     def analyze(self):
         self._volume = scipy.integrate.cumtrapz(self.flow, self.time / 60.0, initial=0)
 
-        new_breaths = nurse.analysis.measure_breaths(self)
-        self._breaths = nurse.analysis.combine_breaths(self, self._breaths, new_breaths)
+        breaths = nurse.analysis.measure_breaths(self)
+        self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(self._breaths, breaths)
+
+        self._cumulative = nurse.analysis.cumulative(self._cumulative, updated, new_breaths)
 
     @property
     @abc.abstractmethod

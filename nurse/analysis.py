@@ -158,9 +158,10 @@ def measure_breaths(generator):
 
     return breaths
 
-def combine_breaths(generator, old_breaths, new_breaths):
+def combine_breaths(old_breaths, new_breaths):
     breaths = list(old_breaths)
     new_breaths = list(new_breaths)
+    updated = []
 
     first_to_check = max(0, len(breaths) - len(new_breaths) - 1)
     for i in range(first_to_check, len(breaths)):
@@ -180,6 +181,7 @@ def combine_breaths(generator, old_breaths, new_breaths):
             if same:
                 # take all fields that are defined in either old or new, but preferring new if it's in both
                 breaths[i] = {**breaths[i], **new_breaths[j]}  # Python>=3.5
+                updated.append(breaths[i])
                 drop.append(j)
                 break
 
@@ -188,4 +190,34 @@ def combine_breaths(generator, old_breaths, new_breaths):
 
     breaths.extend(new_breaths)
 
-    return breaths
+    return breaths, updated, new_breaths
+
+def moving_average(cumulative, key, value, alpha=0.1):
+    if key not in cumulative:
+        return value
+    else:
+        return alpha*value + (1.0 - alpha)*cumulative[key]
+
+def cumulative(cumulative, updated, new_breaths):
+    for breath in updated + new_breaths:
+        timestamp = None
+        if "empty timestamp" in breath and (timestamp is None or timestamp < breath["empty timestamp"]):
+            timestamp = breath["empty timestamp"]
+        if "inhale timestamp" in breath and (timestamp is None or timestamp < breath["inhale timestamp"]):
+            timestamp = breath["inhale timestamp"]
+        if "full timestamp" in breath and (timestamp is None or timestamp < breath["full timestamp"]):
+            timestamp = breath["full timestamp"]
+        if "exhale timestamp" in breath and (timestamp is None or timestamp < breath["exhale timestamp"]):
+            timestamp = breath["exhale timestamp"]
+
+        this_is_new = False
+        if timestamp is not None:
+            # the smoothing sigma is 0.2 sec (see smooth_derivative), so cut at 3*0.2
+            if "last breath timestamp" not in cumulative or cumulative["last breath timestamp"] + 3*0.2 < timestamp:
+                cumulative["last breath timestamp"] = timestamp
+                this_is_new = True
+
+        if this_is_new and "time since last" in breath:
+            cumulative["breath interval"] = moving_average(cumulative, "breath interval", breath["time since last"])
+
+    return cumulative
