@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pigpio
-
+import time
 
 class LCD:
     DEVICE_LCD = 0x3C  # Slave 0x78 << 1
@@ -12,7 +12,7 @@ class LCD:
         self.pi = pigpio.pi()
 
         # Get I2C bus handle
-        self.hLCD = self.pi.i2c_open(6, DEVICE_LCD)
+        self.hLCD = self.pi.i2c_open(6, self.DEVICE_LCD)
 
         # initialize
         time.sleep(0.04)  # wait 40ms
@@ -37,20 +37,20 @@ class LCD:
 
         self.ctrl(0x06)  # Entry mode increment
 
-    def ctrl(value):
+    def ctrl(self, value):
         self.pi.i2c_write_device(self.hLCD, [0x00, value])
 
-    def text(text):
+    def text(self, text):
         b = text.encode("ascii")
         self.pi.i2c_write_device(self.hLCD, [0x40] + [*b])
 
-    def upper(text, *, pos=0):
+    def upper(self, text, *, pos=0):
         if pos is "center":
             pos = (20 - len(text)) // 2
         self.ctrl(0x80 + pos)
         self.text(text)
 
-    def lower(text, *, pos=0):
+    def lower(self, text, *, pos=0):
         if pos is "center":
             pos = (20 - len(text)) // 2
         self.ctrl(0xC0 + pos)
