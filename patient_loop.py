@@ -29,9 +29,9 @@ def prepare():
         "time": datetime.now().timestamp(),
         "alarms": {},
         "data": {
-            "timestamps": get_last(collector.timestamps, passing_window),
-            "flows": get_last(collector.flow, passing_window),
-            "pressures": get_last(collector.pressure, passing_window),
+            "timestamps": get_last(collector.timestamps, passing_window).tolist(),
+            "flows": get_last(collector.flow, passing_window).tolist(),
+            "pressures": get_last(collector.pressure, passing_window).tolist(),
         },
     }
 
