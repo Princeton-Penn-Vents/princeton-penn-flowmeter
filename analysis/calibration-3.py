@@ -63,7 +63,7 @@ df_DP
 # In[5]:
 
 
-comparator = df_Q["Volumetric Flow"].fillna(method="ffill").values**(7/4)
+comparator = df_Q["Volumetric Flow"].rolling(5).mean().fillna(method="bfill").values**(7/4)
 delta = abs(comparator[1:] - comparator[:-1])
 origin_Q = df_Q["Time"].values[np.argmax(delta)]
 df_Q["Common Time"] = (df_Q["Time"] - origin_Q).dt.total_seconds()
@@ -79,7 +79,7 @@ df_Q["Common Time"]
 # In[6]:
 
 
-comparator = df_DP["Delta Pressure"].fillna(method="ffill").values
+comparator = df_DP["Delta Pressure"].rolling(5).mean().fillna(method="bfill").values
 delta = abs(comparator[1:] - comparator[:-1])
 origin_DP = df_DP["Time"].values[np.argmax(delta)]
 df_DP["Common Time"] = df_DP["Time"] - origin_DP
