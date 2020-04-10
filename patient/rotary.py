@@ -119,7 +119,7 @@ class Rotary:
 
         self.pi = pi
         self.current = 0
-        self.items = list(self.dict.keys)
+        self.items = list(self.dict.keys())
 
         def rotary_turned(ch, _level, _tick):
             if ch == pinA:
@@ -128,10 +128,14 @@ class Rotary:
                     self.dict[self.items[self.current]].up()  # ClockWise
                 else:
                     self.dict[self.items[self.current]].down()  # CounterClockWise
+            print("Changed {self.items[self.current]}")
+            print(rotary)
 
         def rotary_switch(ch, _level, _tick):
             if ch == pinSW:
                 self.current = (self.current + 1) % len(self.dict)
+            print("Changed to {self.items[self.current]}")
+            print(rotary)
 
         pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
         pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
@@ -161,6 +165,5 @@ if __name__ == "__main__":
 
     while True:
         signal.pause()
-        print(rotary)
 
     rotary.close()
