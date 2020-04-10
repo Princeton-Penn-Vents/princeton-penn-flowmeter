@@ -50,3 +50,20 @@ A breath record may have any of the following fields. (Field names include space
    * **empty pressure (cm-H₂O):** the original, unsmoothed **pressure** at the time of **empty**, which is often but not necessarily equal to **min pressure**.
    * **empty volume (mL):** the original, unsmoothed **volume** at the time of **empty**, which is always the minimum for this breath.
    * **time since last (sec):** the time difference between this breath (at **empty**) and the previous breath (at its **empty**).
+
+## Recomputing breath records
+
+Since the time-series has finite duration, it necessarily clips some part of the first breath and some part of the last breath in its range. As data are accumulated, old time-series data are dropped off one end of the buffer and new time-series data are added to the other. By repeating the analysis on overlapping segments of time, we can recover clipped breaths. Since breath records require much less memory than the original time-series, a longer history of breaths may be saved.
+
+To recover all clipped breaths, the analysis must be performed at least once per `length of time-series` minus `length of one breath` and at most twice per `length of time-series`. Since breath lengths are variable and the analysis is computationally inexpensive, twice per `length of time-series` would be best. This also implies that the length of the time-series must be considerably longer than two breaths, which it is (currently 15 seconds).
+
+**FIXME:** The analysis is currently being run once every second, which is considerably more often than twice per time-series. It could be a lot less frequent than that. Perhaps the **volume** (derived time-series) is desired at 1 second intervals, but the breath records do not need to be constructed this often.
+
+When breath records are recomputed, they have to be matched with old breath records. Any of the four timestamps (**inhale**, **full**, **exhale**, **empty**) that match within 3 × the Gaussian smoothing sigma (0.6 seconds) qualifies as a match. When old and new breath records are identified, any fields that are present in old or new but not the other are kept, and new fields are kept if both old and new are present.
+
+**FIXME:** The breath data accumulates indefinitely. At some point it should be batched to disk or dropped entirely.
+
+## Cumulative measurements
+
+The next data tier is that of cumulative measurements. Each of the following fields has a single value that gets updated with each run of the analysis, unlike the breath records, which accumulate as a growing list.
+
