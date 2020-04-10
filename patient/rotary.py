@@ -156,8 +156,7 @@ class Rotary:
 
     @property
     def current_key(self):
-        with self._lock:
-            return self._listing[self.current]
+        return self.items[self.current]
 
     def __getitem__(self, item):
         return self.config[item]
