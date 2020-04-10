@@ -44,6 +44,13 @@ class LocalGenerator(Generator):
         else:
             return np.array([], dtype=np.double)
 
+    @property
+    def timestamp(self):
+        if len(self._time) > 0:
+            return np.asarray(self._time) / 1000
+        else:
+            return np.array([], dtype=np.double)
+
 
 class RemoteGenerator(Generator):
     def __init__(self, *, ip="127.0.0.1", port=None):
@@ -74,6 +81,15 @@ class RemoteGenerator(Generator):
         elif len(self._time) > 0:
             # This could be datetime.now().timestamp() if clocks accurate, but oddly doesn't work on the pi. Maybe another truncation issue.
             return -((np.asarray(self._time) - self._time[-1]) / 1000)
+        else:
+            return np.array([], dtype=np.double)
+
+    @property
+    def timestamp(self):
+        if self.status is Status.DISCON:
+            return np.array([], dtype=np.double)
+        elif len(self._time) > 0:
+            return np.asarray(self._time) / 1000
         else:
             return np.array([], dtype=np.double)
 

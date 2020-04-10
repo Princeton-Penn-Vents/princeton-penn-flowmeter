@@ -37,6 +37,11 @@ class Generator(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def timestamp(self):
+        pass
+
+    @property
+    @abc.abstractmethod
     def flow(self):
         pass
 

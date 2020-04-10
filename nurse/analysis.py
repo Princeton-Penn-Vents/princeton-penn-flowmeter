@@ -95,7 +95,7 @@ def find_breaths(A, B, C, D):
     return outs
 
 def measure_breaths(generator):
-    time = -generator.time
+    time = generator.timestamp
     flow = generator.flow
     volume = generator.volume
     pressure = generator.pressure
@@ -116,37 +116,35 @@ def measure_breaths(generator):
         index = np.argmin(abs(time - t))
 
         if which == 0:
-            breath["empty time"] = -t
+            breath["empty timestamp"] = t
             breath["empty pressure"] = pressure[index]
             breath["empty volume"] = volume[index]
             if "full volume" in breath:
                 breath["tidal volume"] = breath["full volume"] - breath["empty volume"]
-            if len(breaths) > 0 and "empty time" in breaths[-1]:
-                breath["time since last"] = breath["empty time"] - breaths[-1]["empty time"]
+            if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
+                breath["time since last"] = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
 
             breaths.append(breath)
             breath = {}
 
         elif which == 1:
+            breath["inhale timestamp"] = t
             breath["inhale flow"] = flow[index]
             breath["inhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
             breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["inhale compliance"] = breath["inhale dV/dt"] / breath["inhale dP/dt"]
-            if i >= 2:
-                breath["inhale duration"] = t - breath_times[i - 2][1]
 
         elif which == 2:
-            breath["full time"] = -t
+            breath["full timestamp"] = t
             breath["full pressure"] = pressure[index]
             breath["full volume"] = volume[index]
 
         elif which == 3:
+            breath["exhale timestamp"] = t
             breath["exhale flow"] = flow[index]
             breath["exhale dV/dt"] = smooth_dvolume[np.argmin(abs(smooth_time_v - t))]
             breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
             breath["exhale compliance"] = breath["exhale dV/dt"] / breath["exhale dP/dt"]
-            if i >= 2:
-                breath["exhale duration"] = t - breath_times[i - 2][1]
 
     if len(breath) != 0:
         breaths.append(breath)
