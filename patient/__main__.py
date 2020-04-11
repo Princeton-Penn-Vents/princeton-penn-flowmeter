@@ -130,7 +130,7 @@ forever = threading.Event()
 def signal_handler(signal, frame):
     print("You pressed Ctrl+C!")
     pi.i2c_close(hSDP3)
-    pi.close()
+    pi.stop()
     forever.set()
 
 
