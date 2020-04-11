@@ -15,6 +15,7 @@ import argparse
 import numpy as np
 import os
 import sys
+import math
 from pathlib import Path
 
 from nurse.generator import Status
@@ -23,23 +24,25 @@ from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
-guicolors = { "ALERT" : QtGui.QColor(160,200,255),
-              "patient_border" : "rgb(160,200,255)"
-}
+guicolors = {"ALERT": QtGui.QColor(160, 200, 255), "patient_border": "rgb(160,200,255)"}
 
-class GraphInfo():
 
+class GraphInfo:
     def __init__(self):
         # the y limits ought to be configurable.
         self.graph_labels = ["flow", "pressure", "volume"]
         self.graph_pens = {}
         self.graph_pens["flow"] = (120, 255, 50)
-        self.graph_pens["pressure"] =(255, 120, 50)
-        self.graph_pens["volume"] =(255, 128, 255)
+        self.graph_pens["pressure"] = (255, 120, 50)
+        self.graph_pens["volume"] = (255, 128, 255)
 
-        self.graph_pen_qcol={}
+        self.graph_pen_qcol = {}
         for key in self.graph_pens:
-            self.graph_pen_qcol[key]= QtGui.QColor(self.graph_pens[key][0], self.graph_pens[key][1], self.graph_pens[key][2])
+            self.graph_pen_qcol[key] = QtGui.QColor(
+                self.graph_pens[key][0],
+                self.graph_pens[key][1],
+                self.graph_pens[key][2],
+            )
 
         self.yLims = {}
         self.yLims["flow"] = (-30, 30)
@@ -56,7 +59,6 @@ class GraphInfo():
         self.units["pressure"] = "cm H2O"
         self.units["volume"] = "mL"
 
-    
 
 class AlertWidget(QtWidgets.QWidget):
     @property
@@ -87,11 +89,11 @@ class AlertWidget(QtWidgets.QWidget):
 
         lower = QtWidgets.QWidget()
         lower_layout = QtWidgets.QGridLayout()
-        lower_layout.setContentsMargins(0,0,0,0)
-        lower_layout.setColumnMinimumWidth(1,20) #big enough - maybe too big?
+        lower_layout.setContentsMargins(0, 0, 0, 0)
+        lower_layout.setColumnMinimumWidth(1, 20)  # big enough - maybe too big?
         lower_layout.setVerticalSpacing(0)
         lower_layout.setSpacing(0)
-        
+
         lower.setLayout(lower_layout)
         self.info_vals = [12.2, 20.0, 12.2, 20.0]
 
@@ -104,11 +106,11 @@ class AlertWidget(QtWidgets.QWidget):
             self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.widget_lookup[self.info_strings[j]] = j
-            lower_layout.addWidget(self.info_widgets[-1], j, 0 )
-            lower_layout.addWidget(self.val_widgets[-1], j, 1  )
+            lower_layout.addWidget(self.info_widgets[-1], j, 0)
+            lower_layout.addWidget(self.val_widgets[-1], j, 1)
 
         column_layout.addWidget(lower)
-       
+
 
 class GraphicsView(pg.GraphicsView):
     def __init__(self, *args, i, **kwargs):
@@ -131,11 +133,13 @@ class PatientSensor(QtGui.QFrame):
         self.setProperty("status", value.name)
         self.style().unpolish(self.graphview)
         self.style().polish(self.graphview)
-        
+
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("PatientInfo")
-        self.setStyleSheet("#PatientInfo { border: 1px solid "+guicolors["patient_border"]+" }") #borders 
+        self.setStyleSheet(
+            "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
+        )  # borders
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -188,7 +192,7 @@ class PatientSensor(QtGui.QFrame):
         self.status = self.flow.status
 
         if self.status == Status.ALERT:
-            graphview.setBackground(guicolors['ALERT'])
+            graphview.setBackground(guicolors["ALERT"])
 
         self.alert.name_btn.clicked.connect(self.click_number)
 
@@ -209,19 +213,21 @@ class PatientSensor(QtGui.QFrame):
 
         gis = GraphInfo()
 
-        self.curves={}
-        first_graph = getattr(self,"graph_"+gis.graph_labels[0])
-        for i,key in enumerate(gis.graph_labels): 
-            graph = getattr(self,"graph_"+key)
+        self.curves = {}
+        first_graph = getattr(self, "graph_" + gis.graph_labels[0])
+        for i, key in enumerate(gis.graph_labels):
+            graph = getattr(self, "graph_" + key)
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
-            self.curves[key] = graph.plot(self.flow.time, getattr(self.flow,key), pen=pen)
+            self.curves[key] = graph.plot(
+                self.flow.time, getattr(self.flow, key), pen=pen
+            )
 
             graph.setRange(xRange=(30, 0), yRange=gis.yLims[key])
             dy = [(value, str(value)) for value in gis.yTicks[key]]
             graph.getAxis("left").setTicks([dy, []])
-            if i!=len(gis.graph_labels)-1:
+            if i != len(gis.graph_labels) - 1:
                 graph.hideAxis("bottom")
-            if i!=0:
+            if i != 0:
                 first_graph.setXLink(graph)
             graph.addLine(y=0)
 
@@ -231,22 +237,20 @@ class PatientSensor(QtGui.QFrame):
         self.flow.analyze()
         gis = GraphInfo()
 
-        for i,key in enumerate(gis.graph_labels):
-            graph = getattr(self,"graph_"+key)
-            self.curves[key].setData(self.flow.time, getattr(self.flow,key))
-            
+        for i, key in enumerate(gis.graph_labels):
+            graph = getattr(self, "graph_" + key)
+            self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
-        #look for status changes
+        # look for status changes
         if self.flow.status != self.alert.status:
             self.alert.status = self.flow.status
             self.status = self.flow.status
 
             if self.status == Status.ALERT:
-                self.graphview.setBackground(QtGui.QColor(160,200,255))
+                self.graphview.setBackground(QtGui.QColor(160, 200, 255))
             else:
-                self.graphview.setBackground(QtGui.QColor(0,0,0))
-            
-            
+                self.graphview.setBackground(QtGui.QColor(0, 0, 0))
+
         for key in self.alert.widget_lookup:
             val = self.alert.widget_lookup[key]
             v = np.random.uniform(5.0, 15.0)
@@ -254,7 +258,7 @@ class PatientSensor(QtGui.QFrame):
 
 
 class PatientGrid(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, width, **kwargs):
         super().__init__(*args, **kwargs)
 
         layout = QtWidgets.QGridLayout()
@@ -262,29 +266,35 @@ class PatientGrid(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Avoid wiggles when updating
-        for i in range(4):
+        for i in range(width):
             layout.setColumnStretch(i, 3)
 
         self.setLayout(layout)
 
 
 class MainStack(QtWidgets.QWidget):
-    def __init__(self, *args, ip, port, refresh, **kwargs):
+    def __init__(self, *args, ip, port, refresh, displays, **kwargs):
         super().__init__(*args, **kwargs)
+
+        height = math.ceil(math.sqrt(displays))
+        width = math.ceil(displays / height)
 
         layout = QtWidgets.QVBoxLayout()
         headerwidget = HeaderWidget(self)
         layout.addWidget(headerwidget)
-        patientwidget = PatientGrid(self)
+        patientwidget = PatientGrid(self, width=width)
         layout.addWidget(patientwidget)
 
         self.setLayout(layout)
 
         self.graphs = [
-            PatientSensor(i, ip=ip, port=port, parent=patientwidget) for i in range(20)
+            PatientSensor(i, ip=ip, port=port, parent=patientwidget)
+            for i in range(displays)
         ]
         for i, graph in enumerate(self.graphs):
-            patientwidget.layout().addWidget(self.graphs[i], *reversed(divmod(i, 5)))
+            patientwidget.layout().addWidget(
+                self.graphs[i], *reversed(divmod(i, height))
+            )
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
@@ -307,17 +317,16 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
 
-        text = QtWidgets.QLabel(
-            "     Princeton Open Vent Monitor"
-        )
+        text = QtWidgets.QLabel("     Princeton Open Vent Monitor")
         text.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
-        text.setStyleSheet("color: #F58025;");
+        text.setStyleSheet("color: #F58025;")
         text.setAlignment(Qt.AlignLeft)
-        layout.addWidget(logolabel,0,Qt.AlignVCenter)
-        layout.addWidget(text,0,Qt.AlignVCenter)
+        layout.addWidget(logolabel, 0, Qt.AlignVCenter)
+        layout.addWidget(text, 0, Qt.AlignVCenter)
         layout.addStretch()
         layout.setSpacing(0)
         self.setLayout(layout)
+
 
 class NSFLogoWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -328,9 +337,10 @@ class NSFLogoWidget(QtWidgets.QWidget):
         logo = QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
-        layout.addWidget(logolabel,0,Qt.AlignVCenter)
+        layout.addWidget(logolabel, 0, Qt.AlignVCenter)
         layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
+
 
 class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -341,44 +351,50 @@ class GraphLabelWidget(QtWidgets.QWidget):
 
         gis = GraphInfo()
 
-        alpha=140
-        values={}
+        alpha = 140
+        values = {}
         for key in gis.graph_pen_qcol:
-            pen=gis.graph_pen_qcol[key]
-            values[key]="{r}, {g}, {b}, {a}".format(r = pen.red(),
-                                                    g = pen.green(),
-                                                    b = pen.blue(),
-                                                    a = alpha
-                                                    )
+            pen = gis.graph_pen_qcol[key]
+            values[key] = "{r}, {g}, {b}, {a}".format(
+                r=pen.red(), g=pen.green(), b=pen.blue(), a=alpha
+            )
 
         text = QtWidgets.QLabel("Graph settings")
         text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
         text.setStyleSheet("QLabel { color: ghostwhite }")
         text.setAlignment(Qt.AlignLeft)
-        layout.addWidget(text,1,Qt.AlignVCenter)
-        self.buttons={}
-        
+        layout.addWidget(text, 1, Qt.AlignVCenter)
+        self.buttons = {}
+
         for key in gis.graph_labels:
-            name_btn = QtWidgets.QPushButton(key.capitalize()+'('+gis.units[key]+')')
+            name_btn = QtWidgets.QPushButton(
+                key.capitalize() + "(" + gis.units[key] + ")"
+            )
             name_btn.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
-            name_btn.setStyleSheet("QPushButton { background-color: 'transparent'; color: rgba("+values[key]+"); }")
-            self.buttons[key]=name_btn
-            layout.addWidget(name_btn,1,Qt.AlignVCenter)
+            name_btn.setStyleSheet(
+                "QPushButton { background-color: 'transparent'; color: rgba("
+                + values[key]
+                + "); }"
+            )
+            self.buttons[key] = name_btn
+            layout.addWidget(name_btn, 1, Qt.AlignVCenter)
             name_btn.clicked.connect(self.click_graph_info)
 
         self.setLayout(layout)
 
     @Slot()
     def click_graph_info(self):
-        #ok - this needs to get generalized and extended
-        number, ok = QtWidgets.QInputDialog.getDouble(self, "Adjust plots", "Min Y axis", 10, 0, 100)
+        # ok - this needs to get generalized and extended
+        number, ok = QtWidgets.QInputDialog.getDouble(
+            self, "Adjust plots", "Min Y axis", 10, 0, 100
+        )
         if ok:
             try:
-                print("Found number",number,ok)
+                print("Found number", number, ok)
             except ValueError:
                 return
 
-        
+
 class HeaderWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -389,11 +405,10 @@ class HeaderWidget(QtWidgets.QWidget):
         princeton_logo = PrincetonLogoWidget()
         graph_info = GraphLabelWidget()
         nsf_logo = NSFLogoWidget()
-        layout.addWidget(princeton_logo,6)
-        layout.addWidget(graph_info,6)
-        layout.addWidget(nsf_logo,2)
+        layout.addWidget(princeton_logo, 6)
+        layout.addWidget(graph_info, 6)
+        layout.addWidget(nsf_logo, 2)
 
-      
         self.setLayout(layout)
 
     @Slot()
@@ -404,15 +419,16 @@ class HeaderWidget(QtWidgets.QWidget):
                 port = int(number)
             except ValueError:
                 return
-            print("hi there",number)
+            print("hi there", number)
 
-        
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, ip, port, refresh, **kwargs):
+    def __init__(self, *args, ip, port, refresh, displays, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
-        self.resize(1920, 1080)
+
+        if displays > 4:
+            self.resize(1920, 1080)
 
         # May be expensive, probably only enable if we multithread the draw
         # pg.setConfigOptions(antialias=True)
@@ -423,7 +439,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStyleSheet(f.read())
 
         centralwidget = MainStack(
-            self, *args, ip=ip, port=port, refresh=refresh, **kwargs
+            self, *args, ip=ip, port=port, refresh=refresh, displays=displays, **kwargs
         )
         self.setCentralWidget(centralwidget)
 
@@ -455,7 +471,9 @@ def main(argv, *, fullscreen, no_display, **kwargs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
     parser.add_argument(
         "--refresh", default=1000, type=int, help="Screen refresh timer, in ms"
@@ -465,6 +483,13 @@ if __name__ == "__main__":
     )
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--no-display", action="store_true")
+    parser.add_argument(
+        "--displays",
+        "-n",
+        type=int,
+        default=20,
+        help="# of displays, currently not dynamic",
+    )
 
     arg, unparsed_args = parser.parse_known_args()
     main(
@@ -473,5 +498,6 @@ if __name__ == "__main__":
         port=arg.port,
         fullscreen=arg.fullscreen,
         no_display=arg.no_display,
+        displays=arg.displays,
         refresh=arg.refresh,
     )
