@@ -237,7 +237,7 @@ class PatientGrid(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Avoid wiggles when updating
-        for i in range(5):
+        for i in range(4):
             layout.setColumnStretch(i, 3)
 
         self.setLayout(layout)
@@ -259,7 +259,7 @@ class MainStack(QtWidgets.QWidget):
             PatientSensor(i, ip=ip, port=port, parent=patientwidget) for i in range(20)
         ]
         for i, graph in enumerate(self.graphs):
-            patientwidget.layout().addWidget(self.graphs[i], *reversed(divmod(i, 4)))
+            patientwidget.layout().addWidget(self.graphs[i], *reversed(divmod(i, 5)))
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
