@@ -5,6 +5,7 @@ import signal
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import pyqtSlot as Slot  # Named like PySide
 from PyQt5 import QtGui
+from PyQt5.QtGui import QPixmap, QFont
 
 import pyqtgraph as pg
 
@@ -279,11 +280,23 @@ class HeaderWidget(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(0)
+        layout.setColumnStretch(1,1)
+        layout.setColumnStretch(2,0)
         layout.setContentsMargins(0, 0, 0, 0)
+        logo = QPixmap("images/PUsig2-158C-shield.png").scaledToWidth(18)
+        logolabel = QtWidgets.QLabel()
+        logolabel.setPixmap(logo)
         text1 = QtWidgets.QLabel(
-            "Welcome - lets put our color legend and units here together with other drill down options"
+            "  Princeton Open Vent Monitor"
         )
+        text1.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
+        text1.setStyleSheet("color: #E77500;");
+        text2 = QtWidgets.QLabel(
+            "Lets put our color legend and units here together with other drill down options"
+        )
+        layout.addWidget(logolabel)
         layout.addWidget(text1)
+        layout.addWidget(text2)
         self.setLayout(layout)
 
 
