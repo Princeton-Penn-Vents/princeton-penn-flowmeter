@@ -296,13 +296,13 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel.setPixmap(logo)
 
         text = QtWidgets.QLabel(
-            "  Princeton Open Vent Monitor"
+            " Princeton Open Vent Monitor"
         )
         text.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
         text.setStyleSheet("color: #F58025;");
         text.setAlignment(Qt.AlignLeft)
-        layout.addWidget(logolabel)
-        layout.addWidget(text)
+        layout.addWidget(logolabel,0,Qt.AlignVCenter)
+        layout.addWidget(text,0,Qt.AlignVCenter)
         layout.addStretch()
         layout.setSpacing(0)
         self.setLayout(layout)
@@ -316,7 +316,7 @@ class NSFLogoWidget(QtWidgets.QWidget):
         logo = QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
-        layout.addWidget(logolabel)
+        layout.addWidget(logolabel,0,Qt.AlignVCenter)
         layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
@@ -343,7 +343,7 @@ class GraphLabelWidget(QtWidgets.QWidget):
         text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
         text.setStyleSheet("QLabel { color: ghostwhite }")
         text.setAlignment(Qt.AlignLeft)
-        layout.addWidget(text,1)
+        layout.addWidget(text,1,Qt.AlignVCenter)
 
         for key in gis.graph_labels:
             name_btn = QtWidgets.QPushButton(key.capitalize()+'('+gis.units[key]+')')
@@ -355,7 +355,7 @@ class GraphLabelWidget(QtWidgets.QWidget):
 #            text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
 #            text.setAlignment(Qt.AlignCenter)
 #            layout.addWidget(text,1)
-            layout.addWidget(name_btn,1)
+            layout.addWidget(name_btn,1,Qt.AlignVCenter)
         
         self.setLayout(layout)
         
