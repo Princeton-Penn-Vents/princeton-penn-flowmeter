@@ -186,12 +186,12 @@ class PatientSensor(QtGui.QFrame):
         yLims = {}
         yLims["flow"] = (-30, 30)
         yLims["pressure"] = (0, 20)
-        yLims["volume"] = (0, 20)
+        yLims["volume"] = (-1000, 1000)
 
         yTicks = {}
         yTicks["flow"] = [-25, 0, 25]
         yTicks["pressure"] = [0, 15]
-        yTicks["volume"] = [0, 15]
+        yTicks["volume"] = [-1000, 1000]
 
         self.graph_flow.setRange(xRange=(30, 0), yRange=yLims["flow"])
         self.graph_pressure.setRange(xRange=(30, 0), yRange=yLims["pressure"])
