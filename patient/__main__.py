@@ -113,7 +113,7 @@ print(time.time(), dp, temp, dpsf)
 print("{} {:.4f} {:.4f}".format(time.time(), (float)(dp / dpsf), (float)(temp / 200.0)))
 
 if arg.file:
-    myfile = open(arg.file, "wa")
+    myfile = open(arg.file, "a")
     atexit.register(myfile.close)
 else:
     myfile = None
