@@ -23,8 +23,10 @@ COLOR = {
 
 class Generator(abc.ABC):
     def __init__(self):
-        self._old_realtime = None
         self._volume = np.array([], dtype=np.double)
+        self._old_realtime = None
+        self._volume_unshifted_min = None
+        self._volume_shift = 0.0
         self._breaths = []
         self._cumulative = {}
         self._alarms = {}
@@ -42,11 +44,16 @@ class Generator(abc.ABC):
 
         if len(realtime) > 0:
             self._volume = nurse.analysis.flow_to_volume(
-                realtime, self._old_realtime, self.flow, self._volume
+                realtime, self._old_realtime, self.flow, self._volume - self._volume_shift
             )
-            # strictly speaking, we only need to save as much of this as would
-            # be lost before the next call to analyze.
             self._old_realtime = realtime
+            if self._volume_unshifted_min is None:
+                self._volume_unshifted_min = np.min(self._volume)
+            else:
+                self._volume_unshifted_min = min(self._volume_unshifted_min, np.min(self._volume))
+
+            self._volume_shift = -self._volume_unshifted_min
+            self._volume = self._volume + self._volume_shift
 
             breaths = nurse.analysis.measure_breaths(
                 realtime, self.flow, self.volume, self.pressure
