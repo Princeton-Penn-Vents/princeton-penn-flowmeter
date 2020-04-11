@@ -172,17 +172,12 @@ class PatientSensor(QtGui.QFrame):
         self.flow.get_data()
         self.flow.analyze()
 
-        pen = pg.mkPen(color=(120, 255, 50), width=2)
-        self.curve_flow = self.graph_flow.plot(self.flow.time, self.flow.flow, pen=pen)
-        pen = pg.mkPen(color=(255, 120, 50), width=2)
-        self.curve_pressure = self.graph_pressure.plot(
-            self.flow.time, self.flow.pressure, pen=pen
-        )
-        pen = pg.mkPen(color=(255, 128, 255), width=2)
-        self.curve_volume = self.graph_volume.plot(
-            self.flow.time, self.flow.volume, pen=pen
-        )
         # the y limits ought to be configurable.
+        graph_pens = {}
+        graph_pens["flow"] = (120, 255, 50)
+        graph_pens["pressure"] =(255, 120, 50)
+        graph_pens["volume"] =(255, 128, 255)
+
         yLims = {}
         yLims["flow"] = (-30, 30)
         yLims["pressure"] = (0, 20)
@@ -193,31 +188,38 @@ class PatientSensor(QtGui.QFrame):
         yTicks["pressure"] = [0, 15]
         yTicks["volume"] = [-1000, 1000]
 
-        graphs=[self.graph_flow, self.graph_pressure, self.graph_volume]
-        graph_names=["flow","pressure","volume"]
+        self.graphs={}
+        self.graphs["flow"] = self.graph_flow
+        self.graphs["pressure"] = self.graph_pressure
+        self.graphs["volume"] = self.graph_volume
 
-        for i,graph in enumerate(graphs):
-            key=graph_names[i]
+        #this determines the order
+        self.graph_names=["flow","pressure","volume"]
+        self.curves={}
+        
+        for i,key in enumerate(self.graph_names): 
+            graph = self.graphs[key]
+            pen = pg.mkPen(color=graph_pens[key], width=2)
+            self.curves[key] = graph.plot(self.flow.time, getattr(self.flow,key), pen=pen)
+
             graph.setRange(xRange=(30, 0), yRange=yLims[key])
             dy = [(value, str(value)) for value in yTicks[key]]
             graph.getAxis("left").setTicks([dy, []])
-            if i!=len(graphs)-1:
+            if i!=len(self.graphs)-1:
                 graph.hideAxis("bottom")
             if i!=0:
-                graphs[0].setXLink(graph)
+                self.graphs[self.graph_names[0]].setXLink(graph)
             graph.addLine(y=0)
-
-        # self.upper = self.graph_flow.addLine(y=8, pen=pen)
-        # self.lower = self.graph_flow.addLine(y=-2, pen=pen)
 
     @Slot()
     def update_plot(self):
         self.flow.get_data()
         self.flow.analyze()
 
-        self.curve_flow.setData(self.flow.time, self.flow.flow)
-        self.curve_pressure.setData(self.flow.time, self.flow.pressure)
-        self.curve_volume.setData(self.flow.time, self.flow.volume)
+        for i,key in enumerate(self.graph_names):
+            graph = self.graphs[key] 
+            self.curves[key].setData(self.flow.time, getattr(self.flow,key))
+            
 
         self.alert.status = self.flow.status
         self.status = self.flow.status
