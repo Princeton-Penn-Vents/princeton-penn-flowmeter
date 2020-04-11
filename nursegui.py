@@ -193,22 +193,19 @@ class PatientSensor(QtGui.QFrame):
         yTicks["pressure"] = [0, 15]
         yTicks["volume"] = [-1000, 1000]
 
-        self.graph_flow.setRange(xRange=(30, 0), yRange=yLims["flow"])
-        self.graph_pressure.setRange(xRange=(30, 0), yRange=yLims["pressure"])
-        self.graph_volume.setRange(xRange=(30, 0), yRange=yLims["volume"])
-        dy = [(value, str(value)) for value in yTicks["flow"]]
-        self.graph_flow.getAxis("left").setTicks([dy, []])
-        dy = [(value, str(value)) for value in yTicks["pressure"]]
-        self.graph_pressure.getAxis("left").setTicks([dy, []])
-        dy = [(value, str(value)) for value in yTicks["volume"]]
-        self.graph_volume.getAxis("left").setTicks([dy, []])
+        graphs=[self.graph_flow, self.graph_pressure, self.graph_volume]
+        graph_names=["flow","pressure","volume"]
 
-        self.graph_flow.setXLink(self.graph_pressure)
-        self.graph_flow.setXLink(self.graph_volume)
-        self.graph_flow.hideAxis("bottom")
-        self.graph_pressure.hideAxis("bottom")
-
-        #pen = pg.mkPen(color=(220, 220, 50), width=3)
+        for i,graph in enumerate(graphs):
+            key=graph_names[i]
+            graph.setRange(xRange=(30, 0), yRange=yLims[key])
+            dy = [(value, str(value)) for value in yTicks[key]]
+            graph.getAxis("left").setTicks([dy, []])
+            if i!=len(graphs)-1:
+                graph.hideAxis("bottom")
+            if i!=0:
+                graphs[0].setXLink(graph)
+            graph.addLine(y=0)
 
         # self.upper = self.graph_flow.addLine(y=8, pen=pen)
         # self.lower = self.graph_flow.addLine(y=-2, pen=pen)
