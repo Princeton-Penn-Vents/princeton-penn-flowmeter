@@ -23,6 +23,10 @@ from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
+guicolors = { "ALERT" : QtGui.QColor(160,200,255),
+              "patient_border" : "rgb(160,200,255)"
+}
+
 class GraphInfo():
 
     def __init__(self):
@@ -125,14 +129,13 @@ class PatientSensor(QtGui.QFrame):
     @status.setter
     def status(self, value):
         self.setProperty("status", value.name)
-        self.style().unpolish(self)
-        self.style().polish(self)
-
+        self.style().unpolish(self.graphview)
+        self.style().polish(self.graphview)
+        
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("PatientInfo")
-        self.setStyleSheet("#PatientInfo { border: 1px solid rgb(160,200,255) }") #are you kidding
-
+        self.setStyleSheet("#PatientInfo { border: 1px solid "+guicolors["patient_border"]+" }") #borders 
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -147,6 +150,8 @@ class PatientSensor(QtGui.QFrame):
         upper.setLayout(layout)
 
         graphview = GraphicsView(parent=self, i=i)
+        self.graphview = graphview
+        self.graphview.setObjectName("GraphView")
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
         graphview.setCentralWidget(graphlayout)
@@ -181,6 +186,10 @@ class PatientSensor(QtGui.QFrame):
 
         self.alert.status = self.flow.status
         self.status = self.flow.status
+
+        if self.status == Status.ALERT:
+            graphview.setBackground(guicolors['ALERT'])
+
         self.alert.name_btn.clicked.connect(self.click_number)
 
     @Slot()
@@ -199,26 +208,21 @@ class PatientSensor(QtGui.QFrame):
         self.flow.analyze()
 
         gis = GraphInfo()
-        self.graphs={}
-        self.graphs["flow"] = self.graph_flow
-        self.graphs["pressure"] = self.graph_pressure
-        self.graphs["volume"] = self.graph_volume
 
-        #this determines the order
         self.curves={}
-        
+        first_graph = getattr(self,"graph_"+gis.graph_labels[0])
         for i,key in enumerate(gis.graph_labels): 
-            graph = self.graphs[key]
+            graph = getattr(self,"graph_"+key)
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graph.plot(self.flow.time, getattr(self.flow,key), pen=pen)
 
             graph.setRange(xRange=(30, 0), yRange=gis.yLims[key])
             dy = [(value, str(value)) for value in gis.yTicks[key]]
             graph.getAxis("left").setTicks([dy, []])
-            if i!=len(self.graphs)-1:
+            if i!=len(gis.graph_labels)-1:
                 graph.hideAxis("bottom")
             if i!=0:
-                self.graphs[gis.graph_labels[0]].setXLink(graph)
+                first_graph.setXLink(graph)
             graph.addLine(y=0)
 
     @Slot()
@@ -228,13 +232,21 @@ class PatientSensor(QtGui.QFrame):
         gis = GraphInfo()
 
         for i,key in enumerate(gis.graph_labels):
-            graph = self.graphs[key] 
+            graph = getattr(self,"graph_"+key)
             self.curves[key].setData(self.flow.time, getattr(self.flow,key))
             
 
-        self.alert.status = self.flow.status
-        self.status = self.flow.status
+        #look for status changes
+        if self.flow.status != self.alert.status:
+            self.alert.status = self.flow.status
+            self.status = self.flow.status
 
+            if self.status == Status.ALERT:
+                self.graphview.setBackground(QtGui.QColor(160,200,255))
+            else:
+                self.graphview.setBackground(QtGui.QColor(0,0,0))
+            
+            
         for key in self.alert.widget_lookup:
             val = self.alert.widget_lookup[key]
             v = np.random.uniform(5.0, 15.0)
@@ -344,20 +356,28 @@ class GraphLabelWidget(QtWidgets.QWidget):
         text.setStyleSheet("QLabel { color: ghostwhite }")
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(text,1,Qt.AlignVCenter)
-
+        self.buttons={}
+        
         for key in gis.graph_labels:
             name_btn = QtWidgets.QPushButton(key.capitalize()+'('+gis.units[key]+')')
             name_btn.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
             name_btn.setStyleSheet("QPushButton { background-color: 'transparent'; color: rgba("+values[key]+"); }")
-
-#            text = QtWidgets.QLabel(key.capitalize()+'('+gis.units[key]+')')           
-#            text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
-#            text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
-#            text.setAlignment(Qt.AlignCenter)
-#            layout.addWidget(text,1)
+            self.buttons[key]=name_btn
             layout.addWidget(name_btn,1,Qt.AlignVCenter)
-        
+            name_btn.clicked.connect(self.click_graph_info)
+
         self.setLayout(layout)
+
+    @Slot()
+    def click_graph_info(self):
+        #ok - this needs to get generalized and extended
+        number, ok = QtWidgets.QInputDialog.getDouble(self, "Adjust plots", "Min Y axis", 10, 0, 100)
+        if ok:
+            try:
+                print("Found number",number,ok)
+            except ValueError:
+                return
+
         
 class HeaderWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -373,18 +393,18 @@ class HeaderWidget(QtWidgets.QWidget):
         layout.addWidget(graph_info,6)
         layout.addWidget(nsf_logo,2)
 
+      
         self.setLayout(layout)
 
-#    @Slot()
-#    def click_number(self):
-#        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
-#        if ok:
-#            try:
-#                port = int(number)
-#            except ValueError:
-#                self.flow = LocalGenerator(Status.DISCON)
-#                return
-#            self.flow = RemoteGenerator(port=port)
+    @Slot()
+    def click_header(self):
+        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
+        if ok:
+            try:
+                port = int(number)
+            except ValueError:
+                return
+            print("hi there",number)
 
         
 
