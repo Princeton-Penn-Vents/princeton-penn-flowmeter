@@ -223,7 +223,7 @@ def measure_breaths(time, flow, volume, pressure):
                     print(f"index = {index}")
                     print(f"time = {time}")
                     print(f"breath_times[i - 2][1] = {breath_times[i - 2][1]}")
-                    print(f"abs(time - breath_times[i - 2][1])) = {abs(time - breath_times[i - 2][1]))}")
+                    print(f"abs(time - breath_times[i - 2][1]) = {abs(time - breath_times[i - 2][1])}")
                     print(f"np.argmin(abs(time - breath_times[i - 2][1])) = {np.argmin(abs(time - breath_times[i - 2][1]))}")
                     print(f"pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index] = {pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]}")
                     raise
