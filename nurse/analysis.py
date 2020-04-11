@@ -214,9 +214,19 @@ def measure_breaths(time, flow, volume, pressure):
                 breath["exhale dV/dt"] / breath["exhale dP/dt"]
             )
             if i >= 2:
-                breath["max pressure"] = np.max(
-                    pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
-                )
+                try:
+                    breath["max pressure"] = np.max(
+                        pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
+                    )
+                except ValueError:
+                    # This would be so much easier in Python 3.8...
+                    print(f"index = {index}")
+                    print(f"time = {time}")
+                    print(f"breath_times[i - 2][1] = {breath_times[i - 2][1]}")
+                    print(f"abs(time - breath_times[i - 2][1])) = {abs(time - breath_times[i - 2][1]))}")
+                    print(f"np.argmin(abs(time - breath_times[i - 2][1])) = {np.argmin(abs(time - breath_times[i - 2][1]))}")
+                    print(f"pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index] = {pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]}")
+                    raise
 
     if len(breath) != 0:
         breaths.append(breath)
