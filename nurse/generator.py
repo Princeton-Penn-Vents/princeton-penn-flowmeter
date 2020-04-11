@@ -44,13 +44,18 @@ class Generator(abc.ABC):
 
         if len(realtime) > 0:
             self._volume = nurse.analysis.flow_to_volume(
-                realtime, self._old_realtime, self.flow, self._volume - self._volume_shift
+                realtime,
+                self._old_realtime,
+                self.flow,
+                self._volume - self._volume_shift,
             )
             self._old_realtime = realtime
             if self._volume_unshifted_min is None:
                 self._volume_unshifted_min = np.min(self._volume)
             else:
-                self._volume_unshifted_min = min(self._volume_unshifted_min, np.min(self._volume))
+                self._volume_unshifted_min = min(
+                    self._volume_unshifted_min, np.min(self._volume)
+                )
 
             self._volume_shift = -self._volume_unshifted_min
             self._volume = self._volume + self._volume_shift

@@ -148,12 +148,14 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(self.graphview)  # , 7)
 
         gis = GraphInfo()
-        for j,key in enumerate(gis.graph_labels):
-            attr_name="graph_"+key
-            setattr(self, attr_name, graphlayout.addPlot(x=[], y=[], name=key.capitalize()))
-            getattr(self,attr_name).setMouseEnabled(False, False)
-            getattr(self,attr_name).invertX()
-            if j!=len(gis.graph_labels):
+        for j, key in enumerate(gis.graph_labels):
+            attr_name = "graph_" + key
+            setattr(
+                self, attr_name, graphlayout.addPlot(x=[], y=[], name=key.capitalize())
+            )
+            getattr(self, attr_name).setMouseEnabled(False, False)
+            getattr(self, attr_name).invertX()
+            if j != len(gis.graph_labels):
                 graphlayout.nextRow()
 
         self.alert = AlertWidget(i)
@@ -220,11 +222,11 @@ class PatientSensor(QtGui.QFrame):
             self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
         # look for status changes
-        #useful for standalone testing
-        #import random
-        #if random.random()<0.1:
+        # useful for standalone testing
+        # import random
+        # if random.random()<0.1:
         #    self.flow.status=Status.ALERT
-        #else:
+        # else:
         #    self.flow.status=Status.OK
         if self.flow.status != self.alert.status:
             self.alert.status = self.flow.status
@@ -263,7 +265,7 @@ class MainStack(QtWidgets.QWidget):
         width = math.ceil(displays / height)
 
         layout = QtWidgets.QVBoxLayout()
-        if displays > 3: #avoid adding this to small screens
+        if displays > 3:  # avoid adding this to small screens
             headerwidget = HeaderWidget(self)
             layout.addWidget(headerwidget)
         patientwidget = PatientGrid(self, width=width)

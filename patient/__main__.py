@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--file", help="File to record to")
+arg = parser.parse_args()
+
 # hardware interfaces:
 # SDP3 diff pressure sensor - I2C handled by pigpio.pi()
 # MCP3008 ADC readings - SPI handled by spidev.SpiDev()
@@ -9,7 +16,9 @@ import signal
 import pigpio
 import binascii
 import spidev
+import json
 import zmq
+import atexit
 import threading
 
 # ------------------
@@ -103,6 +112,12 @@ dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
 print("{} {:.4f} {:.4f}".format(time.time(), (float)(dp / dpsf), (float)(temp / 200.0)))
 
+if arg.file:
+    myfile = open(arg.file, "wa")
+    atexit.register(myfile.close)
+else:
+    myfile = None
+
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
     #  global dpsf
@@ -113,7 +128,12 @@ def sdp3_handler(signum, frame):
     tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
     tmpADC = getADC(chanMP3V5004)
     d = {"v": 1, "t": ts, "P": tmpADC, "F": tmpdp}
-    socket.send_json(d)
+    if myfile:
+        ds = json.dumps(s)
+        print(df, file=myfile)
+        socket.send_string(ds)
+    else:
+        socket.send_json(d)
     # print(d)
 
 
@@ -136,8 +156,5 @@ def signal_handler(signal, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-
-# event loop:
-#    wait for readout of diff pressure sensor and pressure sensor (signal interrupt handler)
-
+# Read until quit
 forever.wait()
