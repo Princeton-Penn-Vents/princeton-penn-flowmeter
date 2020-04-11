@@ -12,7 +12,7 @@ standard laptop/desktop machine. Analysis code runs on both the patient box
 and on the nurse monitoring station to derive quantities for both alarms 
 and display.
 
-The software is written on Python and PyQt for portability.
+The software is written in Python and PyQt for portability.
 
 # Installation
 
