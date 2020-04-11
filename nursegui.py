@@ -140,13 +140,12 @@ class PatientSensor(QtGui.QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        graphview = GraphicsView(parent=self, i=i)
-        self.graphview = graphview
+        self.graphview = GraphicsView(parent=self, i=i)
         self.graphview.setObjectName("GraphView")
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
-        graphview.setCentralWidget(graphlayout)
-        layout.addWidget(graphview)  # , 7)
+        self.graphview.setCentralWidget(graphlayout)
+        layout.addWidget(self.graphview)  # , 7)
 
         gis = GraphInfo()
         for j,key in enumerate(gis.graph_labels):
@@ -171,7 +170,7 @@ class PatientSensor(QtGui.QFrame):
         self.alert.status = self.flow.status
 
         if self.alert.status == Status.ALERT:
-            graphview.setBackground(guicolors["ALERT"])
+            self.graphview.setBackground(guicolors["ALERT"])
 
         self.alert.name_btn.clicked.connect(self.click_number)
 
@@ -264,8 +263,9 @@ class MainStack(QtWidgets.QWidget):
         width = math.ceil(displays / height)
 
         layout = QtWidgets.QVBoxLayout()
-        headerwidget = HeaderWidget(self)
-        layout.addWidget(headerwidget)
+        if displays > 3: #avoid adding this to small screens
+            headerwidget = HeaderWidget(self)
+            layout.addWidget(headerwidget)
         patientwidget = PatientGrid(self, width=width)
         layout.addWidget(patientwidget)
 
