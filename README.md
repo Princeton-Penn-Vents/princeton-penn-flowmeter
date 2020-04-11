@@ -1,5 +1,18 @@
 # princeton-penn-flowmeter
-Software for patent and nurse stations
+Software for patient and nurse stations for multi-patient ventilator 
+monitoring. 
+
+The hardware at the patient includes two sensors, a single board computer 
+(SBC, in this case a Raspberry Pi model 4b), a 20x2 LCD, a rotary encoder and 
+additional electronics to allow configuration of alarm parameters. The sensor
+time series data from up to 20 patient boxes are transmitted to a nurse 
+monitoring station, where a graphical GUI presents an aggregate view of the 
+time series. The nurse monitoring station can either be an SBC or a more 
+standard laptop/desktop machine. Analysis code runs on both the patient box 
+and on the nurse monitoring station to derive quantities for both alarms 
+and display.
+
+The software is written on Python and PyQt for portability.
 
 # Installation
 
