@@ -128,12 +128,6 @@ class PatientSensor(QtGui.QFrame):
     def status(self):
         return Status[self.property("status")]
 
-    @status.setter
-    def status(self, value):
-        self.setProperty("status", value.name)
-        self.style().unpolish(self.graphview)
-        self.style().polish(self.graphview)
-
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("PatientInfo")
@@ -141,17 +135,10 @@ class PatientSensor(QtGui.QFrame):
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
 
-        outer_layout = QtWidgets.QVBoxLayout()
-        outer_layout.setSpacing(0)
-        outer_layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(outer_layout)
-
-        upper = QtWidgets.QWidget()
-        outer_layout.addWidget(upper)
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        upper.setLayout(layout)
+        self.setLayout(layout)
 
         graphview = GraphicsView(parent=self, i=i)
         self.graphview = graphview
@@ -161,21 +148,14 @@ class PatientSensor(QtGui.QFrame):
         graphview.setCentralWidget(graphlayout)
         layout.addWidget(graphview)  # , 7)
 
-        self.graph_flow = graphlayout.addPlot(x=[], y=[], name="Flow")
-        self.graph_flow.setMouseEnabled(False, False)
-        self.graph_flow.invertX()
-
-        graphlayout.nextRow()
-
-        self.graph_pressure = graphlayout.addPlot(x=[], y=[], name="Pressure")
-        self.graph_pressure.setMouseEnabled(False, False)
-        self.graph_pressure.invertX()
-
-        graphlayout.nextRow()
-
-        self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
-        self.graph_volume.setMouseEnabled(False, False)
-        self.graph_volume.invertX()
+        gis = GraphInfo()
+        for j,key in enumerate(gis.graph_labels):
+            attr_name="graph_"+key
+            setattr(self, attr_name, graphlayout.addPlot(x=[], y=[], name=key.capitalize()))
+            getattr(self,attr_name).setMouseEnabled(False, False)
+            getattr(self,attr_name).invertX()
+            if j!=len(gis.graph_labels):
+                graphlayout.nextRow()
 
         self.alert = AlertWidget(i)
 
@@ -189,9 +169,8 @@ class PatientSensor(QtGui.QFrame):
             self.flow = LocalGenerator(status)
 
         self.alert.status = self.flow.status
-        self.status = self.flow.status
 
-        if self.status == Status.ALERT:
+        if self.alert.status == Status.ALERT:
             graphview.setBackground(guicolors["ALERT"])
 
         self.alert.name_btn.clicked.connect(self.click_number)
@@ -242,12 +221,17 @@ class PatientSensor(QtGui.QFrame):
             self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
         # look for status changes
+        #useful for standalone testing
+        #import random
+        #if random.random()<0.1:
+        #    self.flow.status=Status.ALERT
+        #else:
+        #    self.flow.status=Status.OK
         if self.flow.status != self.alert.status:
             self.alert.status = self.flow.status
-            self.status = self.flow.status
 
-            if self.status == Status.ALERT:
-                self.graphview.setBackground(QtGui.QColor(160, 200, 255))
+            if self.alert.status == Status.ALERT:
+                self.graphview.setBackground(guicolors["ALERT"])
             else:
                 self.graphview.setBackground(QtGui.QColor(0, 0, 0))
 
