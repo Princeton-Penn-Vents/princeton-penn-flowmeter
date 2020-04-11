@@ -10,6 +10,7 @@ import pigpio
 import binascii
 import spidev
 import zmq
+import threading
 
 # ------------------
 # output file setup
@@ -17,13 +18,15 @@ import zmq
 context = zmq.Context()
 socket = context.socket(zmq.PUB)  # publish (broadcast)
 socket.bind("tcp://*:5556")
-ReadoutHz = 100.0
+ReadoutHz = 50.0
 # outputFileName = "patient.dat"
 # f = open(outputFileName, "w")
 # sys.stdout = f
 # ------------------
 # output file end of setup
 # ------------------
+
+
 # ------------------
 # MCP3008 ADC setup
 # ------------------
@@ -81,8 +84,10 @@ snlsw = int.from_bytes(bdataSDP3[12:14], byteorder="big", signed=False)
 snllsw = int.from_bytes(bdataSDP3[15:17], byteorder="big", signed=False)
 sn = (snmmsw << 48) | (snmsw << 32) | (snlsw << 16) | snllsw
 print(hex(pn), hex(sn))
+
 # start continuous readout with averaging with differential pressure temperature compensation
 pi.i2c_write_device(hSDP3, [0x36, 0x15])
+
 # get initial values of differential pressure, temperature and the differential pressure scale factor
 time.sleep(0.020)
 nbytes = 9
@@ -97,6 +102,7 @@ temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
 dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
 print("{} {:.4f} {:.4f}".format(time.time(), (float)(dp / dpsf), (float)(temp / 200.0)))
+
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
     #  global dpsf
@@ -113,11 +119,25 @@ def sdp3_handler(signum, frame):
 
 signal.signal(signal.SIGALRM, sdp3_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1.0 / ReadoutHz)  # Readout in Hz
+
 # ------------------
 # SDP3 diff pressure sensor end of setup
 # ------------------
 
+forever = threading.Event()
+
+
+def signal_handler(signal, frame):
+    print("You pressed Ctrl+C!")
+    hSDP3.close()
+    pi.close()
+    forever.set()
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
 # event loop:
 #    wait for readout of diff pressure sensor and pressure sensor (signal interrupt handler)
-while True:
-    signal.pause()
+
+forever.wait()

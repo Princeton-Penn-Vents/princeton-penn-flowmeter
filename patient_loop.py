@@ -22,7 +22,7 @@ passing_window = 100 * 5
 # Captures collector
 def prepare():
     collector.get_data()
-    collector.analyze()
+    # collector.analyze()
 
     return {
         "version": 1,
