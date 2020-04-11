@@ -19,7 +19,7 @@ AlertWidget[status="OK"] > QPushButton {
   color: white;
   font: bold;
   font-size: 20px;
-  background-color: #97DE79;
+  background-color: 'transparent';
   height: 80px;
   width: 16px;
   padding: 2px;
