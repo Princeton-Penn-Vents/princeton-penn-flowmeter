@@ -1,5 +1,14 @@
 import numpy as np
+import scipy.integrate
 
+
+def flow_to_volume(realtime, old_realtime, flow, old_volume):
+    if old_realtime is None:
+        shift = 0
+    else:
+        shift = old_volume[np.argmin(abs(old_realtime - realtime[0]))]
+
+    return scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
 
 def smooth_derivative(times, values, sig=0.2):
     window_width = int(np.ceil(4 * sig / np.min(times[1:] - times[:-1])))
