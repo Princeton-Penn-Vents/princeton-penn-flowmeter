@@ -3,6 +3,7 @@
 import http.server
 import json
 from datetime import datetime
+import atexit
 
 from patient.rotary import DICT
 from patient.rotary_lcd import RotaryLCD
@@ -12,6 +13,8 @@ from sim.rolling import get_last
 # Initialize LCD
 rotary = RotaryLCD(DICT)
 rotary.display()
+
+atexit.register(rotary.close)
 
 # Initialize Collector
 collector = Collector()
