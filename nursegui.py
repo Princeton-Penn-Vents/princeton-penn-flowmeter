@@ -296,7 +296,7 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel.setPixmap(logo)
 
         text = QtWidgets.QLabel(
-            " Princeton Open Vent Monitor"
+            "     Princeton Open Vent Monitor"
         )
         text.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
         text.setStyleSheet("color: #F58025;");
@@ -375,6 +375,18 @@ class HeaderWidget(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
+#    @Slot()
+#    def click_number(self):
+#        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
+#        if ok:
+#            try:
+#                port = int(number)
+#            except ValueError:
+#                self.flow = LocalGenerator(Status.DISCON)
+#                return
+#            self.flow = RemoteGenerator(port=port)
+
+        
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, ip, port, refresh, **kwargs):
