@@ -295,7 +295,7 @@ class HeaderWidget(QtWidgets.QWidget):
             "  Princeton Open Vent Monitor"
         )
         text1.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
-        text1.setStyleSheet("color: #E77500;");
+        text1.setStyleSheet("color: #F58025;");
         text2 = QtWidgets.QLabel(
             "Lets put our color legend and units here together with other drill down options"
         )
