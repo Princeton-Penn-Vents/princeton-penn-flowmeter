@@ -72,6 +72,6 @@ lsmod | grep spi (check that spidev and spi_bcm2708 are running)
 spidev is there by default
 ```
 
-### Acknowledgements
+# Acknowledgements
 
 This project is supported by Princeton University and by NSF Cooperative Agreement OAC-1836650.
