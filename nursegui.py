@@ -23,6 +23,36 @@ from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
+class GraphInfo():
+
+    def __init__(self):
+        # the y limits ought to be configurable.
+        self.graph_labels = ["flow", "pressure", "volume"]
+        self.graph_pens = {}
+        self.graph_pens["flow"] = (120, 255, 50)
+        self.graph_pens["pressure"] =(255, 120, 50)
+        self.graph_pens["volume"] =(255, 128, 255)
+
+        self.graph_pen_qcol={}
+        for key in self.graph_pens:
+            self.graph_pen_qcol[key]= QtGui.QColor(self.graph_pens[key][0], self.graph_pens[key][1], self.graph_pens[key][2])
+
+        self.yLims = {}
+        self.yLims["flow"] = (-30, 30)
+        self.yLims["pressure"] = (0, 20)
+        self.yLims["volume"] = (0, 800)
+
+        self.yTicks = {}
+        self.yTicks["flow"] = [-25, 0, 25]
+        self.yTicks["pressure"] = [0, 15]
+        self.yTicks["volume"] = [0, 750]
+
+        self.units = {}
+        self.units["flow"] = "L/m"
+        self.units["pressure"] = "cm H2O"
+        self.units["volume"] = "mL"
+
+    
 
 class AlertWidget(QtWidgets.QWidget):
     @property
@@ -100,12 +130,9 @@ class PatientSensor(QtGui.QFrame):
 
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
-        #       frame = QtGui.QFrame()
-        #       frame.setSpacing(0)
-        #       frame.setContentsMargins(0, 0, 0, 0)
-        #       self.setLayout(frame)
         self.setObjectName("PatientInfo")
-        self.setStyleSheet("#PatientInfo { border: 1px solid grey }")
+        self.setStyleSheet("#PatientInfo { border: 1px solid rgb(50,120,255) }") #are you kidding
+
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -118,7 +145,6 @@ class PatientSensor(QtGui.QFrame):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         upper.setLayout(layout)
-        # upper.setStyleSheet("background-color: #FEFFCF;");
 
         graphview = GraphicsView(parent=self, i=i)
         graphlayout = pg.GraphicsLayout()
@@ -172,51 +198,36 @@ class PatientSensor(QtGui.QFrame):
         self.flow.get_data()
         self.flow.analyze()
 
-        # the y limits ought to be configurable.
-        graph_pens = {}
-        graph_pens["flow"] = (120, 255, 50)
-        graph_pens["pressure"] =(255, 120, 50)
-        graph_pens["volume"] =(255, 128, 255)
-
-        yLims = {}
-        yLims["flow"] = (-30, 30)
-        yLims["pressure"] = (0, 20)
-        yLims["volume"] = (-1000, 1000)
-
-        yTicks = {}
-        yTicks["flow"] = [-25, 0, 25]
-        yTicks["pressure"] = [0, 15]
-        yTicks["volume"] = [-1000, 1000]
-
+        gis = GraphInfo()
         self.graphs={}
         self.graphs["flow"] = self.graph_flow
         self.graphs["pressure"] = self.graph_pressure
         self.graphs["volume"] = self.graph_volume
 
         #this determines the order
-        self.graph_names=["flow","pressure","volume"]
         self.curves={}
         
-        for i,key in enumerate(self.graph_names): 
+        for i,key in enumerate(gis.graph_labels): 
             graph = self.graphs[key]
-            pen = pg.mkPen(color=graph_pens[key], width=2)
+            pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graph.plot(self.flow.time, getattr(self.flow,key), pen=pen)
 
-            graph.setRange(xRange=(30, 0), yRange=yLims[key])
-            dy = [(value, str(value)) for value in yTicks[key]]
+            graph.setRange(xRange=(30, 0), yRange=gis.yLims[key])
+            dy = [(value, str(value)) for value in gis.yTicks[key]]
             graph.getAxis("left").setTicks([dy, []])
             if i!=len(self.graphs)-1:
                 graph.hideAxis("bottom")
             if i!=0:
-                self.graphs[self.graph_names[0]].setXLink(graph)
+                self.graphs[gis.graph_labels[0]].setXLink(graph)
             graph.addLine(y=0)
 
     @Slot()
     def update_plot(self):
         self.flow.get_data()
         self.flow.analyze()
+        gis = GraphInfo()
 
-        for i,key in enumerate(self.graph_names):
+        for i,key in enumerate(gis.graph_labels):
             graph = self.graphs[key] 
             self.curves[key].setData(self.flow.time, getattr(self.flow,key))
             
@@ -314,28 +325,21 @@ class GraphLabelWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        
-        graph_pens = {}
-        graph_pens["flow"] = QtGui.QColor(120, 255, 50)
-        graph_pens["pressure"] =QtGui.QColor(255, 120, 50)
-        graph_pens["volume"] =QtGui.QColor(255, 128, 255)
+
+        gis = GraphInfo()
+
         alpha=140
         values={}
-        for key in graph_pens:
-            pen=graph_pens[key]
+        for key in gis.graph_pen_qcol:
+            pen=gis.graph_pen_qcol[key]
             values[key]="{r}, {g}, {b}, {a}".format(r = pen.red(),
                                                     g = pen.green(),
                                                     b = pen.blue(),
                                                     a = alpha
                                                     )
-        graphs = ["flow", "pressure", "volume"]
-        units = {}
-        units["flow"] = "L/m"
-        units["pressure"] = "cm H2O"
-        units["volume"] = "mL"
 
-        for key in graphs:
-            text = QtWidgets.QLabel(key+'('+units[key]+')')           
+        for key in gis.graph_labels:
+            text = QtWidgets.QLabel(key+'('+gis.units[key]+')')           
             text.setFont(QtGui.QFont("Times", 14, QtGui.QFont.Bold))
             text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
             text.setAlignment(Qt.AlignLeft)
