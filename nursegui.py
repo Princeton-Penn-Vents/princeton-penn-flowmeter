@@ -274,34 +274,88 @@ class MainStack(QtWidgets.QWidget):
             graph.flow.close()
 
 
+class PrincetonLogoWidget(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        logo = QPixmap("images/PUsig2-158C-shield.png").scaledToWidth(18)
+        logolabel = QtWidgets.QLabel()
+        logolabel.setPixmap(logo)
+
+        text = QtWidgets.QLabel(
+            "  Princeton Open Vent Monitor"
+        )
+        text.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
+        text.setStyleSheet("color: #F58025;");
+        text.setAlignment(Qt.AlignLeft)
+        layout.addWidget(logolabel)
+        layout.addWidget(text)
+        layout.addStretch()
+        layout.setSpacing(0)
+        self.setLayout(layout)
+
+class NSFLogoWidget(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        logo = QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
+        logolabel = QtWidgets.QLabel()
+        logolabel.setPixmap(logo)
+        layout.addWidget(logolabel)
+        self.setLayout(layout)
+
+class GraphLabelWidget(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        graph_pens = {}
+        graph_pens["flow"] = QtGui.QColor(120, 255, 50)
+        graph_pens["pressure"] =QtGui.QColor(255, 120, 50)
+        graph_pens["volume"] =QtGui.QColor(255, 128, 255)
+        alpha=140
+        values={}
+        for key in graph_pens:
+            pen=graph_pens[key]
+            values[key]="{r}, {g}, {b}, {a}".format(r = pen.red(),
+                                                    g = pen.green(),
+                                                    b = pen.blue(),
+                                                    a = alpha
+                                                    )
+        graphs = ["flow", "pressure", "volume"]
+        units = {}
+        units["flow"] = "L/m"
+        units["pressure"] = "cm H2O"
+        units["volume"] = "mL"
+
+        for key in graphs:
+            text = QtWidgets.QLabel(key+'('+units[key]+')')           
+            text.setFont(QtGui.QFont("Times", 14, QtGui.QFont.Bold))
+            text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
+            text.setAlignment(Qt.AlignLeft)
+            layout.addWidget(text)
+        self.setLayout(layout)
+        
 class HeaderWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QGridLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
-        layout.setColumnStretch(1,1)
-        layout.setColumnStretch(2,1)
-        layout.setColumnStretch(3,0)
         layout.setContentsMargins(0, 0, 0, 0)
-        logo1 = QPixmap("images/PUsig2-158C-shield.png").scaledToWidth(18)
-        logo2 = QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
-        logo1label = QtWidgets.QLabel()
-        logo1label.setPixmap(logo1)
-        logo2label = QtWidgets.QLabel()
-        logo2label.setPixmap(logo2)
-        text1 = QtWidgets.QLabel(
-            "  Princeton Open Vent Monitor"
-        )
-        text1.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
-        text1.setStyleSheet("color: #F58025;");
-        text2 = QtWidgets.QLabel(
-            "Lets put our color legend and units here together with other drill down options"
-        )
-        text2.setAlignment(Qt.AlignCenter)
-        layout.addWidget(logo1label)
-        layout.addWidget(text1)
-        layout.addWidget(text2)
-        layout.addWidget(logo2label)
+
+        princeton_logo = PrincetonLogoWidget()
+        graph_info = GraphLabelWidget()
+        nsf_logo = NSFLogoWidget()
+        layout.addWidget(princeton_logo)
+        layout.addWidget(graph_info)
+        layout.addWidget(nsf_logo)
+
         self.setLayout(layout)
 
 
