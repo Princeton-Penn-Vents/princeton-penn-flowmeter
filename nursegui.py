@@ -24,7 +24,7 @@ from nurse.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
-guicolors = {"ALERT": QtGui.QColor(160, 200, 255), "patient_border": "rgb(160,200,255)"}
+guicolors = {"ALERT": QtGui.QColor(0, 0, 205), "patient_border": "rgb(160,200,255)"}
 
 
 class GraphInfo:
