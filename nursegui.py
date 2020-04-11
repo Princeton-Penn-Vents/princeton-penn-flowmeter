@@ -41,9 +41,40 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout = QtWidgets.QVBoxLayout()
         self.setLayout(column_layout)
 
-        self.name_btn = QtWidgets.QPushButton("\n".join(str(i + 1)))
+        self.name_btn = QtWidgets.QPushButton(str(i + 1))
         column_layout.addWidget(self.name_btn)  # , 2)
 
+        self.info_strings = [
+            "RR",  # (L/m)
+            "TVe",  # (mL)
+            "TVi",  # (mL/m)
+            "PIP",  # (cm H2O)
+        ]
+
+        lower = QtWidgets.QWidget()
+        lower_layout = QtWidgets.QGridLayout()
+        lower_layout.setContentsMargins(0,0,0,0)
+        lower_layout.setColumnMinimumWidth(1,20) #big enough - maybe too big?
+        lower_layout.setVerticalSpacing(0)
+        lower_layout.setSpacing(0)
+        
+        lower.setLayout(lower_layout)
+        self.info_vals = [12.2, 20.0, 12.2, 20.0]
+
+        self.info_widgets = []
+        self.val_widgets = []
+        self.widget_lookup = {}
+        for j in range(len(self.info_strings)):
+            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
+            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
+            self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
+            self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
+            self.widget_lookup[self.info_strings[j]] = j
+            lower_layout.addWidget(self.info_widgets[-1], j, 0 )
+            lower_layout.addWidget(self.val_widgets[-1], j, 1  )
+
+        column_layout.addWidget(lower)
+       
 
 class GraphicsView(pg.GraphicsView):
     def __init__(self, *args, i, **kwargs):
@@ -73,6 +104,8 @@ class PatientSensor(QtGui.QFrame):
         #       frame.setSpacing(0)
         #       frame.setContentsMargins(0, 0, 0, 0)
         #       self.setLayout(frame)
+        self.setObjectName("PatientInfo")
+        self.setStyleSheet("#PatientInfo { border: 1px solid grey }")
 
         outer_layout = QtWidgets.QVBoxLayout()
         outer_layout.setSpacing(0)
@@ -94,58 +127,24 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(graphview)  # , 7)
 
         self.graph_flow = graphlayout.addPlot(x=[], y=[], name="Flow")
-        #        self.graph_flow.setLabel("left", "F", units="L/m")
         self.graph_flow.setMouseEnabled(False, False)
         self.graph_flow.invertX()
 
         graphlayout.nextRow()
 
         self.graph_pressure = graphlayout.addPlot(x=[], y=[], name="Pressure")
-        #        self.graph_pressure.setLabel("left", "P", units="cm H2O")
         self.graph_pressure.setMouseEnabled(False, False)
         self.graph_pressure.invertX()
 
         graphlayout.nextRow()
 
         self.graph_volume = graphlayout.addPlot(x=[], y=[], name="Volume")
-        #        self.graph_volume.setLabel("left", "V", units="mL")
         self.graph_volume.setMouseEnabled(False, False)
         self.graph_volume.invertX()
 
         self.alert = AlertWidget(i)
 
         layout.addWidget(self.alert)  # , 3)
-
-        lower = QtWidgets.QWidget()
-        # lower.setStyleSheet("background-color: #FEFFCF;");
-        outer_layout.addWidget(lower)
-        lower_layout = QtWidgets.QGridLayout()
-        lower.setLayout(lower_layout)
-
-        self.info_strings = [
-            "RR",  # (L/m)
-            "TVe",  # (mL)
-            "TVi",  # (mL/m)
-            "PIP",  # (cm H2O)
-        ]
-
-        # dummy
-        self.info_vals = [12.2, 20.0, 12.2, 20.0]
-
-        nCols = len(self.info_strings)
-        self.info_widgets = []
-        self.val_widgets = []
-        self.widget_lookup = {}
-        for j in range(len(self.info_strings)):
-            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
-            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
-            self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            lower_layout.addWidget(self.info_widgets[-1], j // nCols, 2 * (j % nCols))
-            lower_layout.addWidget(
-                self.val_widgets[-1], j // nCols, 1 + 2 * (j % nCols)
-            )
-            self.widget_lookup[self.info_strings[j]] = j
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
 
@@ -179,7 +178,7 @@ class PatientSensor(QtGui.QFrame):
         self.curve_pressure = self.graph_pressure.plot(
             self.flow.time, self.flow.pressure, pen=pen
         )
-        pen = pg.mkPen(color=(50, 120, 255), width=2)
+        pen = pg.mkPen(color=(255, 128, 255), width=2)
         self.curve_volume = self.graph_volume.plot(
             self.flow.time, self.flow.volume, pen=pen
         )
@@ -209,7 +208,7 @@ class PatientSensor(QtGui.QFrame):
         self.graph_flow.hideAxis("bottom")
         self.graph_pressure.hideAxis("bottom")
 
-        pen = pg.mkPen(color=(220, 220, 50), width=3)
+        #pen = pg.mkPen(color=(220, 220, 50), width=3)
 
         # self.upper = self.graph_flow.addLine(y=8, pen=pen)
         # self.lower = self.graph_flow.addLine(y=-2, pen=pen)
@@ -226,10 +225,10 @@ class PatientSensor(QtGui.QFrame):
         self.alert.status = self.flow.status
         self.status = self.flow.status
 
-        for key in self.widget_lookup:
-            val = self.widget_lookup[key]
+        for key in self.alert.widget_lookup:
+            val = self.alert.widget_lookup[key]
             v = np.random.uniform(5.0, 15.0)
-            self.val_widgets[val].setText(str(int(v)))
+            self.alert.val_widgets[val].setText(str(int(v)))
 
 
 class PatientGrid(QtWidgets.QWidget):
