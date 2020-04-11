@@ -3,7 +3,6 @@ import enum
 import numpy as np
 
 import numpy as np
-import scipy.integrate
 
 import nurse.analysis
 import patient.rotary
@@ -24,6 +23,7 @@ COLOR = {
 
 class Generator(abc.ABC):
     def __init__(self):
+        self._old_realtime = None
         self._volume = np.array([], dtype=np.double)
         self._breaths = []
         self._cumulative = {}
@@ -41,25 +41,29 @@ class Generator(abc.ABC):
         realtime = self.realtime
 
         if len(realtime) > 0:
-            self._volume = scipy.integrate.cumtrapz(
-                self.flow * 1000, realtime / 60.0, initial=0
+            self._volume = nurse.analysis.flow_to_volume(
+                realtime, self._old_realtime, self.flow, self._volume
             )
+            # strictly speaking, we only need to save as much of this as would
+            # be lost before the next call to analyze.
+            self._old_realtime = realtime
 
             breaths = nurse.analysis.measure_breaths(
                 realtime, self.flow, self.volume, self.pressure
             )
 
-            self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
-                self._breaths, breaths
-            )
+            if len(breaths) > 0:
+                self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
+                    self._breaths, breaths
+                )
 
-            self._cumulative = nurse.analysis.cumulative(
-                self._cumulative, updated, new_breaths
-            )
+                self._cumulative = nurse.analysis.cumulative(
+                    self._cumulative, updated, new_breaths
+                )
 
-            self._alarms = nurse.analysis.alarms(
-                self._rotary, self._alarms, updated, new_breaths, self._cumulative
-            )
+                self._alarms = nurse.analysis.alarms(
+                    self._rotary, self._alarms, updated, new_breaths, self._cumulative
+                )
 
     @property
     def time(self):
