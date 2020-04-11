@@ -131,7 +131,7 @@ class PatientSensor(QtGui.QFrame):
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
         self.setObjectName("PatientInfo")
-        self.setStyleSheet("#PatientInfo { border: 1px solid rgb(50,120,255) }") #are you kidding
+        self.setStyleSheet("#PatientInfo { border: 1px solid rgb(160,200,255) }") #are you kidding
 
 
         outer_layout = QtWidgets.QVBoxLayout()
@@ -317,12 +317,13 @@ class NSFLogoWidget(QtWidgets.QWidget):
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
         layout.addWidget(logolabel)
+        layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
 class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -338,12 +339,24 @@ class GraphLabelWidget(QtWidgets.QWidget):
                                                     a = alpha
                                                     )
 
+        text = QtWidgets.QLabel("Graph settings")
+        text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
+        text.setStyleSheet("QLabel { color: ghostwhite }")
+        text.setAlignment(Qt.AlignLeft)
+        layout.addWidget(text,1)
+
         for key in gis.graph_labels:
-            text = QtWidgets.QLabel(key+'('+gis.units[key]+')')           
-            text.setFont(QtGui.QFont("Times", 14, QtGui.QFont.Bold))
-            text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
-            text.setAlignment(Qt.AlignLeft)
-            layout.addWidget(text)
+            name_btn = QtWidgets.QPushButton(key.capitalize()+'('+gis.units[key]+')')
+            name_btn.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
+            name_btn.setStyleSheet("QPushButton { background-color: 'transparent'; color: rgba("+values[key]+"); }")
+
+#            text = QtWidgets.QLabel(key.capitalize()+'('+gis.units[key]+')')           
+#            text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
+#            text.setStyleSheet("QLabel { color: rgba("+values[key]+"); }")
+#            text.setAlignment(Qt.AlignCenter)
+#            layout.addWidget(text,1)
+            layout.addWidget(name_btn,1)
+        
         self.setLayout(layout)
         
 class HeaderWidget(QtWidgets.QWidget):
@@ -356,9 +369,9 @@ class HeaderWidget(QtWidgets.QWidget):
         princeton_logo = PrincetonLogoWidget()
         graph_info = GraphLabelWidget()
         nsf_logo = NSFLogoWidget()
-        layout.addWidget(princeton_logo)
-        layout.addWidget(graph_info)
-        layout.addWidget(nsf_logo)
+        layout.addWidget(princeton_logo,6)
+        layout.addWidget(graph_info,6)
+        layout.addWidget(nsf_logo,2)
 
         self.setLayout(layout)
 
