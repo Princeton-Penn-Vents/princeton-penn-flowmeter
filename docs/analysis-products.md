@@ -69,7 +69,7 @@ The next data tier is that of cumulative measurements. Each of the following fie
 
    * **last breath timestamp (sec):** the **realtime** of the latest breath recorded.
    * **breath interval (sec):** the EWMA of **time since last** from breath records.
-   * **breath rate (1/min):** the instantaneous reciprocal of **breath interval**, converted from seconds to minutes.
+   * **RR (1/min):** the instantaneous reciprocal of **breath interval**, converted from seconds to minutes.
    * **PIP (cm-H₂O):** the EWMA of **max pressure** from breath records.
    * **PEEP (cm-H₂O):** the EWMA of **empty pressure** from breath records.
    * **TVe (mL):** the EWMA of **expiratory tidal volume** from breath records.
@@ -77,7 +77,7 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **TV (mL):** the instantaneous average of **TVe** and **TVi**.
    * **inhale compliance (ml/cm-H₂O):** the EWMA of **inhale compliance** from breath records.
    * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
-   * **respiratory rate (L/min):** the instantaneous product of **TV** and **breath rate**.
+   * **breath volume rate (L/min):** the instantaneous product of **TV** and **RR**.
 
 ## Alarms
 

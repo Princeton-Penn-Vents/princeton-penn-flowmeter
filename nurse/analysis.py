@@ -358,7 +358,7 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["breath interval"] = moving_average(
                     cumulative, "breath interval", breath["time since last"]
                 )
-                cumulative["breath rate"] = 60.0 / cumulative["breath interval"]
+                cumulative["RR"] = 60.0 / cumulative["breath interval"]
             if "max pressure" in breath:
                 cumulative["PIP"] = moving_average(
                     cumulative, "PIP", breath["max pressure"]
@@ -385,8 +385,8 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["exhale compliance"] = moving_average(
                     cumulative, "exhale compliance", breath["exhale compliance"]
                 )
-            if "breath rate" in cumulative and "TV" in cumulative:
-                cumulative["respiratory rate"] = cumulative["TV"] * cumulative["breath rate"] / 1000.0
+            if "RR" in cumulative and "TV" in cumulative:
+                cumulative["breath volume rate"] = cumulative["TV"] * cumulative["RR"] / 1000.0
 
     return cumulative
 
