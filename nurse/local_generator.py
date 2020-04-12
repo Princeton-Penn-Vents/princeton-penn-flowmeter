@@ -7,7 +7,7 @@ from nurse.generator import Generator, Status
 
 
 class LocalGenerator(Generator):
-    def __init__(self, status: Status = Status.OK):
+    def __init__(self, status: Status = Status.OK, logging=None):
         super().__init__()
         self.status = status
 
@@ -17,6 +17,8 @@ class LocalGenerator(Generator):
 
         self._start_time = int(1000 * datetime.now().timestamp())
         (self._sim,) = start_sims(1, self._start_time, 12000000)
+
+        self._logging = logging
 
     def get_data(self):
         t = int(datetime.now().timestamp() * 1000)

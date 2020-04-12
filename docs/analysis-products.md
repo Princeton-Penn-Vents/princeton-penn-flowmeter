@@ -15,7 +15,7 @@ Currently only one:
 
    * **volume (mL):** the time-integral of **flow**, after converting L to mL and sec to min. The zero-point for **volume** starts at the beginning of the **flow** integration, so positive **volume** is an inflated lung and negative **volume** is below the initial value.
 
-**FIXME:** The "beginning of the **flow** integration" is at the beginning of the time-series in the rolling buffer, which has an arbitrary starting point. With the above definition, absolute volume is arbitrarily defined and it will be redefined as the time-series buffer rolls forward. Since old breath records are replaced with new breath records whenever the same data are recomputed (below), absolute volumes in the breath records will change as the starting point gets redefined. Volume differences for breaths that came from different rolling window segments would be wrong, but we don't have any of those: all volume differences are computed in the same rolling window segment, so they're both correct and unchanging. The features that are or arn't affected by this are noted below, but we should fix a definition that at least asymtotically stabilizes the absolute volume.
+**Note:** Since **volume** is determined from its differential, it is only known up to an additive constant. Negative volume is not physical, so we adjust the additive constant such that the lowest **volume** ever reached is identified with zero. At the beginning of a time-series, quantities based on absolute **volume** may be revised as new global minima are encountered, but this becomes increasingly rare as a time-series accumulates. The global minimum is the lowest value ever reached, which might predate the data in the rolling buffer: all **volume** values in memory might be greater than zero.
 
 ## Breath record products
 
@@ -39,7 +39,7 @@ A breath record may have any of the following fields. (Field names include space
    * **full timestamp (sec):** the **realtime** when the **volume** is at a maximum.
    * **full pressure (cm-H₂O):** the original, unsmoothed **pressure** at the time of **full**, which is often but not necessarily equal to **max pressure**.
    * **full volume (mL):** the original, unsmoothed **volume** at the time of **full**, which is always the maximum for this breath.
-   * **expiratory tidal volume (mL):** the difference between the **full volume** and the previous **empty volume**, if it exists. This quantity is always positive and is a relative volume, computed within a single time-series buffer, so it is not sensitive to changes in the absolute **volume** as the time-series rolls (see **FIXME** above).
+   * **expiratory tidal volume (mL):** the difference between the **full volume** and the previous **empty volume**, if it exists. This quantity is always positive and is a relative volume, computed within a single time-series buffer, so it is not sensitive to changes in the absolute **volume**.
    * **exhale timestamp (sec):** the **realtime** when the **flow** is at a minimum (extremely negative).
    * **exhale flow (L/min):** the original, unsmoothed **flow** at the time of **exhale**.
    * **exhale dV/dt (mL/sec):** the smoothed **flow** at the time of **exhale**, converted into mL and seconds.
@@ -69,13 +69,15 @@ The next data tier is that of cumulative measurements. Each of the following fie
 
    * **last breath timestamp (sec):** the **realtime** of the latest breath recorded.
    * **breath interval (sec):** the EWMA of **time since last** from breath records.
-   * **breath rate (1/min):** the reciprocal of **breath interval**, converted from seconds to minutes.
+   * **RR (1/min):** the instantaneous reciprocal of **breath interval**, converted from seconds to minutes.
    * **PIP (cm-H₂O):** the EWMA of **max pressure** from breath records.
    * **PEEP (cm-H₂O):** the EWMA of **empty pressure** from breath records.
    * **TVe (mL):** the EWMA of **expiratory tidal volume** from breath records.
    * **TVi (mL):** the EWMA of **inspiratory tidal volume** from breath records.
+   * **TV (mL):** the instantaneous average of **TVe** and **TVi**.
    * **inhale compliance (ml/cm-H₂O):** the EWMA of **inhale compliance** from breath records.
    * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
+   * **breath volume rate (L/min):** the instantaneous product of **TV** and **RR**.
 
 ## Alarms
 
