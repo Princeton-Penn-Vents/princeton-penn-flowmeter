@@ -81,10 +81,11 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout.addWidget(self.name_btn)  # , 2)
 
         self.info_strings = [
-            "RR",  # (L/m)
+            #"RR",  # (L/m)
             "TVe",  # (mL)
             "TVi",  # (mL/m)
             "PIP",  # (cm H2O)
+            "PEEP",  # (cm H2O)
         ]
 
         lower = QtWidgets.QWidget()
@@ -95,7 +96,8 @@ class AlertWidget(QtWidgets.QWidget):
         lower_layout.setSpacing(0)
 
         lower.setLayout(lower_layout)
-        self.info_vals = [12.2, 20.0, 12.2, 20.0]
+        # Values seen before cumulative average values available
+        self.info_vals = [0, 0, 0, 0, 0] 
 
         self.info_widgets = []
         self.val_widgets = []
@@ -105,6 +107,7 @@ class AlertWidget(QtWidgets.QWidget):
             self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
             self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
+            self.val_widgets[-1].setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             self.widget_lookup[self.info_strings[j]] = j
             lower_layout.addWidget(self.info_widgets[-1], j, 0)
             lower_layout.addWidget(self.val_widgets[-1], j, 1)
@@ -236,11 +239,14 @@ class PatientSensor(QtGui.QFrame):
             else:
                 self.graphview.setBackground(QtGui.QColor(0, 0, 0))
 
+        #for key in self.alert.widget_lookup:
+        #    val = self.alert.widget_lookup[key]
+        #    v = np.random.uniform(5.0, 15.0)
+        #    self.alert.val_widgets[val].setText(str(int(v)))
         for key in self.alert.widget_lookup:
-            val = self.alert.widget_lookup[key]
-            v = np.random.uniform(5.0, 15.0)
-            self.alert.val_widgets[val].setText(str(int(v)))
-
+            valindex = self.alert.widget_lookup[key]
+            val = self.flow.cumulative[key]            
+            self.alert.val_widgets[valindex].setText(str(int(round(val))))
 
 class PatientGrid(QtWidgets.QWidget):
     def __init__(self, *args, width, **kwargs):
