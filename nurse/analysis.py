@@ -153,7 +153,10 @@ def measure_breaths(time, flow, volume, pressure):
 
         breath_times = find_breaths(*turning_points)
 
-    except ValueError:
+    except:
+        return []
+
+    if len(time) == 0 or len(breath_times) == 0:
         return []
 
     breaths = []
@@ -163,70 +166,78 @@ def measure_breaths(time, flow, volume, pressure):
 
         if which == 0:
             breath["empty timestamp"] = t
-            breath["empty pressure"] = pressure[index]
-            breath["empty volume"] = volume[index]
+            if 0 <= index < len(pressure):
+                breath["empty pressure"] = pressure[index]
+            if 0 <= index < len(volume):
+                breath["empty volume"] = volume[index]
             if i >= 2:
-                breath["inspiratory tidal volume"] = (
-                    volume[np.argmin(abs(time - breath_times[i - 2][1]))]
-                    - breath["empty volume"]
-                )
+                full_index = np.argmin(abs(time - breath_times[i - 2][1]))
+                if 0 <= full_index < len(volume):
+                    diff = volume[full_index] - breath["empty volume"]
+                    if diff > 0:
+                        breath["inspiratory tidal volume"] = diff
             if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
-                breath["time since last"] = (
-                    breath["empty timestamp"] - breaths[-1]["empty timestamp"]
-                )
+                diff = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
+                if diff > 0:
+                    breath["time since last"] = diff
 
             breaths.append(breath)
             breath = {}
 
         elif which == 1:
             breath["inhale timestamp"] = t
-            breath["inhale flow"] = flow[index]
-            breath["inhale dV/dt"] = (
-                smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
-            )
-            breath["inhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
-            breath["inhale compliance"] = (
-                breath["inhale dV/dt"] / breath["inhale dP/dt"]
-            )
-            if i >= 2:
-                breath["min pressure"] = np.min(
-                    pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
+            if 0 <= index < len(flow):
+                breath["inhale flow"] = flow[index]
+            if len(smooth_time_f) > 0:
+                idx = np.argmin(abs(smooth_time_f - t))
+                if 0 <= idx < len(smooth_flow):
+                    breath["inhale dV/dt"] = smooth_flow[idx] * 1000 / 60.0
+            if len(smooth_time_p) > 0:
+                idx = np.argmin(abs(smooth_time_p - t))
+                if 0 <= idx < len(smooth_dpressure):
+                    breath["inhale dP/dt"] = smooth_dpressure[idx]
+            if "inhale dV/dt" in breath and "inhale dP/dt" in breath:
+                breath["inhale compliance"] = (
+                    breath["inhale dV/dt"] / breath["inhale dP/dt"]
                 )
+            if i >= 2:
+                start_index = np.argmin(abs(time - breath_times[i - 2][1]))
+                if start_index < index:
+                    breath["min pressure"] = np.min(pressure[start_index : index])
 
         elif which == 2:
             breath["full timestamp"] = t
-            breath["full pressure"] = pressure[index]
-            breath["full volume"] = volume[index]
+            if 0 <= index < len(pressure):
+                breath["full pressure"] = pressure[index]
+            if 0 <= index < len(volume):
+                breath["full volume"] = volume[index]
             if i >= 2:
-                breath["expiratory tidal volume"] = (
-                    breath["full volume"]
-                    - volume[np.argmin(abs(time - breath_times[i - 2][1]))]
-                )
+                empty_index = np.argmin(abs(time - breath_times[i - 2][1]))
+                if 0 <= empty_index < len(volume):
+                    diff = breath["full volume"] - volume[empty_index]
+                    if diff > 0:
+                        breath["expiratory tidal volume"] = diff
 
         elif which == 3:
             breath["exhale timestamp"] = t
-            breath["exhale flow"] = flow[index]
-            breath["exhale dV/dt"] = (
-                smooth_flow[np.argmin(abs(smooth_time_f - t))] * 1000 / 60.0
-            )
-            breath["exhale dP/dt"] = smooth_dpressure[np.argmin(abs(smooth_time_p - t))]
-            breath["exhale compliance"] = (
-                breath["exhale dV/dt"] / breath["exhale dP/dt"]
-            )
+            if 0 <= index < len(flow):
+                breath["exhale flow"] = flow[index]
+            if len(smooth_time_f) > 0:
+                idx = np.argmin(abs(smooth_time_f - t))
+                if 0 <= idx < len(smooth_flow):
+                    breath["exhale dV/dt"] = smooth_flow[idx] * 1000 / 60.0
+            if len(smooth_time_p) > 0:
+                idx = np.argmin(abs(smooth_time_p - t))
+                if 0 <= idx < len(smooth_dpressure):
+                    breath["exhale dP/dt"] = smooth_dpressure[idx]
+            if "exhale dV/dt" in breath and "exhale dP/dt" in breath:
+                breath["exhale compliance"] = (
+                    breath["exhale dV/dt"] / breath["exhale dP/dt"]
+                )
             if i >= 2:
-                try:
-                    breath["max pressure"] = np.max(
-                        pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]
-                    )
-                except ValueError:
-                    # This would be so much easier in Python 3.8...
-                    print(f"index = {index}")
-                    print(f"time = {time}")
-                    print(f"breath_times[i - 2][1] = {breath_times[i - 2][1]}")
-                    print(f"abs(time - breath_times[i - 2][1]) = {abs(time - breath_times[i - 2][1])}")
-                    print(f"np.argmin(abs(time - breath_times[i - 2][1])) = {np.argmin(abs(time - breath_times[i - 2][1]))}")
-                    print(f"pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index] = {pressure[np.argmin(abs(time - breath_times[i - 2][1])) : index]}")
-                    raise
+                start_index = np.argmin(abs(time - breath_times[i - 2][1]))
+                if start_index < index:
+                    breath["max pressure"] = np.max(pressure[start_index : index])
 
     if len(breath) != 0:
         breaths.append(breath)
@@ -289,7 +300,7 @@ def combine_breaths(old_breaths, new_breaths):
 
             if same:
                 # take all fields that are defined in either old or new, but preferring new if it's in both
-                breaths[i] = {**breaths[i], **new_breaths[j]}  # Python>=3.5
+                breaths[i] = {**breaths[i], **new_breaths[j]}
                 updated.append(breaths[i])
                 drop.append(j)
                 break
@@ -364,6 +375,8 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["TVi"] = moving_average(
                     cumulative, "TVi", breath["inspiratory tidal volume"]
                 )
+            if "TVe" in cumulative and "TVi" in cumulative:
+                cumulative["TV"] = 0.5*(cumulative["TVe"] + cumulative["TVi"])
             if "inhale compliance" in breath:
                 cumulative["inhale compliance"] = moving_average(
                     cumulative, "inhale compliance", breath["inhale compliance"]
@@ -372,6 +385,8 @@ def cumulative(cumulative, updated, new_breaths):
                 cumulative["exhale compliance"] = moving_average(
                     cumulative, "exhale compliance", breath["exhale compliance"]
                 )
+            if "breath rate" in cumulative and "TV" in cumulative:
+                cumulative["respiratory rate"] = cumulative["TV"] * cumulative["breath rate"] / 1000.0
 
     return cumulative
 
