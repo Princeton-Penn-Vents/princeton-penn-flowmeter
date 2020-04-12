@@ -247,8 +247,13 @@ class PatientSensor(QtGui.QFrame):
         #    self.alert.val_widgets[val].setText(str(int(v)))
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
-            val = self.flow.cumulative[key]            
-            self.alert.val_widgets[valindex].setText(str(int(round(val))))
+            #val = self.flow.cumulative[key]            
+            val = self.flow.cumulative.get(key)
+            if val: 
+                self.alert.val_widgets[valindex].setText(str(int(round(val))))
+            else:
+                self.alert.val_widgets[valindex].setText(str(0))
+            
 
 class PatientGrid(QtWidgets.QWidget):
     def __init__(self, *args, width, **kwargs):
