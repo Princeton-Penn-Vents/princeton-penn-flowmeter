@@ -57,17 +57,17 @@ class Generator(abc.ABC):
                     with open(os.path.join(
                         self._logging, "time_{}.dat".format(id(self))
                     ), "ba") as file:
-                        file.write(realtime[start_index:].astype("<f8").tostring())
+                        file.write((realtime[start_index:] * 1000).astype("<u8").tostring())
 
                     with open(os.path.join(
                         self._logging, "flow_{}.dat".format(id(self))
                     ), "ba") as file:
-                        file.write(self.flow[start_index:].astype("<f8").tostring())
+                        file.write(self.flow[start_index:].astype("<f4").tostring())
 
                     with open(os.path.join(
                         self._logging, "pres_{}.dat".format(id(self))
                     ), "ba") as file:
-                        file.write(self.pressure[start_index:].astype("<f8").tostring())
+                        file.write(self.pressure[start_index:].astype("<f4").tostring())
 
             self._volume = nurse.analysis.flow_to_volume(
                 realtime,
