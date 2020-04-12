@@ -83,9 +83,9 @@ class AlertWidget(QtWidgets.QWidget):
         column_layout.addWidget(self.name_btn)  # , 2)
 
         self.info_strings = [
-            #"RR",  # (L/m)
+            "RR",  # (breaths/min)
             "TVe",  # (mL)
-            "TVi",  # (mL/m)
+            "TVi",  # (mL)
             "PIP",  # (cm H2O)
             "PEEP",  # (cm H2O)
         ]
