@@ -252,7 +252,7 @@ class PatientSensor(QtGui.QFrame):
             if val: 
                 self.alert.val_widgets[valindex].setText(str(int(round(val))))
             else:
-                self.alert.val_widgets[valindex].setText(str(0))
+                self.alert.val_widgets[valindex].setText('---')
             
 
 class PatientGrid(QtWidgets.QWidget):
