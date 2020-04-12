@@ -26,6 +26,8 @@ DIR = Path(__file__).parent.absolute()
 
 guicolors = {"ALERT": QtGui.QColor(0, 0, 205), "patient_border": "rgb(160,200,255)"}
 
+logging_directory = None
+
 
 class GraphInfo:
     def __init__(self):
@@ -167,7 +169,7 @@ class PatientSensor(QtGui.QFrame):
         if port is not None:
             self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
-            self.flow = LocalGenerator(status)
+            self.flow = LocalGenerator(status, logging=logging_directory)
 
         self.alert.status = self.flow.status
 
@@ -183,7 +185,7 @@ class PatientSensor(QtGui.QFrame):
             try:
                 port = int(number)
             except ValueError:
-                self.flow = LocalGenerator(Status.DISCON)
+                self.flow = LocalGenerator(Status.DISCON, logging=logging_directory)
                 return
             self.flow = RemoteGenerator(port=port)
 
@@ -468,7 +470,9 @@ if __name__ == "__main__":
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
     parser.add_argument("--fullscreen", action="store_true")
-    parser.add_argument("--no-display", action="store_true")
+    parser.add_argument(
+        "--no-display", action="store_true", help="Prevents the main window from appearing; for debugging"
+    )
     parser.add_argument(
         "--displays",
         "-n",
@@ -476,8 +480,14 @@ if __name__ == "__main__":
         default=20,
         help="# of displays, currently not dynamic",
     )
+    parser.add_argument(
+        "--logging", default="", help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)"
+    )
 
     arg, unparsed_args = parser.parse_known_args()
+    if arg.logging != "":
+        logging_directory = arg.logging
+
     main(
         argv=sys.argv[:1] + unparsed_args,
         ip=arg.ip,
