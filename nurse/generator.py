@@ -116,5 +116,9 @@ class Generator(abc.ABC):
     def alarms(self):
         return self._alarms
 
+    @property
+    def cumulative(self):
+        return self._cumulative
+
     def close(self):
         pass
