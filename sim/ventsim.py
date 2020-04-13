@@ -26,7 +26,10 @@ class VentSim:
         self.starting_volume = params.get("starting_volume", 0.0)
         self.breath_variation = params.get("breath_variation", 300.0)
         self.max_breath_interval = params.get("max_breath_interval", 9000.0)
-
+        self.measurement_error_pressure = params.get("measurement_error_pressure", 0.)
+        self.measurement_error_flow = params.get("measurement_error_flow", 0.)
+        
+        
     def initialize_sim(self):
         print("running sim with these parameters")
         self.print_config()
@@ -190,10 +193,12 @@ class VentSim:
         d = {
             "v": 1,
             "t": int(self.curr_time + self.times[self.current_bin]),
-            "F": self.flow[self.current_bin],
-            "P": self.pressure[self.current_bin],
+            "F": self.flow[self.current_bin] + np.random.normal(0,self.measurement_error_flow,1),
+            "P": self.pressure[self.current_bin] + np.random.normal(0,self.measurement_error_pressure,1),
             "temp": 23.3,
         }
+
+        
         self.current_bin += 1
         return d
 
@@ -201,7 +206,9 @@ class VentSim:
         nbins = int(nMilliSeconds / self.sample_length)
         if self.current_bin + nbins > len(self.times):
             self.extend()
-
+        fbin=self.current_bin
+        lbin=self.current_bin + nbins
+        
         d = {
             "version": 1,
             "source": "simulation",
@@ -209,16 +216,12 @@ class VentSim:
             "data": {
                 "timestamps": (
                     self.curr_time
-                    + self.times[self.current_bin : self.current_bin + nbins]
+                    + self.times[fbin:lbin]
                 )
                 .astype(int)
                 .tolist(),
-                "flows": self.flow[
-                    self.current_bin : self.current_bin + nbins
-                ].tolist(),
-                "pressures": self.pressure[
-                    self.current_bin : self.current_bin + nbins
-                ].tolist(),
+                "flows": (self.flow[fbin:lbin] + np.random.normal(0,self.measurement_error_flow,lbin-fbin)).tolist(),
+                "pressures": (self.pressure[fbin:lbin] + np.random.normal(0,self.measurement_error_pressure,lbin-fbin)).tolist()
             },
         }
 
@@ -226,7 +229,7 @@ class VentSim:
         return d
 
     def get_all(self):
-        return self.times.astype(int), self.flow, self.volume, self.pressure
+        return self.times.astype(int), self.flow+np.random.normal(0,self.measurement_error_flow,len(self.times)), self.volume, self.pressure+np.random.normal(0,self.measurement_error_pressure,len(self.times))
 
     def get_from_timestamp(self, t, nMilliSeconds):
         lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
@@ -251,8 +254,8 @@ class VentSim:
                 "timestamps": (self.curr_time + self.times[fbin:lbin])
                 .astype(int)
                 .tolist(),
-                "flows": self.flow[fbin:lbin].tolist(),
-                "pressures": self.pressure[fbin:lbin].tolist(),
+                "flows": (self.flow[fbin:lbin] + np.random.normal(0,self.measurement_error_flow,lbin-fbin)).tolist(),
+                "pressures": (self.pressure[fbin:lbin]+ np.random.normal(0,self.measurement_error_pressure,lbin-fbin)).tolist(),
             },
         }
         return d

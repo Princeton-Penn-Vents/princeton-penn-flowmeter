@@ -13,10 +13,14 @@ def start_sims(nSim, start_time, sim_time):
 
         simulator = VentSim(start_time, sim_time)
         simulator.load_configs(os.path.join(os.path.dirname(os.path.realpath(__file__)),"sim_configs.yml"))
-        if random.random() < 0.5:
-            simulator.use_config("nominal_breather",params)
+        if i==3:
+            simulator.use_config("alarm_nonbreather")
         else:
-            simulator.use_config("nominal_nonbreather",params)
+            if random.random() < 0.5:
+                simulator.use_config("nominal_breather",params)
+            else:
+                simulator.use_config("nominal_nonbreather",params)
+
         simulator.initialize_sim()
 
         # advance it somewhat
