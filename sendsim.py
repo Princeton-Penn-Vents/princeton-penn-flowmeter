@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import sys
-import numpy as np
-import http.server
-import argparse
-import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from functools import partial
-from sim.start_sims import start_sims
-from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
-import time
+from sim.start_sims import start_sims
+import argparse
+import http.server
+import json
+import numpy as np
 import random
+import sys
+import time
+from urllib.parse import urlparse, parse_qs
 
 
 def main(sim, t_now):
@@ -23,24 +24,37 @@ def main(sim, t_now):
     return json.dumps(d).encode("ascii")
 
 
-# Ugly, better if the handler had options
 class Handler(http.server.BaseHTTPRequestHandler):
     def __init__(self, parent, version_num, *args, **kwargs):
         self.parent = parent
         self.version_num = version_num
         super().__init__(*args, **kwargs)
 
+    def parse_url(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/":
+            return parse_qs(parsed.query)
+
     def do_HEAD(self):
+        if self.parse_url() is None:
+            self.send_response(404)
+            return
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.end_headers()
+        return True
 
     def do_GET(self):
+        parsed_path = urlparse(self.path)
+        print(parsed_path.path)
+        print(parsed_path.query)
+        print(self.parse_url())
+
         t_now = int(1000 * datetime.now().timestamp())
 
         if self.parent.isDisconnected[self.version_num] <= t_now:
-            self.do_HEAD()
-            self.wfile.write(main(self.parent.sims[self.version_num], t_now))
+            if self.do_HEAD():
+                self.wfile.write(main(self.parent.sims[self.version_num], t_now))
         else:
             self.send_error(408)
 
