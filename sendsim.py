@@ -77,7 +77,6 @@ class OurServer:
     def update_disconnect(self):
         while(True):
             rand = random.random()
-            print(rand)
             if rand < self.disconnect_prob:
                 t_now = int(1000 * datetime.now().timestamp())
                 sensor_num = random.randint(0,len(self.sims)-1)
