@@ -47,12 +47,12 @@ class GraphInfo:
             )
 
         self.yLims = {}
-        self.yLims["flow"] = (-30, 30)
+        self.yLims["flow"] = (-40, 30)
         self.yLims["pressure"] = (0, 20)
         self.yLims["volume"] = (0, 800)
 
         self.yTicks = {}
-        self.yTicks["flow"] = [-25, 0, 25]
+        self.yTicks["flow"] = [-30, 0, 30]
         self.yTicks["pressure"] = [0, 15]
         self.yTicks["volume"] = [0, 750]
 
@@ -108,8 +108,10 @@ class AlertWidget(QtWidgets.QWidget):
             self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
             self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
             self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
+            self.info_widgets[-1].setStyleSheet("color: #4CB3EF;")
             self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.val_widgets[-1].setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.val_widgets[-1].setStyleSheet("color: #4CB3EF;")
             self.widget_lookup[self.info_strings[j]] = j
             lower_layout.addWidget(self.info_widgets[-1], j, 0)
             lower_layout.addWidget(self.val_widgets[-1], j, 1)
