@@ -3,6 +3,7 @@ import enum
 import os
 
 import numpy as np
+from datetime import datetime
 
 import nurse.analysis
 import patient.rotary
@@ -31,6 +32,7 @@ class Generator(abc.ABC):
         self._cumulative = {}
         self._alarms = {}
         self._rotary = patient.rotary.MockRotary(patient.rotary.DICT)
+        self.last_update = None
 
     def set_rotary(self, rotary):
         self._rotary = rotary
@@ -106,8 +108,9 @@ class Generator(abc.ABC):
     @property
     def time(self):
         timestamps = self.timestamps
+        tardy = 0 if self.last_update is None else (datetime.now().timestamp() - self.last_update)*1000
         if len(timestamps) > 0:
-            return -(timestamps - timestamps[-1]) / 1000
+            return -(timestamps - timestamps[-1] - tardy) / 1000
         else:
             return timestamps
 
