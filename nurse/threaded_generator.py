@@ -36,7 +36,11 @@ class GeneratorThread(threading.Thread):
                 with self._lock:
                     self.status = Status.DISCON
                 return
-
+            if r.status_code != 200:
+                with self._lock:
+                    self.status = Status.DISCON
+                return
+                
             root = json.loads(r.text)
             times = np.asarray(root["data"]["timestamps"])
             flow = np.asarray(root["data"]["flows"])
