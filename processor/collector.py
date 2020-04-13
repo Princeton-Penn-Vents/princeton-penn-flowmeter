@@ -46,14 +46,6 @@ class CollectorThread(threading.Thread):
             )
 
 
-def analyzer(coll, collector_thread):
-    while not collector_thread.signal_end.is_set():
-        time.sleep(1.0)
-
-        with collector_thread._lock:
-            coll.analyze()
-
-
 class Collector(Generator):
     def __init__(self):
         super().__init__()
@@ -65,11 +57,18 @@ class Collector(Generator):
         self._thread = CollectorThread()
         self._thread.start()
 
-        self._analyzer_thread = Thread(target=analyzer, args=[self, collector_thread])
+        self._analyzer_thread = threading.Thread(target=self._analyzer)
         self._analyzer_thread.start()
 
+    def _analyzer(self):
+        while not self._thread.signal_end.is_set():
+            time.sleep(1.0)
+
+            self.get_data()
+            self.analyze()
+
     def get_data(self):
-        (self._time, self._flow, self._pressure) = self._thread.get_data()
+        self._time, self._flow, self._pressure = self._thread.get_data()
 
     @property
     def timestamps(self):
@@ -96,9 +95,12 @@ if __name__ == "__main__":
     time.sleep(5)
     coll.get_data()
     print(f"Received {len(coll.time)} values in 5 seconds")
+    print(f"Analyzer length is {len(coll.volume)}")
     time.sleep(5)
     coll.get_data()
     print(f"Received {len(coll.time)} values in 10 seconds")
+    print(f"Analyzer length is {len(coll.volume)}")
+    print(f"Alarms: {coll.alarms}")
     coll.close()
 
 
