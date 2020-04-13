@@ -144,7 +144,7 @@ def sdp3_handler(signum, frame):
 #       tmpADC = getADC(chanMP3V5004)
        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
        if myfile:
-           ds = json.dumps(s)
+           ds = json.dumps(d)
            print(df, file=myfile)
            socket.send_string(ds)
        else:
