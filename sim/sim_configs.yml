@@ -2,7 +2,9 @@ nominal_breather:
   - sample_length: 20.0
   - breath_interval: 5000.0
   - max_flow: 15.0
-  - tidal_volume: 0.6
+  - tidal_volume:
+    - mean: 0.6
+    - sigma: 0.1
   - peep: 4
   - compliance_func: "constant_compliance"
   - starting_volume: 0.0

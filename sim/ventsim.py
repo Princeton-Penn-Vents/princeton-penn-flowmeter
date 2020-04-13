@@ -37,14 +37,33 @@ class VentSim:
         stream = open(yml_file, 'r')
         params = yaml.safe_load(stream)
         self.configs = params
-        
+
+    def interpret_yaml_key(self, val):
+        if type(val) == list:
+            mean=-1
+            sigma=-1
+            for t_dict in val:
+                for key in t_dict:
+                    if key == "mean": mean = t_dict[key]
+                    else:
+                        if key == "sigma": sigma = t_dict[key]
+                        else:
+                            assert False, "unexpected value " + key
+            if mean==-1 or sigma==-1:
+                assert False, "missing mean or sigma"
+            return np.random.normal(mean,sigma)
+        else:
+            return val #its a value
+            
     def use_config(self, config,params={}):
-        assert config in self.configs, "missing configuration "+config
+        assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
+        print(new_config)
         for t_dict in new_config:
             for key in t_dict:
                 if key not in params:
-                    setattr(self,key,t_dict[key])
+                    setattr(self,key,self.interpret_yaml_key(t_dict[key]))
+                    print(key,getattr(self,key))
                 else:
                     setattr(self,key,params[key])
         if type(self.compliance_func) == str:
@@ -247,7 +266,7 @@ if __name__ == "__main__":
     simulator = VentSim(now_time, 1200000)
     simulator.load_configs("sim_configs.yml")
     simulator.use_config("nominal_breather")
-    simulator.initialize()
+    simulator.initialize_sim()
     
     for i in range(0, 10):
         print(simulator.get_next())
