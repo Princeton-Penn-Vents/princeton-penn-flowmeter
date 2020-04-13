@@ -240,11 +240,8 @@ class PatientSensor(QtGui.QFrame):
                 self.graphview.setBackground(guicolors["ALERT"])
             else:
                 self.graphview.setBackground(QtGui.QColor(0, 0, 0))
+            #TESTself.graphview.setBackground(guicolors["ALERT"])
 
-        #for key in self.alert.widget_lookup:
-        #    val = self.alert.widget_lookup[key]
-        #    v = np.random.uniform(5.0, 15.0)
-        #    self.alert.val_widgets[val].setText(str(int(v)))
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             #val = self.flow.cumulative[key]            
