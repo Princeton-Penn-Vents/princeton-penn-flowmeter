@@ -35,7 +35,7 @@ class GeneratorThread(threading.Thread):
             try:
                 r = requests.get(self._address)
                 self._last_update = datetime.now().timestamp()
-            except: 
+            except:
                 with self._lock:
                     self.status = Status.DISCON
                 time.sleep(1)

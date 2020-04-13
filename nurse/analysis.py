@@ -203,7 +203,7 @@ def measure_breaths(time, flow, volume, pressure):
             if i >= 2:
                 start_index = np.argmin(abs(time - breath_times[i - 2][1]))
                 if start_index < index:
-                    breath["min pressure"] = np.min(pressure[start_index : index])
+                    breath["min pressure"] = np.min(pressure[start_index:index])
 
         elif which == 2:
             breath["full timestamp"] = t
@@ -237,7 +237,7 @@ def measure_breaths(time, flow, volume, pressure):
             if i >= 2:
                 start_index = np.argmin(abs(time - breath_times[i - 2][1]))
                 if start_index < index:
-                    breath["max pressure"] = np.max(pressure[start_index : index])
+                    breath["max pressure"] = np.max(pressure[start_index:index])
 
     if len(breath) != 0:
         breaths.append(breath)
@@ -376,7 +376,7 @@ def cumulative(cumulative, updated, new_breaths):
                     cumulative, "TVi", breath["inspiratory tidal volume"]
                 )
             if "TVe" in cumulative and "TVi" in cumulative:
-                cumulative["TV"] = 0.5*(cumulative["TVe"] + cumulative["TVi"])
+                cumulative["TV"] = 0.5 * (cumulative["TVe"] + cumulative["TVi"])
             if "inhale compliance" in breath:
                 cumulative["inhale compliance"] = moving_average(
                     cumulative, "inhale compliance", breath["inhale compliance"]
@@ -386,7 +386,9 @@ def cumulative(cumulative, updated, new_breaths):
                     cumulative, "exhale compliance", breath["exhale compliance"]
                 )
             if "RR" in cumulative and "TV" in cumulative:
-                cumulative["breath volume rate"] = cumulative["TV"] * cumulative["RR"] / 1000.0
+                cumulative["breath volume rate"] = (
+                    cumulative["TV"] * cumulative["RR"] / 1000.0
+                )
 
     return cumulative
 

@@ -15,8 +15,14 @@ class RemoteGenerator(Generator):
         self.status = Status.DISCON
 
     def get_data(self):
-        (self.status, self.last_update, self._time, self._flow, self._pressure,) = self._thread.get_data()
-        
+        (
+            self.status,
+            self.last_update,
+            self._time,
+            self._flow,
+            self._pressure,
+        ) = self._thread.get_data()
+
     @property
     def flow(self):
         return np.asarray(self._flow)
@@ -31,4 +37,3 @@ class RemoteGenerator(Generator):
 
     def close(self):
         self._thread.signal_end.set()
-

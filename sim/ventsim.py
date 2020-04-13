@@ -7,16 +7,16 @@ import numpy as np
 def constant_compliance(**kwargs):
     return 0.1  # L / cm H2O
 
-known_compliance_functions = {
-    "constant_compliance" : constant_compliance
-    }
+
+known_compliance_functions = {"constant_compliance": constant_compliance}
+
 
 class VentSim:
     def __init__(self, curr_time, sim_time_max, params={}):
         self.current_bin = 0
         self.curr_time = curr_time
         self.sim_time = sim_time_max
-        
+
         self.sample_length = params.get("sample_length", 20.0)
         self.breath_interval = params.get("breath_interval", 7000.0)
         self.max_flow = params.get("max_flow", 15.0)
@@ -34,17 +34,14 @@ class VentSim:
 
     def load_configs(self, yml_file):
         import yaml
-        stream = open(yml_file, 'r')
+
+        stream = open(yml_file, "r")
         params = yaml.safe_load(stream)
         self.configs = params
 
     def interpret_yaml_key(self, val):
         if type(val) == list:
-            possible_keys={ "mean" : -1,
-                            "sigma" : -1,
-                            "min" : -1,
-                            "max" : -1
-                           }
+            possible_keys = {"mean": -1, "sigma": -1, "min": -1, "max": -1}
             for t_dict in val:
                 for key in t_dict:
                     if key in possible_keys:
@@ -52,32 +49,34 @@ class VentSim:
                     else:
                         assert False, "unexpected value " + key
 
-            if possible_keys['mean'] > -1 and possible_keys["sigma"] > -1:
-                return np.random.normal(possible_keys['mean'], possible_keys['sigma'])
-            if possible_keys['min'] > -1 and possible_keys["max"] > -1:
-                return np.random.uniform(possible_keys["min"],possible_keys["max"])
+            if possible_keys["mean"] > -1 and possible_keys["sigma"] > -1:
+                return np.random.normal(possible_keys["mean"], possible_keys["sigma"])
+            if possible_keys["min"] > -1 and possible_keys["max"] > -1:
+                return np.random.uniform(possible_keys["min"], possible_keys["max"])
             assert False, "Missing mean/sigma or min/max values"
         else:
-            return val #its a value
-            
-    def use_config(self, config,params={}):
+            return val  # its a value
+
+    def use_config(self, config, params={}):
         assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
         print(new_config)
         for t_dict in new_config:
             for key in t_dict:
                 if key not in params:
-                    setattr(self,key,self.interpret_yaml_key(t_dict[key]))
-                    print(key,getattr(self,key))
+                    setattr(self, key, self.interpret_yaml_key(t_dict[key]))
+                    print(key, getattr(self, key))
                 else:
-                    setattr(self,key,params[key])
+                    setattr(self, key, params[key])
         if type(self.compliance_func) == str:
-            assert self.compliance_func in known_compliance_functions, "missing compliance function "+ self.compliance_func
+            assert self.compliance_func in known_compliance_functions, (
+                "missing compliance function " + self.compliance_func
+            )
             self.compliance_func = known_compliance_functions[self.compliance_func]
-        print("Changed ventsim configuration to",config)
-        
+        print("Changed ventsim configuration to", config)
+
     def print_config(self):
-        print("Sample length (ms)",self.sample_length)
+        print("Sample length (ms)", self.sample_length)
         print("Breathing interval (ms)", self.breath_interval)
         print("Maximum flow (mL/m)", self.max_flow)
         print("Tidal volume (L)", self.tidal_volume)
@@ -85,7 +84,7 @@ class VentSim:
         print("Staring volume (L)", self.starting_volume)
         print("Breath variation (sigma in ms)", self.breath_variation)
         print("Maximum interval between breaths (ms)", self.max_breath_interval)
-        
+
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
@@ -171,7 +170,10 @@ class VentSim:
 
     def nominal_volume(self):
         # convert to L from L/m
-        return np.cumsum(self.flow) * (self.sample_length / (60.0 * 1000.0)) + self.starting_volume
+        return (
+            np.cumsum(self.flow) * (self.sample_length / (60.0 * 1000.0))
+            + self.starting_volume
+        )
 
     def nominal_pressure(self):
         # We can add **kwargs and join it with locals if we need to go further up the chain
@@ -272,7 +274,7 @@ if __name__ == "__main__":
     simulator.load_configs("sim_configs.yml")
     simulator.use_config("nominal_breather")
     simulator.initialize_sim()
-    
+
     for i in range(0, 10):
         print(simulator.get_next())
 

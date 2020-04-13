@@ -41,34 +41,61 @@ class Generator(abc.ABC):
     def get_data(self):
         pass
 
+    def prepare(self, from_timestamp=None):
+        if from_timestamp is None:
+            window = slice(None)
+        else:
+            start = np.searchsorted(self.timestamps, from_timestamp, side="right")
+            window = slice(start, None)
+
+        return {
+            "version": 1,
+            "time": datetime.now().timestamp(),
+            "alarms": {},
+            "data": {
+                "timestamps": self.timestamps[window].tolist(),
+                "flows": self.flow[window].tolist(),
+                "pressures": self.pressure[window].tolist(),
+            },
+        }
+
     def analyze(self):
         realtime = self.realtime
 
         if len(realtime) > 0:
             if getattr(self, "_logging", None):
                 if os.path.exists(self._logging) and not os.path.isdir(self._logging):
-                    warnings.warn("{} is not a directory; not logging".format(self._logging))
+                    warnings.warn(
+                        "{} is not a directory; not logging".format(self._logging)
+                    )
                 else:
                     if not os.path.exists(self._logging):
                         os.mkdir(self._logging)
                     if self._old_realtime is None or len(self._old_realtime) == 0:
                         start_index = 0
                     else:
-                        start_index = np.argmin(abs(realtime - self._old_realtime[-1])) + 1
+                        start_index = (
+                            np.argmin(abs(realtime - self._old_realtime[-1])) + 1
+                        )
 
-                    with open(os.path.join(
-                        self._logging, "time_{}.dat".format(id(self))
-                    ), "ba") as file:
-                        file.write((realtime[start_index:] * 1000).astype("<u8").tostring())
+                    with open(
+                        os.path.join(self._logging, "time_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
+                        file.write(
+                            (realtime[start_index:] * 1000).astype("<u8").tostring()
+                        )
 
-                    with open(os.path.join(
-                        self._logging, "flow_{}.dat".format(id(self))
-                    ), "ba") as file:
+                    with open(
+                        os.path.join(self._logging, "flow_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
                         file.write(self.flow[start_index:].astype("<f4").tostring())
 
-                    with open(os.path.join(
-                        self._logging, "pres_{}.dat".format(id(self))
-                    ), "ba") as file:
+                    with open(
+                        os.path.join(self._logging, "pres_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
             self._volume = nurse.analysis.flow_to_volume(
@@ -108,7 +135,11 @@ class Generator(abc.ABC):
     @property
     def time(self):
         timestamps = self.timestamps
-        tardy = 0 if self.last_update is None else (datetime.now().timestamp() - self.last_update)*1000
+        tardy = (
+            0
+            if self.last_update is None
+            else (datetime.now().timestamp() - self.last_update) * 1000
+        )
         if len(timestamps) > 0:
             return -(timestamps - timestamps[-1] - tardy) / 1000
         else:

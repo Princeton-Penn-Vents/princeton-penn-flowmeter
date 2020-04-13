@@ -124,12 +124,12 @@ else:
 def sdp3_handler(signum, frame):
     #  global dpsf
     global NReadout
-    NReadout+=1
+    NReadout += 1
     ts = int(1000 * time.time())
-    if ((NReadout%NReadoutTemp)==0):
-       nbytes = 9
+    if (NReadout % NReadoutTemp) == 0:
+        nbytes = 9
     else:
-       nbytes = 3
+        nbytes = 3
     tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
     btmpdataSDP3 = tmpdataSDP3[1]
     tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
@@ -141,9 +141,9 @@ def sdp3_handler(signum, frame):
         socket.send_string(ds)
     else:
         socket.send_json(d)
-    if ((NReadout%NReadoutTemp)==0):
+    if (NReadout % NReadoutTemp) == 0:
         tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
-        print(ts,tmptemp/200.0)
+        print(ts, tmptemp / 200.0)
     # print(d)
 
 
