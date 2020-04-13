@@ -35,7 +35,7 @@ class Generator(abc.ABC):
         self._alarms = {}
         self._rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
-        
+
     def set_rotary(self, rotary):
         self._rotary = rotary
 
@@ -150,7 +150,9 @@ class Generator(abc.ABC):
         default = timestamp - stale_threshold
         stale = {}
         for field in self._cumulative:
-            last_update_timediff = timestamp - self._cumulative_timestamps.get(field, default)
+            last_update_timediff = timestamp - self._cumulative_timestamps.get(
+                field, default
+            )
             if last_update_timediff >= stale_threshold:
                 stale[field] = last_update_timediff
         if len(stale) > 0:

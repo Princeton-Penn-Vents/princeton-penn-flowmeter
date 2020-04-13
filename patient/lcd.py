@@ -17,7 +17,7 @@ class LCD:
         self.hLCD = self.pi.i2c_open(6, self.DEVICE_LCD)
 
         # initialize
-        self.reset() # issue soft reset to LCD
+        self.reset()  # issue soft reset to LCD
         time.sleep(0.04)  # wait 40ms
 
         self.ctrl(0x38)  # Function set - 8 bit, 2 line, norm height, inst table 0
@@ -41,9 +41,9 @@ class LCD:
         self.ctrl(0x06)  # Entry mode increment
 
     def reset(self):
-        self.pi.write(self.pinRST,0)
+        self.pi.write(self.pinRST, 0)
         time.sleep(0.002)
-        self.pi.write(self.pinRST,1)
+        self.pi.write(self.pinRST, 1)
 
     def ctrl(self, value):
         self.pi.i2c_write_device(self.hLCD, [0x00, value])

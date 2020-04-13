@@ -47,6 +47,9 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def close(self):
+        self.lcd.clear()
+        self.lcd.upper("Princeton Open Vent")
+        self.lcd.lower("Patient loop closed")
         self.lcd.close()
         super().close()
 
