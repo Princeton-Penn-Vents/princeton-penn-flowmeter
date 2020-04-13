@@ -46,12 +46,27 @@ class CollectorThread(threading.Thread):
             )
 
 
+def analyzer(coll, collector_thread):
+    while not collector_thread.signal_end.is_set():
+        time.sleep(1.0)
+
+        with collector_thread._lock:
+            coll.analyze()
+
+
 class Collector(Generator):
     def __init__(self):
         super().__init__()
 
+        self._time = np.array([], dtype=np.int64)
+        self._flow = np.array([], dtype=np.double)
+        self._pressure = np.array([], dtype=np.double)
+
         self._thread = CollectorThread()
         self._thread.start()
+
+        self._analyzer_thread = Thread(target=analyzer, args=[self, collector_thread])
+        self._analyzer_thread.start()
 
     def get_data(self):
         (self._time, self._flow, self._pressure) = self._thread.get_data()
@@ -71,6 +86,7 @@ class Collector(Generator):
     def close(self):
         self._thread.signal_end.set()
         self._thread.join()
+        self._analyzer_thread.join()
 
 
 if __name__ == "__main__":
