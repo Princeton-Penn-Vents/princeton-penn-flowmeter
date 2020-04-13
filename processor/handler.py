@@ -31,7 +31,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed_path = urlparse(self.path)
-        print(self.parse_url())
 
         t_now = int(1000 * datetime.now().timestamp())
         d = self.generator.prepare()
