@@ -4,6 +4,7 @@ from .ventsim import VentSim
 import random
 import os
 
+
 def start_sims(nSim, start_time, sim_time):
 
     sims = []
@@ -24,7 +25,7 @@ def start_sims(nSim, start_time, sim_time):
         simulator.initialize_sim()
 
         # advance it somewhat
-        #t = sim.get_batch(100 * random.random())
+        # t = sim.get_batch(100 * random.random())
         sims.append(simulator)
 
     return sims

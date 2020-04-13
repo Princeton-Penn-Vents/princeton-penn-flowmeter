@@ -1,12 +1,13 @@
 import json
 import numpy as np
 import requests
-import nurse.analysis
 import threading
 import time
+from datetime import datetime
 
-from sim.rolling import Rolling, new_elements
-from nurse.generator import Status
+import processor.analysis
+from processor.rolling import Rolling, new_elements
+from processor.generator import Status
 
 
 class GeneratorThread(threading.Thread):
@@ -18,6 +19,7 @@ class GeneratorThread(threading.Thread):
         self._pressure = Rolling(window_size=30 * 50)
 
         self._lock = threading.Lock()
+        self._last_update = None
 
         self.signal_end = threading.Event()
         self.status = Status.DISCON
@@ -32,7 +34,8 @@ class GeneratorThread(threading.Thread):
         while not self.signal_end.is_set():
             try:
                 r = requests.get(self._address)
-            except: 
+                self._last_update = datetime.now().timestamp()
+            except:
                 with self._lock:
                     self.status = Status.DISCON
                 time.sleep(1)
@@ -62,6 +65,7 @@ class GeneratorThread(threading.Thread):
         with self._lock:
             return (
                 self.status,
+                self._last_update,
                 np.asarray(self._time).copy(),
                 np.asarray(self._flow).copy(),
                 np.asarray(self._pressure).copy(),

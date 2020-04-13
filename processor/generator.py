@@ -3,9 +3,10 @@ import enum
 import os
 
 import numpy as np
+from datetime import datetime
 
-import nurse.analysis
-import patient.rotary
+import processor.analysis
+import processor.rotary
 
 
 class Status(enum.Enum):
@@ -30,7 +31,8 @@ class Generator(abc.ABC):
         self._breaths = []
         self._cumulative = {}
         self._alarms = {}
-        self._rotary = patient.rotary.MockRotary(patient.rotary.DICT)
+        self._rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
+        self.last_update = None
 
     def set_rotary(self, rotary):
         self._rotary = rotary
@@ -39,37 +41,64 @@ class Generator(abc.ABC):
     def get_data(self):
         pass
 
+    def prepare(self, from_timestamp=None):
+        if from_timestamp is None:
+            window = slice(None)
+        else:
+            start = np.searchsorted(self.timestamps, from_timestamp, side="right")
+            window = slice(start, None)
+
+        return {
+            "version": 1,
+            "time": datetime.now().timestamp(),
+            "alarms": {},
+            "data": {
+                "timestamps": self.timestamps[window].tolist(),
+                "flows": self.flow[window].tolist(),
+                "pressures": self.pressure[window].tolist(),
+            },
+        }
+
     def analyze(self):
         realtime = self.realtime
 
         if len(realtime) > 0:
             if getattr(self, "_logging", None):
                 if os.path.exists(self._logging) and not os.path.isdir(self._logging):
-                    warnings.warn("{} is not a directory; not logging".format(self._logging))
+                    warnings.warn(
+                        "{} is not a directory; not logging".format(self._logging)
+                    )
                 else:
                     if not os.path.exists(self._logging):
                         os.mkdir(self._logging)
                     if self._old_realtime is None or len(self._old_realtime) == 0:
                         start_index = 0
                     else:
-                        start_index = np.argmin(abs(realtime - self._old_realtime[-1])) + 1
+                        start_index = (
+                            np.argmin(abs(realtime - self._old_realtime[-1])) + 1
+                        )
 
-                    with open(os.path.join(
-                        self._logging, "time_{}.dat".format(id(self))
-                    ), "ba") as file:
-                        file.write((realtime[start_index:] * 1000).astype("<u8").tostring())
+                    with open(
+                        os.path.join(self._logging, "time_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
+                        file.write(
+                            (realtime[start_index:] * 1000).astype("<u8").tostring()
+                        )
 
-                    with open(os.path.join(
-                        self._logging, "flow_{}.dat".format(id(self))
-                    ), "ba") as file:
+                    with open(
+                        os.path.join(self._logging, "flow_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
                         file.write(self.flow[start_index:].astype("<f4").tostring())
 
-                    with open(os.path.join(
-                        self._logging, "pres_{}.dat".format(id(self))
-                    ), "ba") as file:
+                    with open(
+                        os.path.join(self._logging, "pres_{}.dat".format(id(self))),
+                        "ba",
+                    ) as file:
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
-            self._volume = nurse.analysis.flow_to_volume(
+            self._volume = processor.analysis.flow_to_volume(
                 realtime,
                 self._old_realtime,
                 self.flow,
@@ -86,28 +115,35 @@ class Generator(abc.ABC):
             self._volume_shift = -self._volume_unshifted_min
             self._volume = self._volume + self._volume_shift
 
-            breaths = nurse.analysis.measure_breaths(
+            breaths = processor.analysis.measure_breaths(
                 realtime, self.flow, self.volume, self.pressure
             )
 
             if len(breaths) > 0:
-                self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
-                    self._breaths, breaths
-                )
+                (
+                    self._breaths,
+                    updated,
+                    new_breaths,
+                ) = processor.analysis.combine_breaths(self._breaths, breaths)
 
-                self._cumulative = nurse.analysis.cumulative(
+                self._cumulative = processor.analysis.cumulative(
                     self._cumulative, updated, new_breaths
                 )
 
-                self._alarms = nurse.analysis.alarms(
+                self._alarms = processor.analysis.alarms(
                     self._rotary, self._alarms, updated, new_breaths, self._cumulative
                 )
 
     @property
     def time(self):
         timestamps = self.timestamps
+        tardy = (
+            0
+            if self.last_update is None
+            else (datetime.now().timestamp() - self.last_update) * 1000
+        )
         if len(timestamps) > 0:
-            return -(timestamps - timestamps[-1]) / 1000
+            return -(timestamps - timestamps[-1] - tardy) / 1000
         else:
             return timestamps
 

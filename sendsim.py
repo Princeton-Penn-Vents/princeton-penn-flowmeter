@@ -13,6 +13,7 @@ from itertools import chain
 import time
 import random
 
+
 def main(sim, t_now):
     d = sim.get_from_timestamp(t_now, 5000)
     # enrich with stuff that comes from the analysis
@@ -39,15 +40,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         if self.parent.isDisconnected[self.version_num] <= t_now:
             self.do_HEAD()
-            self.wfile.write(
-                main(self.parent.sims[self.version_num], t_now)
-            ) 
+            self.wfile.write(main(self.parent.sims[self.version_num], t_now))
         else:
             self.send_error(408)
 
+
 class OurServer:
     def serve_on_port(self, server_address, i):
-        if server_address==0:
+        if server_address == 0:
             print("Starting disconnector service")
             self.update_disconnect()
         else:
@@ -67,23 +67,24 @@ class OurServer:
         if args.n > 1:
             print("Serving; press Control-C multiple times to quit")
             addresses = ((ip, args.port + i) for i in range(args.n))
-            with ThreadPoolExecutor(max_workers=args.n+1) as e:
-                e.map(self.serve_on_port, chain(addresses,[0]), range(args.n+1))
+            with ThreadPoolExecutor(max_workers=args.n + 1) as e:
+                e.map(self.serve_on_port, chain(addresses, [0]), range(args.n + 1))
         else:
             port = args.port
             server_address = (ip, port)
             self.serve_on_port(server_address, 0)
 
     def update_disconnect(self):
-        while(True):
+        while True:
             rand = random.random()
             if rand < self.disconnect_prob:
                 t_now = int(1000 * datetime.now().timestamp())
-                sensor_num = random.randint(0,len(self.sims)-1)
-                self.isDisconnected[sensor_num]=t_now + 30*1000 # 30 seconds
-                print("Disconnecting ",sensor_num,t_now)
+                sensor_num = random.randint(0, len(self.sims) - 1)
+                self.isDisconnected[sensor_num] = t_now + 30 * 1000  # 30 seconds
+                print("Disconnecting ", sensor_num, t_now)
             time.sleep(1)
-        
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
@@ -91,7 +92,12 @@ if __name__ == "__main__":
         "--bind", default="0.0.0.0", help="Binding address (default: all)"
     )
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
-    parser.add_argument("--discon_prob", type=float, default=0., help="Probability of disconnecting a sim for 30 seconds each second")
+    parser.add_argument(
+        "--discon_prob",
+        type=float,
+        default=0.0,
+        help="Probability of disconnecting a sim for 30 seconds each second",
+    )
     args = parser.parse_args()
     print(args)
     myServer = OurServer(args)

@@ -18,9 +18,9 @@ import sys
 import math
 from pathlib import Path
 
-from nurse.generator import Status
-from nurse.local_generator import LocalGenerator
-from nurse.remote_generator import RemoteGenerator
+from processor.generator import Status
+from processor.local_generator import LocalGenerator
+from processor.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
@@ -99,7 +99,7 @@ class AlertWidget(QtWidgets.QWidget):
 
         lower.setLayout(lower_layout)
         # Values seen before cumulative average values available
-        self.info_vals = [0, 0, 0, 0, 0] 
+        self.info_vals = [0, 0, 0, 0, 0]
 
         self.info_widgets = []
         self.val_widgets = []
@@ -110,7 +110,9 @@ class AlertWidget(QtWidgets.QWidget):
             self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.info_widgets[-1].setStyleSheet("color: #4CB3EF;")
             self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            self.val_widgets[-1].setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.val_widgets[-1].setAlignment(
+                QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+            )
             self.val_widgets[-1].setStyleSheet("color: #4CB3EF;")
             self.widget_lookup[self.info_strings[j]] = j
             lower_layout.addWidget(self.info_widgets[-1], j, 0)
@@ -242,17 +244,17 @@ class PatientSensor(QtGui.QFrame):
                 self.graphview.setBackground(guicolors["ALERT"])
             else:
                 self.graphview.setBackground(QtGui.QColor(0, 0, 0))
-            #TESTself.graphview.setBackground(guicolors["ALERT"])
+            # TESTself.graphview.setBackground(guicolors["ALERT"])
 
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
-            #val = self.flow.cumulative[key]            
+            # val = self.flow.cumulative[key]
             val = self.flow.cumulative.get(key)
-            if val: 
+            if val:
                 self.alert.val_widgets[valindex].setText(str(int(round(val))))
             else:
-                self.alert.val_widgets[valindex].setText('---')
-            
+                self.alert.val_widgets[valindex].setText("---")
+
 
 class PatientGrid(QtWidgets.QWidget):
     def __init__(self, *args, width, **kwargs):
@@ -481,7 +483,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument(
-        "--no-display", action="store_true", help="Prevents the main window from appearing; for debugging"
+        "--no-display",
+        action="store_true",
+        help="Prevents the main window from appearing; for debugging",
     )
     parser.add_argument(
         "--displays",
@@ -491,7 +495,9 @@ if __name__ == "__main__":
         help="# of displays, currently not dynamic",
     )
     parser.add_argument(
-        "--logging", default="", help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)"
+        "--logging",
+        default="",
+        help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)",
     )
 
     arg, unparsed_args = parser.parse_known_args()

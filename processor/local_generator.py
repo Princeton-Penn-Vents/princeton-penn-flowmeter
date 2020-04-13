@@ -2,8 +2,8 @@ from datetime import datetime
 import numpy as np
 
 from sim.start_sims import start_sims
-from sim.rolling import Rolling, new_elements
-from nurse.generator import Generator, Status
+from processor.rolling import Rolling, new_elements
+from processor.generator import Generator, Status
 
 
 class LocalGenerator(Generator):

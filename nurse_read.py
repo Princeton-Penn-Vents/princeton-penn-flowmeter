@@ -14,9 +14,9 @@ arg = parser.parse_args()
 import time
 import numpy as np
 
-from nurse.local_generator import LocalGenerator
-from nurse.remote_generator import RemoteGenerator
-from nurse.generator import Generator
+from processor.local_generator import LocalGenerator
+from processor.remote_generator import RemoteGenerator
+from processor.generator import Generator
 
 gen: Generator
 
