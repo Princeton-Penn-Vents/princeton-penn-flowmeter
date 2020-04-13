@@ -6,6 +6,7 @@ import time
 from processor.setting import Setting, IncrSetting, SelectionSetting
 
 DICT = {
+    "Stale Data": IncrSetting(5, min=1, max=10, incr=1, unit="sec"),
     "PIP Max": IncrSetting(30, min=0, max=40, incr=1, unit="cm-H2O"),
     "PIP Min": IncrSetting(5, min=0, max=20, incr=1, unit="cm-H2O"),
     "PEEP Max": IncrSetting(8, min=0, max=15, incr=1, unit="cm-H2O"),

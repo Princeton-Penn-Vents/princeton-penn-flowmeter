@@ -1,6 +1,7 @@
 import abc
 import enum
 import os
+import time
 
 import numpy as np
 from datetime import datetime
@@ -30,10 +31,11 @@ class Generator(abc.ABC):
         self._volume_shift = 0.0
         self._breaths = []
         self._cumulative = {}
+        self._cumulative_timestamps = {}
         self._alarms = {}
         self._rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
-
+        
     def set_rotary(self, rotary):
         self._rotary = rotary
 
@@ -126,13 +128,33 @@ class Generator(abc.ABC):
                     new_breaths,
                 ) = processor.analysis.combine_breaths(self._breaths, breaths)
 
-                self._cumulative = processor.analysis.cumulative(
+                self._cumulative, updated_fields = processor.analysis.cumulative(
                     self._cumulative, updated, new_breaths
                 )
 
                 self._alarms = processor.analysis.alarms(
                     self._rotary, self._alarms, updated, new_breaths, self._cumulative
                 )
+
+            else:
+                updated_fields = set()
+
+        timestamp = time.time()
+        cumulative_timestamps = dict(self._cumulative_timestamps)
+        cumulative_timestamps[""] = timestamp
+        for field in updated_fields:
+            cumulative_timestamps[field] = timestamp
+        self._cumulative_timestamps = cumulative_timestamps
+
+        stale_threshold = self._rotary["Stale Data"].value
+        default = timestamp - stale_threshold
+        stale = {}
+        for field in self._cumulative:
+            last_update_timediff = timestamp - self._cumulative_timestamps.get(field, default)
+            if last_update_timediff >= stale_threshold:
+                stale[field] = last_update_timediff
+        if len(stale) > 0:
+            self._alarms["Stale Data"] = stale
 
     @property
     def time(self):
@@ -181,6 +203,10 @@ class Generator(abc.ABC):
     @property
     def cumulative(self):
         return self._cumulative
+
+    @property
+    def cumulative_timestamps(self):
+        return self._cumulative_timestamps
 
     def close(self):
         pass

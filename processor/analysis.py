@@ -314,7 +314,8 @@ def combine_breaths(old_breaths, new_breaths):
 
 
 # default alpha is 0.3: value changes after about 3 breaths
-def moving_average(cumulative, key, value, alpha=0.3):
+def moving_average(cumulative, updated_fields, key, value, alpha=0.3):
+    updated_fields.add(key)
     if key not in cumulative:
         return value
     else:
@@ -323,6 +324,7 @@ def moving_average(cumulative, key, value, alpha=0.3):
 
 def cumulative(cumulative, updated, new_breaths):
     cumulative = dict(cumulative)
+    updated_fields = set()
 
     for breath in updated + new_breaths:
         timestamp = None
@@ -351,46 +353,50 @@ def cumulative(cumulative, updated, new_breaths):
                 or cumulative["last breath timestamp"] + 3 * 0.2 < timestamp
             ):
                 cumulative["last breath timestamp"] = timestamp
+                updated_fields.add("last breath timestamp")
                 this_is_new = True
 
         if this_is_new:
             if "time since last" in breath:
                 cumulative["breath interval"] = moving_average(
-                    cumulative, "breath interval", breath["time since last"]
+                    cumulative, updated_fields, "breath interval", breath["time since last"]
                 )
                 cumulative["RR"] = 60.0 / cumulative["breath interval"]
+                updated_fields.add("RR")
             if "max pressure" in breath:
                 cumulative["PIP"] = moving_average(
-                    cumulative, "PIP", breath["max pressure"]
+                    cumulative, updated_fields, "PIP", breath["max pressure"]
                 )
             if "empty pressure" in breath:
                 cumulative["PEEP"] = moving_average(
-                    cumulative, "PEEP", breath["empty pressure"]
+                    cumulative, updated_fields, "PEEP", breath["empty pressure"]
                 )
             if "expiratory tidal volume" in breath:
                 cumulative["TVe"] = moving_average(
-                    cumulative, "TVe", breath["expiratory tidal volume"]
+                    cumulative, updated_fields, "TVe", breath["expiratory tidal volume"]
                 )
             if "inspiratory tidal volume" in breath:
                 cumulative["TVi"] = moving_average(
-                    cumulative, "TVi", breath["inspiratory tidal volume"]
+                    cumulative, updated_fields, "TVi", breath["inspiratory tidal volume"]
                 )
             if "TVe" in cumulative and "TVi" in cumulative:
                 cumulative["TV"] = 0.5 * (cumulative["TVe"] + cumulative["TVi"])
+                updated_fields.add("TV")
             if "inhale compliance" in breath:
                 cumulative["inhale compliance"] = moving_average(
-                    cumulative, "inhale compliance", breath["inhale compliance"]
+                    cumulative, updated_fields, "inhale compliance", breath["inhale compliance"]
                 )
             if "exhale compliance" in breath:
                 cumulative["exhale compliance"] = moving_average(
-                    cumulative, "exhale compliance", breath["exhale compliance"]
+                    cumulative, updated_fields, "exhale compliance", breath["exhale compliance"]
                 )
             if "RR" in cumulative and "TV" in cumulative:
                 cumulative["breath volume rate"] = (
                     cumulative["TV"] * cumulative["RR"] / 1000.0
                 )
+                updated_fields.add("breath volume rate")
 
-    return cumulative
+    return cumulative, updated_fields
 
 
 def alarm_record(old_record, timestamp, value, ismax):
@@ -412,6 +418,7 @@ def alarm_record(old_record, timestamp, value, ismax):
 
 def alarms(rotary, alarms, updated, new_breaths, cumulative):
     alarms = dict(alarms)
+    alarms.pop("Stale Data", None)   # handled specially in generator.py
 
     if "PIP" in cumulative:
         assert rotary["PIP Max"].unit == "cm-H2O"

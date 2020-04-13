@@ -79,6 +79,14 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
    * **breath volume rate (L/min):** the instantaneous product of **TV** and **RR**.
 
+## Cumulative timestamps
+
+As a data tier that is parallel to the cumulative measurements, "cumulative timestamps" is a Python dict of the last time each field was updated. This time is not from the measurement stream (i.e. **realtime** of the time-series), it is the output of Python's `time.time()` function. If the time-series is generated on a computer with a different clock offset from the analysis procedure, these times can diverge.
+
+The time associated with the empty string, `""`, is always updated every time `analyze` is called.
+
+The other strings are all the cumulative measurements fields that have ever been set and the time when they were last set. A difference between one of these values and the value associated with `""` indicates a stale value.
+
 ## Alarms
 
 Alarms are like cumulative measurements in that they are a fixed number of fields that change in place, rather than a growing sequence like the breath records. Alarms are raised when a cumulative value exceeds a predefined threshold, and they are "sticky" in the sense that once an analysis creates an alarm, subsequent analyses do not remove it, even if the quantity returns to a suitable value. Other processes might remove alarms.
@@ -101,6 +109,8 @@ The following alarms are defined:
    * **TVe Min:** lower bound on the cumulative **TVe** value.
    * **TVi Max:** upper bound on the cumulative **TVi** value.
    * **TVi Min:** lower bound on the cumulative **TVi** value.
+
+The **Stale Data** alarm is configured with the rotary dial, but is otherwise special. It is not sticky: if a cumulative measurement ceases to be stale, it is removed. Also, it does not have the standard record structure: it is a dict from cumulative measurement field name to the time since its last measurement. See cumulative timestamps (above).
 
 ## Status of analysis products in the workflow
 
