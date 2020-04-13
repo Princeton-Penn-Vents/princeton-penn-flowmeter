@@ -6,6 +6,7 @@ import numpy as np
 
 import threading
 import zmq
+import time
 
 
 class CollectorThread(threading.Thread):
@@ -89,8 +90,6 @@ class Collector(Generator):
 
 
 if __name__ == "__main__":
-    import time
-
     coll = Collector()
     time.sleep(5)
     coll.get_data()
