@@ -5,10 +5,10 @@ import json
 from datetime import datetime
 import atexit
 
-from patient.rotary import DICT
+from processor.rotary import DICT
 from patient.rotary_lcd import RotaryLCD
-from patient.collector import Collector
-from sim.rolling import get_last
+from processor.collector import Collector
+from processor.rolling import get_last
 
 # Initialize LCD
 rotary = RotaryLCD(DICT)

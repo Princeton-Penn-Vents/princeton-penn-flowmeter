@@ -1,9 +1,9 @@
 from datetime import datetime
 import numpy as np
 
-from sim.rolling import Rolling, new_elements
-from nurse.generator import Generator, Status
-from nurse.threaded_generator import GeneratorThread
+from processor.rolling import Rolling, new_elements
+from processor.generator import Generator, Status
+from processor.threaded_generator import GeneratorThread
 
 
 class RemoteGenerator(Generator):

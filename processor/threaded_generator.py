@@ -1,13 +1,13 @@
 import json
 import numpy as np
 import requests
-import nurse.analysis
 import threading
 import time
 from datetime import datetime
 
-from sim.rolling import Rolling, new_elements
-from nurse.generator import Status
+import processor.analysis
+from processor.rolling import Rolling, new_elements
+from processor.generator import Status
 
 
 class GeneratorThread(threading.Thread):
