@@ -2,7 +2,7 @@
 
 from .ventsim import VentSim
 import random
-
+import os
 
 def start_sims(nSim, start_time, sim_time):
 
@@ -11,13 +11,18 @@ def start_sims(nSim, start_time, sim_time):
 
         params = {}
         # 50% change of the patient breathing on their own
-        if random.random() < 0.5:
-            params["breath_variation"] = 100.0  # milliseconds
         params["tidal_volume"] = 0.5 + random.random() * 0.2
 
-        sim = VentSim(start_time, sim_time, params)
+        simulator = VentSim(start_time, sim_time)
+        simulator.load_configs(os.path.join(os.path.dirname(os.path.realpath(__file__)),"sim_configs.yml"))
+        if random.random() < 0.5:
+            simulator.use_config("nominal_breather",params)
+        else:
+            simulator.use_config("nominal_nonbreather",params)
+        simulator.initialize_sim()
+
         # advance it somewhat
-        t = sim.get_batch(100 * random.random())
-        sims.append(sim)
+        #t = sim.get_batch(100 * random.random())
+        sims.append(simulator)
 
     return sims

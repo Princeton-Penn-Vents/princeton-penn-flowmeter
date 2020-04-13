@@ -14,40 +14,43 @@ known_compliance_functions = {
 class VentSim:
     def __init__(self, curr_time, sim_time_max, params={}):
         self.current_bin = 0
+        self.curr_time = curr_time
+        self.sim_time = sim_time_max
+        
         self.sample_length = params.get("sample_length", 20.0)
         self.breath_interval = params.get("breath_interval", 7000.0)
         self.max_flow = params.get("max_flow", 15.0)
         self.tidal_volume = params.get("tidal_volume", 0.6)
         self.peep = params.get("peep", 4)
-        self.curr_time = curr_time
-        self.sim_time = sim_time_max
         self.compliance_func = params.get("compliance_func", constant_compliance)
         self.starting_volume = params.get("starting_volume", 0.0)
         self.breath_variation = params.get("breath_variation", 300.0)
         self.max_breath_interval = params.get("max_breath_interval", 9000.0)
 
+    def initialize_sim(self):
+        print("running sim with these parameters")
+        self.print_config()
         self.precompute()
 
     def load_configs(self, yml_file):
         import yaml
         stream = open(yml_file, 'r')
         params = yaml.safe_load(stream)
-        print(params)
         self.configs = params
         
-    def use_config(self, config):
+    def use_config(self, config,params={}):
         assert config in self.configs, "missing configuration "+config
         new_config = self.configs[config]
         for t_dict in new_config:
             for key in t_dict:
-                setattr(self,key,t_dict[key]) 
+                if key not in params:
+                    setattr(self,key,t_dict[key])
+                else:
+                    setattr(self,key,params[key])
         if type(self.compliance_func) == str:
             assert self.compliance_func in known_compliance_functions, "missing compliance function "+ self.compliance_func
             self.compliance_func = known_compliance_functions[self.compliance_func]
         print("Changed ventsim configuration to",config)
-        self.print_config()
-        self.current_bin=0
-        self.precompute()
         
     def print_config(self):
         print("Sample length (ms)",self.sample_length)
@@ -244,6 +247,8 @@ if __name__ == "__main__":
     simulator = VentSim(now_time, 1200000)
     simulator.load_configs("sim_configs.yml")
     simulator.use_config("nominal_breather")
+    simulator.initialize()
+    
     for i in range(0, 10):
         print(simulator.get_next())
 
