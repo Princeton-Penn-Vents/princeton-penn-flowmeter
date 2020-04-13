@@ -1,0 +1,12 @@
+nominal_breather:
+  - sample_length: 20.0
+  - breath_interval: 7000.0
+  - max_flow: 15.0
+  - tidal_volume: 0.6
+  - peep: 4
+  - compliance_func: "constant_compliance"
+  - starting_volume: 0.0
+  - breath_variation: 300.0
+  - max_breath_interval: 9000.0
+
+

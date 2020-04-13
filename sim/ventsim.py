@@ -7,6 +7,9 @@ import numpy as np
 def constant_compliance(**kwargs):
     return 0.1  # L / cm H2O
 
+known_compliance_functions = {
+    "constant_compliance" : constant_compliance
+    }
 
 class VentSim:
     def __init__(self, curr_time, sim_time_max, params={}):
@@ -18,14 +21,44 @@ class VentSim:
         self.peep = params.get("peep", 4)
         self.curr_time = curr_time
         self.sim_time = sim_time_max
-        self.recovery_tau = params.get("recovery", 15)
         self.compliance_func = params.get("compliance_func", constant_compliance)
-        self.v0 = params.get("starting_volume", 0.0)
-        self.breath_sigma = params.get("breath_variation", 300.0)
+        self.starting_volume = params.get("starting_volume", 0.0)
+        self.breath_variation = params.get("breath_variation", 300.0)
         self.max_breath_interval = params.get("max_breath_interval", 9000.0)
 
         self.precompute()
 
+    def load_configs(self, yml_file):
+        import yaml
+        stream = open(yml_file, 'r')
+        params = yaml.safe_load(stream)
+        print(params)
+        self.configs = params
+        
+    def use_config(self, config):
+        assert config in self.configs, "missing configuration "+config
+        new_config = self.configs[config]
+        for t_dict in new_config:
+            for key in t_dict:
+                setattr(self,key,t_dict[key]) 
+        if type(self.compliance_func) == str:
+            assert self.compliance_func in known_compliance_functions, "missing compliance function "+ self.compliance_func
+            self.compliance_func = known_compliance_functions[self.compliance_func]
+        print("Changed ventsim configuration to",config)
+        self.print_config()
+        self.current_bin=0
+        self.precompute()
+        
+    def print_config(self):
+        print("Sample length (ms)",self.sample_length)
+        print("Breathing interval (ms)", self.breath_interval)
+        print("Maximum flow (mL/m)", self.max_flow)
+        print("Tidal volume (L)", self.tidal_volume)
+        print("PEEP (cm H2O)", self.peep)
+        print("Staring volume (L)", self.starting_volume)
+        print("Breath variation (sigma in ms)", self.breath_variation)
+        print("Maximum interval between breaths (ms)", self.max_breath_interval)
+        
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
@@ -50,7 +83,7 @@ class VentSim:
             1.2 * self.sim_time / self.breath_interval
         )  # safety margin for fluctuating this later
         deltas = np.random.normal(
-            self.breath_interval, self.breath_sigma, int(max_breaths)
+            self.breath_interval, self.breath_variation, int(max_breaths)
         )
         deltas = np.minimum(deltas, self.max_breath_interval)
         breath_starts = np.append(
@@ -111,7 +144,7 @@ class VentSim:
 
     def nominal_volume(self):
         # convert to L from L/m
-        return np.cumsum(self.flow) * (self.sample_length / (60.0 * 1000.0)) + self.v0
+        return np.cumsum(self.flow) * (self.sample_length / (60.0 * 1000.0)) + self.starting_volume
 
     def nominal_pressure(self):
         # We can add **kwargs and join it with locals if we need to go further up the chain
@@ -209,6 +242,8 @@ if __name__ == "__main__":
     print(now_time)
 
     simulator = VentSim(now_time, 1200000)
+    simulator.load_configs("sim_configs.yml")
+    simulator.use_config("nominal_breather")
     for i in range(0, 10):
         print(simulator.get_next())
 
