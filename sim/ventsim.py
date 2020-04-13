@@ -40,18 +40,23 @@ class VentSim:
 
     def interpret_yaml_key(self, val):
         if type(val) == list:
-            mean=-1
-            sigma=-1
+            possible_keys={ "mean" : -1,
+                            "sigma" : -1,
+                            "min" : -1,
+                            "max" : -1
+                           }
             for t_dict in val:
                 for key in t_dict:
-                    if key == "mean": mean = t_dict[key]
+                    if key in possible_keys:
+                        possible_keys[key] = t_dict[key]
                     else:
-                        if key == "sigma": sigma = t_dict[key]
-                        else:
-                            assert False, "unexpected value " + key
-            if mean==-1 or sigma==-1:
-                assert False, "missing mean or sigma"
-            return np.random.normal(mean,sigma)
+                        assert False, "unexpected value " + key
+
+            if possible_keys['mean'] > -1 and possible_keys["sigma"] > -1:
+                return np.random.normal(possible_keys['mean'], possible_keys['sigma'])
+            if possible_keys['min'] > -1 and possible_keys["max"] > -1:
+                return np.random.uniform(possible_keys["min"],possible_keys["max"])
+            assert False, "Missing mean/sigma or min/max values"
         else:
             return val #its a value
             

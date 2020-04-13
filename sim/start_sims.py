@@ -10,8 +10,6 @@ def start_sims(nSim, start_time, sim_time):
     for i in range(nSim):
 
         params = {}
-        # 50% change of the patient breathing on their own
-        params["tidal_volume"] = 0.5 + random.random() * 0.2
 
         simulator = VentSim(start_time, sim_time)
         simulator.load_configs(os.path.join(os.path.dirname(os.path.realpath(__file__)),"sim_configs.yml"))
