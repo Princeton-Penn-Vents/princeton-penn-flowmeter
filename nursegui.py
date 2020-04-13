@@ -18,9 +18,9 @@ import sys
 import math
 from pathlib import Path
 
-from nurse.generator import Status
-from nurse.local_generator import LocalGenerator
-from nurse.remote_generator import RemoteGenerator
+from processor.generator import Status
+from processor.local_generator import LocalGenerator
+from processor.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 

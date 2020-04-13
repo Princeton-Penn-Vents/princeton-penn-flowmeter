@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+import yaml
 
 
 def constant_compliance(**kwargs):
@@ -33,7 +34,6 @@ class VentSim:
         self.precompute()
 
     def load_configs(self, yml_file):
-        import yaml
 
         stream = open(yml_file, "r")
         params = yaml.safe_load(stream)
@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     from matplotlib import animation
-
+    import time
     from datetime import datetime
 
     now_time = 1000 * datetime.now().timestamp()
@@ -277,8 +277,6 @@ if __name__ == "__main__":
 
     for i in range(0, 10):
         print(simulator.get_next())
-
-    import time
 
     print("testing get from timestamp features")
 

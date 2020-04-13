@@ -5,8 +5,8 @@ import os
 import numpy as np
 from datetime import datetime
 
-import nurse.analysis
-import patient.rotary
+import processor.analysis
+import processor.rotary
 
 
 class Status(enum.Enum):
@@ -31,7 +31,7 @@ class Generator(abc.ABC):
         self._breaths = []
         self._cumulative = {}
         self._alarms = {}
-        self._rotary = patient.rotary.MockRotary(patient.rotary.DICT)
+        self._rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
 
     def set_rotary(self, rotary):
@@ -98,7 +98,7 @@ class Generator(abc.ABC):
                     ) as file:
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
-            self._volume = nurse.analysis.flow_to_volume(
+            self._volume = processor.analysis.flow_to_volume(
                 realtime,
                 self._old_realtime,
                 self.flow,
@@ -115,20 +115,22 @@ class Generator(abc.ABC):
             self._volume_shift = -self._volume_unshifted_min
             self._volume = self._volume + self._volume_shift
 
-            breaths = nurse.analysis.measure_breaths(
+            breaths = processor.analysis.measure_breaths(
                 realtime, self.flow, self.volume, self.pressure
             )
 
             if len(breaths) > 0:
-                self._breaths, updated, new_breaths = nurse.analysis.combine_breaths(
-                    self._breaths, breaths
-                )
+                (
+                    self._breaths,
+                    updated,
+                    new_breaths,
+                ) = processor.analysis.combine_breaths(self._breaths, breaths)
 
-                self._cumulative = nurse.analysis.cumulative(
+                self._cumulative = processor.analysis.cumulative(
                     self._cumulative, updated, new_breaths
                 )
 
-                self._alarms = nurse.analysis.alarms(
+                self._alarms = processor.analysis.alarms(
                     self._rotary, self._alarms, updated, new_breaths, self._cumulative
                 )
 

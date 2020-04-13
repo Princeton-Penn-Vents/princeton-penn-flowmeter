@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from nurse.generator import Generator
-from sim.rolling import Rolling
+from processor.generator import Generator
+from processor.rolling import Rolling
 import numpy as np
 
 import threading

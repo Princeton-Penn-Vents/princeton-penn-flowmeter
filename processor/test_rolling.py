@@ -1,7 +1,7 @@
 from numpy.testing import assert_allclose
 import numpy as np
 
-from sim.rolling import Rolling, new_elements
+from processor.rolling import Rolling, new_elements
 
 
 def test_rolling_single():
