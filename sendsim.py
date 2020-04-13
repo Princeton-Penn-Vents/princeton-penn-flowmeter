@@ -18,17 +18,24 @@ from dataclasses import dataclass
 class PseudoGenerator:
     parent: "OurServer"
     version_num: int
+    last_ts: int = 0
 
-    def prepare(self):
+    def prepare(self, *, from_timestamp=None):
 
         t_now = int(1000 * datetime.now().timestamp())
+        if from_timestamp is None:
+            values = 5000
+        elif from_timestamp == 0:
+            values == 30 * 50
+        else:
+            values = min(int(t_now - from_timestamp) // 50, 30 * 50)
 
         if self.parent.isDisconnected[self.version_num] > t_now:
             return {}
 
         sim = self.parent.sims[self.version_num]
 
-        d = sim.get_from_timestamp(t_now, 5000)
+        d = sim.get_from_timestamp(t_now, values)
 
         # enrich with stuff that comes from the analysis
         d["alarms"] = {}
