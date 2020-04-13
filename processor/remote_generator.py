@@ -13,6 +13,10 @@ class RemoteGenerator(Generator):
         self._thread = GeneratorThread(address=f"http://{ip}:{port}")
         self._thread.start()
         self.status = Status.DISCON
+        self._last_ts = 0
+
+    def prepare(self):
+        return super().prepare(self, from_timestamp=self._last_ts or 0)
 
     def get_data(self):
         (
@@ -22,6 +26,9 @@ class RemoteGenerator(Generator):
             self._flow,
             self._pressure,
         ) = self._thread.get_data()
+
+        if len(self._time) > 0:
+            self._last_ts = self._time[-1]
 
     @property
     def flow(self):

@@ -43,8 +43,10 @@ class Generator(abc.ABC):
     def get_data(self):
         pass
 
-    def prepare(self, from_timestamp=None):
+    def prepare(self, *, from_timestamp=None):
         if from_timestamp is None:
+            window = slice(min(len(self.timestamps), 50 * 5), None)
+        elif from_timestamp == 0:
             window = slice(None)
         else:
             start = np.searchsorted(self.timestamps, from_timestamp, side="right")
@@ -63,6 +65,8 @@ class Generator(abc.ABC):
 
     def analyze(self):
         realtime = self.realtime
+
+        updated_fields = set()
 
         if len(realtime) > 0:
             if getattr(self, "_logging", None):
@@ -107,6 +111,7 @@ class Generator(abc.ABC):
                 self._volume - self._volume_shift,
             )
             self._old_realtime = realtime
+
             if self._volume_unshifted_min is None:
                 self._volume_unshifted_min = np.min(self._volume)
             else:
@@ -135,9 +140,6 @@ class Generator(abc.ABC):
                 self._alarms = processor.analysis.alarms(
                     self._rotary, self._alarms, updated, new_breaths, self._cumulative
                 )
-
-            else:
-                updated_fields = set()
 
         timestamp = time.time()
         cumulative_timestamps = dict(self._cumulative_timestamps)

@@ -194,10 +194,14 @@ class VentSim:
         d = {
             "v": 1,
             "t": int(self.curr_time + self.times[self.current_bin]),
-            "F": self.flow[self.current_bin]
-            + np.random.normal(0, self.measurement_error_flow, 1),
-            "P": self.pressure[self.current_bin]
-            + np.random.normal(0, self.measurement_error_pressure, 1),
+            "F": float(
+                self.flow[self.current_bin]
+                + np.random.normal(0, self.measurement_error_flow, 1)
+            ),
+            "P": float(
+                self.pressure[self.current_bin]
+                + np.random.normal(0, self.measurement_error_pressure, 1)
+            ),
             "temp": 23.3,
         }
 

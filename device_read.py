@@ -4,7 +4,7 @@ import json
 import numpy as np
 import zmq
 
-from sim.rolling import Rolling
+from processor.rolling import Rolling
 
 max_pressure_roll = Rolling(window_size=1000 // 50)
 pressure_roll = Rolling(window_size=1000)
