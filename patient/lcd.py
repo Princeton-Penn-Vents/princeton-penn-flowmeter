@@ -20,6 +20,7 @@ class LCD:
         self.reset()  # issue soft reset to LCD
         time.sleep(0.04)  # wait 40ms
 
+        self.clear()  # Needed to fix flakiness when restarting
         self.ctrl(0x38)  # Function set - 8 bit, 2 line, norm height, inst table 0
         time.sleep(0.01)
 

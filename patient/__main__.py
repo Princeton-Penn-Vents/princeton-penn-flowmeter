@@ -138,7 +138,7 @@ def sdp3_handler(signum, frame):
         ADCavg = np.mean(ADCsamples)
         ADCsamples = []
         ts = int(1000 * time.time())
-        if ((NReadout % NReadoutTemp) == 0):
+        if (NReadout % NReadoutTemp) == 0:
             nbytes = 9
         else:
             nbytes = 3
@@ -152,7 +152,7 @@ def sdp3_handler(signum, frame):
             socket.send_string(ds)
         else:
             socket.send_json(d)
-        if (len(btmpdataSDP3)==9):
+        if len(btmpdataSDP3) == 9:
             tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
             print(ts, tmptemp / 200.0)
 

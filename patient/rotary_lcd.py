@@ -24,6 +24,7 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def pushed_display(self):
+        self.clear()
         self.upper_display()
         self.lower_display()
 
