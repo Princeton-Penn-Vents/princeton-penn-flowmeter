@@ -33,8 +33,8 @@ def prepare():
         "alarms": {},
         "data": {
             "timestamps": get_last(collector.timestamps, passing_window).tolist(),
-            "flows": get_last(collector.flow, passing_window).tolist(),
-            "pressures": get_last(collector.pressure, passing_window).tolist(),
+            "flows": get_last(collector.flow/480, passing_window).tolist(),
+            "pressures": get_last((collector.pressure-255)/12+7.5, passing_window).tolist(),
         },
     }
 
