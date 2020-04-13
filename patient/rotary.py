@@ -16,7 +16,7 @@ class Rotary(LocalRotary):
         print(f"Changed to {self.items[self.current]}")
         print(rotary)
 
-    def __init__(self, config):
+    def __init__(self, config, *, pi=None):
         super().__init__(config)
 
         pinA = 17  # terminal A
@@ -24,7 +24,7 @@ class Rotary(LocalRotary):
         pinSW = 22  # switch
         glitchFilter = 300  # ms
 
-        self.pi = pigpio.pi()
+        self.pi = pigpio.pi() if pi is None else pi
 
         self.pi.set_mode(pinA, pigpio.INPUT)
         self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)

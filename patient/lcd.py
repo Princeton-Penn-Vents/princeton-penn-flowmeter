@@ -8,10 +8,10 @@ class LCD:
     DEVICE_LCD = 0x3C  # Slave 0x78 << 1
     pinRST = 26  # Soft Reset pin GPIO26
 
-    def __init__(self):
+    def __init__(self, *, pi=None):
 
         # Get pigio connection
-        self.pi = pigpio.pi()
+        self.pi = pigpio.pi() if pi is None else pi
 
         # Get I2C bus handle
         self.hLCD = self.pi.i2c_open(6, self.DEVICE_LCD)

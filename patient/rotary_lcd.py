@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
-# Allow run from outer or inner directory (should be a package...)
-try:
-    from patient.rotary import Rotary, DICT
-    from patient.lcd import LCD
-except ImportError:
-    from rotary import Rotary, DICT
-    from lcd import LCD
+from patient.rotary import Rotary, DICT
+from patient.lcd import LCD
+from patient.backlight import Backlight
 
 
 class RotaryLCD(Rotary):
@@ -17,7 +13,9 @@ class RotaryLCD(Rotary):
         for key in config:
             assert len(key) <= 16, "Keys must be short enough to display"
 
-        self.lcd = LCD()
+        self.lcd = LCD(pi=self.pi)
+        self.backlight = Backlight(pi=self.pi)
+        self.backlight.white()
 
     def turned_display(self, up):
         # Top display keeps ID number!
@@ -48,6 +46,7 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def close(self):
+        self.backlight.cyan()
         self.lcd.clear()
         self.lcd.upper("Princeton Open Vent")
         self.lcd.lower("Patient loop closed")
