@@ -36,7 +36,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         t_now = int(1000 * datetime.now().timestamp())
-        
+
         if self.parent.isDisconnected[self.version_num] <= t_now:
             self.do_HEAD()
             self.wfile.write(

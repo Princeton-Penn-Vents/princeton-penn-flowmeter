@@ -32,22 +32,24 @@ class GeneratorThread(threading.Thread):
         while not self.signal_end.is_set():
             try:
                 r = requests.get(self._address)
-            except requests.exceptions.ConnectionError:
+            except: 
                 with self._lock:
                     self.status = Status.DISCON
-                return
+                time.sleep(1)
+                continue
             if r.status_code != 200:
                 with self._lock:
                     self.status = Status.DISCON
-                return
-                
+                time.sleep(1)
+                continue
+
             root = json.loads(r.text)
             times = np.asarray(root["data"]["timestamps"])
             flow = np.asarray(root["data"]["flows"])
             pressure = np.asarray(root["data"]["pressures"])
-
             with self._lock:
                 if self.status == Status.DISCON:
+                    print("reconnecting")
                     self.status = Status.OK
                 to_add = new_elements(self._time, times)
                 self._time.inject(times[-to_add:])
