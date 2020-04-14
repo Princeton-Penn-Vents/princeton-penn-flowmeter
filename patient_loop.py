@@ -22,5 +22,5 @@ collector = Collector()
 collector.rotary = rotary
 
 server_address = ("0.0.0.0", 8100)
-httpd = http.server.ThreadingHTTPServer(server_address, make_handler(collector))
-httpd.serve_forever()
+with http.server.ThreadingHTTPServer(server_address, make_handler(collector)) as httpd:
+    httpd.serve_forever()

@@ -55,11 +55,10 @@ class OurServer:
             print(f"Serving on http://{server_address[0]}:{server_address[1]}")
             gen = PseudoGenerator(self, i)
             self.handler = make_handler(gen)
-            self.httpd = http.server.ThreadingHTTPServer(server_address, self.handler)
-            self.httpd.daemon_threads = True
-            with self.httpd:
+
+            with http.server.ThreadingHTTPServer(server_address, self.handler) as httpd:
                 try:
-                    self.httpd.serve_forever()
+                    httpd.serve_forever()
                 except KeyboardInterrupt:
                     print("\nExiting...")
 
