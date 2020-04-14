@@ -69,7 +69,7 @@ class RotaryCollection(RotaryModeBase):
         return self._dict[self._items[self._current]]
 
     def items(self):
-        return self._config.items()
+        return self.config.items()
 
     def __getitem__(self, val):
         return self[val]
@@ -77,7 +77,7 @@ class RotaryCollection(RotaryModeBase):
 
 class LocalRotary:
     def __init__(self, config: Union[RotaryCollection, Dict[str, Setting]]):
-        self._config = config
+        self.config = config
         self._alarms: Dict[str, Any] = {}
 
     @property
@@ -89,13 +89,13 @@ class LocalRotary:
         self._alarms = item
 
     def __getitem__(self, item: str):
-        return self._config[item]
+        return self.config[item]
 
     def close(self):
         pass
 
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"
-        for key, value in self._config.items():
+        for key, value in self.config.items():
             out += f"  {key} : {value}\n"
         return out + "\n)"
