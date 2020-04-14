@@ -91,8 +91,8 @@ class AlertWidget(QtWidgets.QWidget):
 
         self.info_strings = [
             "RR",  # (breaths/min)
-            "TVe",  # (mL)
             "TVi",  # (mL)
+            "TVe",  # (mL)
             "PIP",  # (cm H2O)
             "PEEP",  # (cm H2O)
         ]
