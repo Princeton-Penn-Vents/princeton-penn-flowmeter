@@ -156,11 +156,12 @@ class Generator(abc.ABC):
                 stale[field] = last_update_timediff
         if len(stale) > 0:
             self._alarms["Stale Data"] = stale
-
-        if self.alarms and self.status == Status.OK:
-            self.status = Status.ALERT
-        elif not self.alarms and self.status == Status.ALERT:
-            self.status = Status.OK
+    
+        if hasattr(self, 'status'):
+            if self.alarms and self.status == Status.OK:
+                self.status = Status.ALERT
+            elif not self.alarms and self.status == Status.ALERT:
+                self.status = Status.OK
 
     @property
     def time(self):
