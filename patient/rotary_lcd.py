@@ -2,7 +2,7 @@
 
 from processor.rotary import Setting
 from patient.rotary import Rotary, DICT, Mode
-from patient.lcd import LCD
+from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 from typing import Dict
 
@@ -24,6 +24,7 @@ class RotaryLCD(Rotary):
     def alert_display(self) -> None:
         if self.mode == Mode.ALARM:
             self.backlight.red()
+            print("Alarms:", self.alarms)
         elif self.alarms:
             self.backlight.orange()
         else:
@@ -48,6 +49,12 @@ class RotaryLCD(Rotary):
         string = f"{current_item:<20}"
         assert len(string) == 20
         self.lcd.lower(string)
+        if self.alarms:
+            n = len(self.alarms)
+            if n == 1:
+                self.lcd.lower("ALARM", Align.RIGHT)
+            else:
+                self.lcd.lower(f"{n} ALARMS", Align.RIGHT)
 
     def display(self) -> None:
         self.lcd.clear()

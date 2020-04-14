@@ -5,10 +5,12 @@ import time
 from typing import Union, Optional
 import enum
 
+
 class Align(enum.Enum):
     RIGHT = enum.auto()
     CENTER = enum.auto()
     LEFT = enum.auto()
+
 
 class LCD:
     DEVICE_LCD = 0x3C  # Slave 0x78 << 1
@@ -63,7 +65,7 @@ class LCD:
         b = text.encode("ascii")
         self.pi.i2c_write_device(self.hLCD, [0x40] + [*b])
 
-    def upper(self, text: str, *, pos: Union[int, Align] = Align.LEFT) -> None:
+    def upper(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
         if pos == Align.LEFT:
             pos = 0
         elif pos == Align.CENTER:
@@ -74,7 +76,7 @@ class LCD:
         self.ctrl(0x80 + pos)
         self.text(text)
 
-    def lower(self, text: str, *, pos: Union[int, Align] = Align.LEFT) -> None:
+    def lower(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
         if pos == Align.LEFT:
             pos = 0
         elif pos == Align.CENTER:
@@ -101,6 +103,6 @@ class LCD:
 
 if __name__ == "__main__":
     lcd = LCD()
-    lcd.upper("HELLO", pos=Align.CENTER)
-    lcd.lower("WORLD", pos=Align.CENTER)
+    lcd.upper("HELLO", Align.CENTER)
+    lcd.lower("WORLD", Align.CENTER)
     lcd.close()
