@@ -156,8 +156,8 @@ class Generator(abc.ABC):
                 stale[field] = last_update_timediff
         if len(stale) > 0:
             self._alarms["Stale Data"] = stale
-    
-        if hasattr(self, 'status'):
+
+        if hasattr(self, "status"):
             if self.alarms and self.status == Status.OK:
                 self.status = Status.ALERT
             elif not self.alarms and self.status == Status.ALERT:
