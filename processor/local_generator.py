@@ -37,13 +37,17 @@ class LocalGenerator(Generator):
     def flow(self):
         if self.status == Status.DISCON:
             return []
-        return np.asarray(self._flow) * (0.6 if self._force_status == Status.ALERT else 1)
+        return np.asarray(self._flow) * (
+            0.6 if self._force_status == Status.ALERT else 1
+        )
 
     @property
     def pressure(self):
         if self.status == Status.DISCON:
             return []
-        return np.asarray(self._pressure) * (0.6 if self._force_status == Status.ALERT else 1)
+        return np.asarray(self._pressure) * (
+            0.6 if self._force_status == Status.ALERT else 1
+        )
 
     @property
     def timestamps(self):

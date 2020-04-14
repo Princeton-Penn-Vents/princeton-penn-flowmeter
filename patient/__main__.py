@@ -122,7 +122,7 @@ print(
     )
 )
 
-myfile : typing.Optional[typing.TextIO]
+myfile: typing.Optional[typing.TextIO]
 
 if arg.file:
     myfile = open(arg.file, "a")

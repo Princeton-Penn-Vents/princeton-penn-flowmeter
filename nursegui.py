@@ -31,7 +31,7 @@ guicolors = {"ALERT": QtGui.QColor(0, 0, 100),
              "text_ok" : "color: #4CB3EF;",
              "text_alert" : "color: red;"
             }
-
+ 
 
 logging_directory = None
 
@@ -152,9 +152,14 @@ class PatientSensor(QtGui.QFrame):
         self.setStyleSheet(
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
+<<<<<<< HEAD
         self.last_status_change=int(1000 * datetime.now().timestamp())
         self.label = i
         
+=======
+        self.last_status_change = int(1000 * datetime.now().timestamp())
+
+>>>>>>> a47ba95947c05106421ce30ff1974b82d9aac1ad
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -183,10 +188,10 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(self.alert)
 
         if port is not None:
-            if i == 7:   # hack to make this one always disconnected
-              self.flow = RemoteGenerator(ip=ip, port=port +100 + i)
+            if i == 7:  # hack to make this one always disconnected
+                self.flow = RemoteGenerator(ip=ip, port=port + 100 + i)
             else:
-              self.flow = RemoteGenerator(ip=ip, port=port + i)
+                self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             self.flow = LocalGenerator(status, logging=logging_directory)
 
@@ -245,10 +250,10 @@ class PatientSensor(QtGui.QFrame):
         #    self.flow.status=Status.ALERT
         # else:
         #    self.flow.status=Status.OK
-        
+
         if self.flow.status != self.alert.status:
             t_now = int(1000 * datetime.now().timestamp())
-            if t_now > self.last_status_change + 5000: # 5seconds
+            if t_now > self.last_status_change + 5000:  # 5seconds
                 self.last_status_change = t_now
                 self.alert.status = self.flow.status
 
@@ -262,9 +267,15 @@ class PatientSensor(QtGui.QFrame):
         current_alarms = self.flow.alarms
         alarming_keys = {}
         for key in current_alarms:
+<<<<<<< HEAD
             alarming_keys[key.split()[0]]=1
         #if len(alarming_keys)>0:
         #    print(alarming_keys,self.label)
+=======
+            alarming_keys[key.split()[0]] = 1
+        if len(alarming_keys) > 0:
+            print(alarming_keys)
+>>>>>>> a47ba95947c05106421ce30ff1974b82d9aac1ad
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]
