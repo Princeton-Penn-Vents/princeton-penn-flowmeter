@@ -154,6 +154,7 @@ class PatientSensor(QtGui.QFrame):
         )  # borders
         self.last_status_change=int(1000 * datetime.now().timestamp())
         self.label = i
+        self.current_alarms={}
         
 
         layout = QtWidgets.QHBoxLayout()
@@ -247,8 +248,8 @@ class PatientSensor(QtGui.QFrame):
         # else:
         #    self.flow.status=Status.OK
 
+        t_now = int(1000 * datetime.now().timestamp())
         if self.flow.status != self.alert.status:
-            t_now = int(1000 * datetime.now().timestamp())
             if t_now > self.last_status_change + 5000:  # 5seconds
                 self.last_status_change = t_now
                 self.alert.status = self.flow.status
@@ -260,22 +261,33 @@ class PatientSensor(QtGui.QFrame):
                 else:
                     self.graphview.setBackground(QtGui.QColor(0, 0, 0))
 
-        current_alarms = self.flow.alarms
-        alarming_keys = {}
-        for key in current_alarms:
-            alarming_keys[key.split()[0]]=1
+        for key in self.flow.alarms:
+            subkey=key.split()[0]
+            if subkey not in self.current_alarms:
+                self.current_alarms[subkey]= t_now
+                if subkey in self.alert.widget_lookup:
+                    valindex=self.alert.widget_lookup[subkey]
+                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+            self.current_alarms[subkey] = t_now
+
+        alarms_to_delete=[]
+        for key in self.current_alarms:
+            if self.current_alarms[key] + 5000 < t_now:
+                if key in self.alert.widget_lookup:
+                    valindex=self.alert.widget_lookup[key]
+                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
+                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_ok"])
+                alarms_to_delete.append(key)
+        for key in alarms_to_delete:
+            del self.current_alarms[key]
+                
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]
             val = self.flow.cumulative.get(key)
             if val:
                 self.alert.val_widgets[valindex].setText(str(int(round(val))))
-                if key in alarming_keys:
-                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_alert"])
-                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_alert"])
-                else:
-                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
-                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_ok"])
             else:
                 self.alert.val_widgets[valindex].setText("---")
 
