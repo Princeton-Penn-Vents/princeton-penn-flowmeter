@@ -26,8 +26,12 @@ from processor.remote_generator import RemoteGenerator
 DIR = Path(__file__).parent.absolute()
 
 guicolors = {"ALERT": QtGui.QColor(0, 0, 100),
-"DISCON": QtGui.QColor(0, 0, 200),
-        "patient_border": "rgb(160,200,255)"}
+             "DISCON": QtGui.QColor(0, 0, 200),
+             "patient_border": "rgb(160,200,255)",
+             "text_ok" : "color: #4CB3EF;",
+             "text_alert" : "color: red;"
+            }
+
 
 logging_directory = None
 
@@ -106,20 +110,22 @@ class AlertWidget(QtWidgets.QWidget):
 
         self.info_widgets = []
         self.val_widgets = []
+        self.last_number_updates = []
         self.widget_lookup = {}
         for j in range(len(self.info_strings)):
             self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
             self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
             self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            self.info_widgets[-1].setStyleSheet("color: #4CB3EF;")
+            self.info_widgets[-1].setStyleSheet(guicolors["text_ok"])
             self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
             self.val_widgets[-1].setAlignment(
                 QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
             )
-            self.val_widgets[-1].setStyleSheet("color: #4CB3EF;")
+            self.val_widgets[-1].setStyleSheet(guicolors["text_ok"])
             self.widget_lookup[self.info_strings[j]] = j
             lower_layout.addWidget(self.info_widgets[-1], j, 0)
             lower_layout.addWidget(self.val_widgets[-1], j, 1)
+            self.last_number_updates.append(int(1000 * datetime.now().timestamp()))
 
         column_layout.addWidget(lower)
 
@@ -147,6 +153,7 @@ class PatientSensor(QtGui.QFrame):
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
         self.last_status_change=int(1000 * datetime.now().timestamp())
+        self.label = i
         
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
@@ -256,14 +263,20 @@ class PatientSensor(QtGui.QFrame):
         alarming_keys = {}
         for key in current_alarms:
             alarming_keys[key.split()[0]]=1
-        if len(alarming_keys)>0:
-            print(alarming_keys)
+        #if len(alarming_keys)>0:
+        #    print(alarming_keys,self.label)
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]
             val = self.flow.cumulative.get(key)
             if val:
                 self.alert.val_widgets[valindex].setText(str(int(round(val))))
+                if key in alarming_keys:
+                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+                else:
+                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
+                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_ok"])
             else:
                 self.alert.val_widgets[valindex].setText("---")
 
