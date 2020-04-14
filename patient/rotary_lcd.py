@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from processor.rotary import Setting
-from patient.rotary import Rotary, DICT, Mode
+from patient.rotary import Rotary, DICT
 from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 from typing import Dict
@@ -22,13 +22,11 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def alert_display(self) -> None:
-        if self.mode == Mode.ALARM:
+        if self.alarms:
             self.backlight.red()
-            print("Alarms:", self.alarms)
-        elif self.alarms:
-            self.backlight.orange()
         else:
             self.backlight.white()
+        self.lower_display()
 
     def pushed_display(self) -> None:
         self.lcd.clear()

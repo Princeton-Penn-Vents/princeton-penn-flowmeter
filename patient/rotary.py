@@ -14,8 +14,6 @@ class Rotary(LocalRotary):
     def __init__(self, config: dict, *, pi=None):
         super().__init__(RotaryCollection(config))
 
-        self.mode = Mode.EDIT
-
         pinA = 17  # terminal A
         pinB = 27  # terminal B
         pinSW = 22  # switch
@@ -62,20 +60,15 @@ class Rotary(LocalRotary):
         print(rotary)
 
     def clockwise(self):
-        if self.mode == Mode.EDIT:
-            self.config.clockwise()
+        self.config.clockwise()
         self.turned_display(up=True)
 
     def counterclockwise(self):
-        if self.mode == Mode.EDIT:
-            self.config.counterclockwise()
+        self.config.counterclockwise()
         self.turned_display(up=False)
 
     def push(self):
-        if self.mode == Mode.EDIT:
-            self.config.push()
-        else:
-            self.mode = Mode.EDIT
+        self.config.push()
         self.pushed_display()
 
     @property
@@ -85,14 +78,8 @@ class Rotary(LocalRotary):
     @alarms.setter
     def alarms(self, item):
         if item != self._alarms:
-            if item:
-                self.mode = Mode.ALARM
-                self.alert()
-            else:
-                self.mode = Mode.EDIT
-                self.alert()
-
             self._alarms = item
+            self.alert()
 
     def alert(self):
         self.alert_display()
