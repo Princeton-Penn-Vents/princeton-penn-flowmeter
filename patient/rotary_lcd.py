@@ -33,7 +33,7 @@ class RotaryLCD(Rotary):
     def upper_display(self):
         ID = self["Sensor ID"].value
         ID_string = f"#{ID}"
-        current_name = self.value().lcd
+        current_name = self.value().lcd_name
         string = f"{current_name:<16} {ID_string:>3}"
         assert len(string) == 20, f'Too long: "{string}" > 20 chars'
         self.lcd.upper(string)
