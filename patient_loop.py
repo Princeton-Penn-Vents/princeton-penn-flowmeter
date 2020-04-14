@@ -13,6 +13,7 @@ from processor.handler import make_handler
 
 # Initialize LCD
 rotary = RotaryLCD(DICT)
+rotary.alarm_filter = lambda x: x in ["RR Max"]
 rotary.display()
 
 atexit.register(rotary.close)

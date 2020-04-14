@@ -8,6 +8,9 @@ from typing import List, Dict, Union, Any
 from processor.setting import Setting, IncrSetting, SelectionSetting
 
 DICT = {
+    "RR Max": IncrSetting(
+        30, min=10, max=90, incr=5, unit="1/min", name="RespRate Max"
+    ),
     "PIP Max": IncrSetting(30, min=0, max=40, incr=1, unit="cm-H2O", name="PIP Max"),
     "PIP Min": IncrSetting(5, min=0, max=20, incr=1, unit="cm-H2O", name="PIP Min"),
     "PEEP Max": IncrSetting(8, min=0, max=15, incr=1, unit="cm-H2O", name="PEEP Max"),

@@ -3,6 +3,7 @@
 import pigpio
 from processor.rotary import LocalRotary, DICT, RotaryCollection
 import enum
+from typing import Callable
 
 
 class Mode(enum.Enum):
@@ -20,6 +21,7 @@ class Rotary(LocalRotary):
         glitchFilter = 300  # ms
 
         self.pi = pigpio.pi() if pi is None else pi
+        self.alarm_filter: Callable[[str], bool] = lambda x: True
 
         self.pi.set_mode(pinA, pigpio.INPUT)
         self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
@@ -73,7 +75,7 @@ class Rotary(LocalRotary):
 
     @property
     def alarms(self):
-        return self._alarms
+        return {k: v for k, v in self._alarms.items() if self.alarm_filter(k)}
 
     @alarms.setter
     def alarms(self, item):
