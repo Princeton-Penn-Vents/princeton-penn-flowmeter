@@ -190,6 +190,7 @@ class PatientSensor(QtGui.QFrame):
             else:
                 self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
+            status = Status.OK if i % 7 != 1 else Status.ALERT
             self.flow = LocalGenerator(status, logging=logging_directory)
 
         self.alert.status = self.flow.status
