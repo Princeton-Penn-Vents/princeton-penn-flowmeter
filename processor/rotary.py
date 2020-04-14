@@ -18,7 +18,7 @@ DICT = {
     "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Alarm Reset": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Sensor ID": IncrSetting(1, min=1, max=20, incr=1),  # REQUIRED
-    "Stale Data Timeout": IncrSetting(5, min=1, max=10, incr=1, unit="sec"),
+    "Stale Data Timeout": IncrSetting(9, min=1, max=10, incr=1, unit="sec"),
 }
 
 
