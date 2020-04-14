@@ -94,6 +94,9 @@ class Rotary(LocalRotary):
             self._alarms = item
 
     def alert(self):
+        self.alert_display()
+
+    def alert_display(self):
         "Override in subclass to customize"
         print(f"Toggling alert status to {self.mode.name}")
 

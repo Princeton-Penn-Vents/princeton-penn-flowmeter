@@ -19,14 +19,17 @@ class RotaryLCD(Rotary):
         # Top display keeps ID number!
         self.lower_display()
 
-    def pushed_display(self):
-        self.lcd.clear()
+    def alert_display(self):
         if self.mode == Mode.ALARM:
             self.backlight.red()
         elif self.alarms:
             self.backlight.orange()
         else:
             self.backlight.white()
+
+    def pushed_display(self):
+        self.lcd.clear()
+        self.alarm_display()
         self.upper_display()
         self.lower_display()
 
