@@ -24,7 +24,9 @@ from processor.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
-guicolors = {"ALERT": QtGui.QColor(0, 0, 205), "patient_border": "rgb(160,200,255)"}
+guicolors = {"ALERT": QtGui.QColor(0, 0, 100),
+"DISCON": QtGui.QColor(0, 0, 200),
+        "patient_border": "rgb(160,200,255)"}
 
 logging_directory = None
 
@@ -169,7 +171,7 @@ class PatientSensor(QtGui.QFrame):
 
         self.alert = AlertWidget(i)
 
-        layout.addWidget(self.alert)  # , 3)
+        layout.addWidget(self.alert)
 
         status = Status.OK if i % 7 != 1 else Status.ALERT
 
@@ -179,10 +181,6 @@ class PatientSensor(QtGui.QFrame):
             self.flow = LocalGenerator(status, logging=logging_directory)
 
         self.alert.status = self.flow.status
-
-        if self.alert.status == Status.ALERT:
-            self.graphview.setBackground(guicolors["ALERT"])
-
         self.alert.name_btn.clicked.connect(self.click_number)
 
     @Slot()
@@ -242,9 +240,10 @@ class PatientSensor(QtGui.QFrame):
 
             if self.alert.status == Status.ALERT:
                 self.graphview.setBackground(guicolors["ALERT"])
+            elif self.alert.status == Status.DISCON:
+                self.graphview.setBackground(guicolors["DISCON"])
             else:
                 self.graphview.setBackground(QtGui.QColor(0, 0, 0))
-            # TESTself.graphview.setBackground(guicolors["ALERT"])
 
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]

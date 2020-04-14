@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 
 import pigpio
-from processor.rotary import LocalRotary, DICT
+from processor.rotary import LocalRotary, DICT, RotaryCollection
+import enum
+
+class Mode(enum.Enum):
+    EDIT = enum.auto()
+    ALARM = enum.auto()
 
 
 class Rotary(LocalRotary):
-    def turned_display(self, up):
-        "Override in subclass to customize"
-        dir = "up" if up else "down"
-        print(f"Changed {self.items[self.current]} {dir}")
-        print(rotary)
-
-    def pushed_display(self):
-        "Override in subclass to customize"
-        print(f"Changed to {self.items[self.current]}")
-        print(rotary)
-
     def __init__(self, config, *, pi=None):
-        super().__init__(config)
+        super().__init__(RotaryCollection(config))
+
+        self.mode = Mode.EDIT
 
         pinA = 17  # terminal A
         pinB = 27  # terminal B
@@ -42,19 +38,63 @@ class Rotary(LocalRotary):
             if ch == pinA:
                 levelB = self.pi.read(pinB)
                 if levelB:
-                    self.config[self.items[self.current]].up()  # ClockWise
-                    self.turned_display(up=True)
+                    self.clockwise()
                 else:
-                    self.config[self.items[self.current]].down()  # CounterClockWise
-                    self.turned_display(up=False)
+                    self.counterclockwise()
 
         def rotary_switch(ch, _level, _tick):
             if ch == pinSW:
-                self.current = (self.current + 1) % len(self.config)
-                self.pushed_display()
+                self.push()
 
         self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
         self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
+
+    def turned_display(self, up):
+        "Override in subclass to customize"
+        dir = "up" if up else "down"
+        print(f"Changed {self.items[self.current]} {dir}")
+        print(rotary)
+
+    def pushed_display(self):
+        "Override in subclass to customize"
+        print(f"Changed to {self.items[self.current]}")
+        print(rotary)
+
+    def clockwise(self):
+        if self.mode == Mode.EDIT:
+            self.config.clockwise()
+        self.turned_display(up=True)
+
+    def counterclockwise(self):
+        if self.mode == Mode.EDIT:
+            self.config.counterclockwise()
+        self.turned_display(up=False)
+    
+    def push(self):
+        if self.mode == Mode.EDIT:
+            self.config.push()
+        else:
+            self.mode = Mode.EDIT
+        self.pushed_display()
+
+    @property
+    def alarms(self):
+        return self._alarms
+
+    @alarms.setter
+    def alarms(self, item):
+        if items != self._alarms:
+            if item:
+                self.mode = Mode.ALARM
+                self.alert()
+            else:
+                self.mode = Mode.EDIT
+
+            self._alarms = item
+
+    def alert(self):
+        "Override in subclass to customize"
+        print(f"Toggling alert status to {self.mode.name}")
 
     def close(self):
         super().close()

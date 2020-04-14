@@ -2,13 +2,14 @@ name: flowmeter
 channels:
   - conda-forge
 dependencies:
-  - python==3.7
-  - scipy
+  - black
+  - matplotlib
+  - mypy
+  - numpy
   - pyqt
   - pyqtgraph
-  - numpy
-  - matplotlib
-  - requests
-  - black
-  - pyzmq
+  - python==3.7
   - pyyaml
+  - pyzmq
+  - requests
+  - scipy

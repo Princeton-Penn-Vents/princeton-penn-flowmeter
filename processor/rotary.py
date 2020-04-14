@@ -2,6 +2,7 @@
 
 import sys
 import time
+import abc
 
 from processor.setting import Setting, IncrSetting, SelectionSetting
 
@@ -17,32 +18,73 @@ DICT = {
     "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Alarm Reset": SelectionSetting(2, [10, 15, 30, 60], unit="sec"),
     "Sensor ID": IncrSetting(1, min=1, max=20, incr=1),  # REQUIRED
-    "Stale Data": IncrSetting(5, min=1, max=10, incr=1, unit="sec"),
+    "Stale Data Timeout": IncrSetting(5, min=1, max=10, incr=1, unit="sec"),
 }
+
+
+class RotaryModeBase(abc.ABC):
+    @abc.abstractmethod
+    def push(self):
+        pass
+
+    @abc.abstractmethod
+    def clockwise(self):
+        pass
+
+    @abc.abstractmethod
+    def counterclockwise(self):
+        pass
+
+
+class RotaryCollection(RotaryModeBase):
+    def __init__(self, dictionary):
+        self._dict = dictionary
+        self._current = 0
+        self._items = list(self._dict.keys())
+
+    def push(self):
+        self.current = (self.current + 1) % len(self.config)
+
+    def clockwise(self):
+        self.value().up()
+
+    def counterclockwise(self):
+        self.value().down()
+
+    def key(self):
+        return self._items[self._current]
+
+    def value(self):
+        return self._config[self._items[self._current]]
+
+    def items(self):
+        return self._config.items()
+
+    def __getitem__(self, val):
+        return self[val]
 
 
 class LocalRotary:
     def __init__(self, config):
-        self.config = config
-        self.current = 0
-        self.items = list(self.config.keys())
+        self._config = config
+        self._alarms = {}
 
     @property
-    def current_key(self):
-        return self.items[self.current]
+    def alarms(self):
+        return self._alarms
 
-    @property
-    def current_item(self):
-        return self.config[self.items[self.current]]
+    @alarms.setter
+    def alarms(self, item):
+        self._alarms = item
 
     def __getitem__(self, item):
-        return self.config[item]
+        return self._config[item]
 
     def close(self):
         pass
 
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"
-        for key, value in self.config.items():
+        for key, value in self._config.items():
             out += f"  {key} : {value}\n"
         return out + "\n)"

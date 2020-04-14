@@ -22,7 +22,13 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def pushed_display(self):
-        self.clear()
+        self.lcd.clear()
+        if self.mode == self.Mode.ALARM:
+            self.backlight.red()
+        elif self.alarms:
+            self.backlight.orange()
+        else:
+            self.backlight.white()
         self.upper_display()
         self.lower_display()
 

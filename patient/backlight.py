@@ -36,5 +36,8 @@ class Backlight:
     def yellow(self):
         self.color(self.shade, self.shade, 0)
 
+    def orange(self):
+        self.color(self.shade, self.shade // 2, 0)
+
     def __del__(self):
         self.pi.stop()  # Not critical to call

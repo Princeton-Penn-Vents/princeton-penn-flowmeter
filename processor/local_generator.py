@@ -9,7 +9,8 @@ from processor.generator import Generator, Status
 class LocalGenerator(Generator):
     def __init__(self, status: Status = Status.OK, logging=None):
         super().__init__()
-        self.status = status
+        self.status = Status.OK
+        self._force_status = status
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
@@ -36,13 +37,13 @@ class LocalGenerator(Generator):
     def flow(self):
         if self.status == Status.DISCON:
             return []
-        return np.asarray(self._flow) * (0.6 if self.status == Status.ALERT else 1)
+        return np.asarray(self._flow) * (0.6 if self._force_status == Status.ALERT else 1)
 
     @property
     def pressure(self):
         if self.status == Status.DISCON:
             return []
-        return np.asarray(self._pressure) * (0.6 if self.status == Status.ALERT else 1)
+        return np.asarray(self._pressure) * (0.6 if self._force_status == Status.ALERT else 1)
 
     @property
     def timestamps(self):

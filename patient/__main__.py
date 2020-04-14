@@ -20,6 +20,7 @@ import json
 import zmq
 import atexit
 import threading
+import typing
 import numpy as np
 
 # ------------------
@@ -120,6 +121,8 @@ print(
         time.time() * 1000, (float)(dp / dpsf), (float)(temp / 200.0)
     )
 )
+
+myfile : typing.Optional[typing.TextIO]
 
 if arg.file:
     myfile = open(arg.file, "a")

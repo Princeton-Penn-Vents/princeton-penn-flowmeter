@@ -33,11 +33,9 @@ class Generator(abc.ABC):
         self._cumulative = {}
         self._cumulative_timestamps = {}
         self._alarms = {}
-        self._rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
+        self.rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
 
-    def set_rotary(self, rotary):
-        self._rotary = rotary
 
     @abc.abstractmethod
     def get_data(self):
@@ -138,7 +136,7 @@ class Generator(abc.ABC):
                 )
 
                 self._alarms = processor.analysis.alarms(
-                    self._rotary, self._alarms, updated, new_breaths, self._cumulative
+                    self.rotary, self._alarms, updated, new_breaths, self._cumulative
                 )
 
         timestamp = time.time()
@@ -148,7 +146,7 @@ class Generator(abc.ABC):
             cumulative_timestamps[field] = timestamp
         self._cumulative_timestamps = cumulative_timestamps
 
-        stale_threshold = self._rotary["Stale Data"].value
+        stale_threshold = self.rotary["Stale Data Timeout"].value
         default = timestamp - stale_threshold
         stale = {}
         for field in self._cumulative:
@@ -159,6 +157,11 @@ class Generator(abc.ABC):
                 stale[field] = last_update_timediff
         if len(stale) > 0:
             self._alarms["Stale Data"] = stale
+
+        if self.alarms and self.status == Status.OK:
+            self.status = Status.ALERT
+        elif not self.alarms and self.status == Status.ALERT:
+            self.status = Status.OK
 
     @property
     def time(self):

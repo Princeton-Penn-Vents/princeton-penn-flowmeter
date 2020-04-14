@@ -67,6 +67,7 @@ class Collector(Generator):
 
             self.get_data()
             self.analyze()
+            self.rotary.alarms = self.alarms
 
     def get_data(self):
         self._time, self._flow, self._pressure = self._thread.get_data()

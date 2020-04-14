@@ -21,7 +21,7 @@ def aggregate_for_nursing(time_stamp, jsons):
 
 
 if __name__ == "__main__":
-    from ventsim import VentSim
+    from sim.ventsim import VentSim
 
     from datetime import datetime
 

@@ -19,7 +19,7 @@ atexit.register(rotary.close)
 
 # Initialize Collector
 collector = Collector()
-collector.set_rotary(rotary)
+collector.rotary = rotary
 
 server_address = ("0.0.0.0", 8100)
 httpd = http.server.ThreadingHTTPServer(server_address, make_handler(collector))
