@@ -433,6 +433,15 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
     alarms.pop("Stale Data", None)  # handled specially in generator.py
 
     if "PIP" in cumulative:
+        assert rotary["RR Max"].unit == "sec"
+        if "RR" in cumulative and cumulative["RR"] > rotary["RR Max"].value:
+            alarms["RR Max"] = alarm_record(
+                alarms.get("RR Max"),
+                cumulative["last breath timestamp"],
+                cumulative["RR"],
+                True,
+            )
+
         assert rotary["PIP Max"].unit == "cm-H2O"
         if "PIP" in cumulative and cumulative["PIP"] > rotary["PIP Max"].value:
             alarms["PIP Max"] = alarm_record(
