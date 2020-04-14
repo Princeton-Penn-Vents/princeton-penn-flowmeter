@@ -507,6 +507,7 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
 
     return alarms
 
+
 def remove_alarms(alarms, latest_time, timeout):
     new_alarms = {}
     for key, value in alarms.items():

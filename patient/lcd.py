@@ -2,13 +2,19 @@
 
 import pigpio
 import time
+from typing import Union, Optional
+import enum
 
+class Align(enum.Enum):
+    RIGHT = enum.auto()
+    CENTER = enum.auto()
+    LEFT = enum.auto()
 
 class LCD:
     DEVICE_LCD = 0x3C  # Slave 0x78 << 1
     pinRST = 26  # Soft Reset pin GPIO26
 
-    def __init__(self, *, pi=None):
+    def __init__(self, *, pi: pigpio.pi = None):
 
         # Get pigio connection
         self.pi = pigpio.pi() if pi is None else pi
@@ -45,46 +51,56 @@ class LCD:
 
         self.ctrl(0x06)  # Entry mode increment
 
-    def reset(self):
+    def reset(self) -> None:
         self.pi.write(self.pinRST, 0)
         time.sleep(0.002)
         self.pi.write(self.pinRST, 1)
 
-    def ctrl(self, value):
+    def ctrl(self, value: int) -> None:
         self.pi.i2c_write_device(self.hLCD, [0x00, value])
 
-    def text(self, text):
+    def text(self, text: str) -> None:
         b = text.encode("ascii")
         self.pi.i2c_write_device(self.hLCD, [0x40] + [*b])
 
-    def upper(self, text, *, pos=0):
-        if pos is "center":
+    def upper(self, text: str, *, pos: Union[int, Align] = Align.LEFT) -> None:
+        if pos == Align.LEFT:
+            pos = 0
+        elif pos == Align.CENTER:
             pos = (20 - len(text)) // 2
+        else:
+            pos = 20 - len(text)
+
         self.ctrl(0x80 + pos)
         self.text(text)
 
-    def lower(self, text, *, pos=0):
-        if pos is "center":
+    def lower(self, text: str, *, pos: Union[int, Align] = Align.LEFT) -> None:
+        if pos == Align.LEFT:
+            pos = 0
+        elif pos == Align.CENTER:
             pos = (20 - len(text)) // 2
+        else:
+            pos = 20 - len(text)
+
         self.ctrl(0xC0 + pos)
         self.text(text)
 
-    def clear(self):
+    def clear(self) -> None:
         self.ctrl(0x01)
 
-    def close(self):
+    def close(self) -> None:
         if hasattr(self, "hLCD"):
             self.pi.i2c_close(self.hLCD)
         self.pi.stop()
-        self.pi = None
+        self.pi = None  # type: ignore
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.pi is not None:
             self.close()
 
 
 if __name__ == "__main__":
     lcd = LCD()
-    lcd.upper("HELLO", pos="center")
-    lcd.lower("WORLD", pos="center")
+    lcd.upper("HELLO", pos=Align.CENTER)
+    lcd.lower("WORLD", pos=Align.CENTER)
     lcd.close()

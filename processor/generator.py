@@ -163,7 +163,7 @@ class Generator(abc.ABC):
         else:
             self._alarms = alarms
 
-        if hasattr(self, 'status'):
+        if hasattr(self, "status"):
             if self.alarms and self.status == Status.OK:
                 self.status = Status.ALERT
             elif not self.alarms and self.status == Status.ALERT:
