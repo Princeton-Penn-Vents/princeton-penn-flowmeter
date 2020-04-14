@@ -84,7 +84,7 @@ class Rotary(LocalRotary):
 
     @alarms.setter
     def alarms(self, item):
-        if items != self._alarms:
+        if item != self._alarms:
             if item:
                 self.mode = Mode.ALARM
                 self.alert()
