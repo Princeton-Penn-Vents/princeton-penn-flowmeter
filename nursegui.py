@@ -268,7 +268,13 @@ class PatientSensor(QtGui.QFrame):
                 if subkey in self.alert.widget_lookup:
                     valindex=self.alert.widget_lookup[subkey]
                     self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+                    f = self.alert.val_widgets[valindex].font();
+                    f.setUnderline(True);
+                    self.alert.val_widgets[valindex].setFont(f);
                     self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_alert"])
+                    f = self.alert.info_widgets[valindex].font();
+                    f.setUnderline(True);
+                    self.alert.info_widgets[valindex].setFont(f);
             self.current_alarms[subkey] = t_now
 
         alarms_to_delete=[]
@@ -277,7 +283,13 @@ class PatientSensor(QtGui.QFrame):
                 if key in self.alert.widget_lookup:
                     valindex=self.alert.widget_lookup[key]
                     self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
+                    f = self.alert.val_widgets[valindex].font();
+                    f.setUnderline(False);
+                    lab.setFont(f);
                     self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_ok"])
+                    f = self.alert.val_widgets[valindex].font();
+                    f.setUnderline(False);
+                    lab.setFont(f);
                 alarms_to_delete.append(key)
         for key in alarms_to_delete:
             del self.current_alarms[key]
