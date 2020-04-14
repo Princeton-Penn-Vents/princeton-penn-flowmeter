@@ -36,7 +36,6 @@ class Generator(abc.ABC):
         self.rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
 
-
     @abc.abstractmethod
     def get_data(self):
         pass

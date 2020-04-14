@@ -4,6 +4,7 @@ import pigpio
 from processor.rotary import LocalRotary, DICT, RotaryCollection
 import enum
 
+
 class Mode(enum.Enum):
     EDIT = enum.auto()
     ALARM = enum.auto()
@@ -69,7 +70,7 @@ class Rotary(LocalRotary):
         if self.mode == Mode.EDIT:
             self.config.counterclockwise()
         self.turned_display(up=False)
-    
+
     def push(self):
         if self.mode == Mode.EDIT:
             self.config.push()

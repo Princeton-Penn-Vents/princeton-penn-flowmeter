@@ -56,7 +56,12 @@ class OurServer:
             gen = PseudoGenerator(self, i)
             self.handler = make_handler(gen)
             self.httpd = http.server.ThreadingHTTPServer(server_address, self.handler)
-            self.httpd.serve_forever()
+            self.httpd.daemon_threads = True
+            with self.httpd:
+                try:
+                    self.httpd.serve_forever()
+                except KeyboardInterrupt:
+                    print("\nExiting...")
 
     def __init__(self, args):
         self.done = False

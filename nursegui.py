@@ -25,9 +25,11 @@ from processor.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
-guicolors = {"ALERT": QtGui.QColor(0, 0, 100),
-"DISCON": QtGui.QColor(0, 0, 200),
-        "patient_border": "rgb(160,200,255)"}
+guicolors = {
+    "ALERT": QtGui.QColor(0, 0, 100),
+    "DISCON": QtGui.QColor(0, 0, 200),
+    "patient_border": "rgb(160,200,255)",
+}
 
 logging_directory = None
 
@@ -146,8 +148,8 @@ class PatientSensor(QtGui.QFrame):
         self.setStyleSheet(
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
-        self.last_status_change=int(1000 * datetime.now().timestamp())
-        
+        self.last_status_change = int(1000 * datetime.now().timestamp())
+
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -176,10 +178,10 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(self.alert)
 
         if port is not None:
-            if i == 7:   # hack to make this one always disconnected
-              self.flow = RemoteGenerator(ip=ip, port=port +100 + i)
+            if i == 7:  # hack to make this one always disconnected
+                self.flow = RemoteGenerator(ip=ip, port=port + 100 + i)
             else:
-              self.flow = RemoteGenerator(ip=ip, port=port + i)
+                self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             self.flow = LocalGenerator(status, logging=logging_directory)
 
@@ -238,10 +240,10 @@ class PatientSensor(QtGui.QFrame):
         #    self.flow.status=Status.ALERT
         # else:
         #    self.flow.status=Status.OK
-        
+
         if self.flow.status != self.alert.status:
             t_now = int(1000 * datetime.now().timestamp())
-            if t_now > self.last_status_change + 5000: # 5seconds
+            if t_now > self.last_status_change + 5000:  # 5seconds
                 self.last_status_change = t_now
                 self.alert.status = self.flow.status
 
@@ -255,8 +257,8 @@ class PatientSensor(QtGui.QFrame):
         current_alarms = self.flow.alarms
         alarming_keys = {}
         for key in current_alarms:
-            alarming_keys[key.split()[0]]=1
-        if len(alarming_keys)>0:
+            alarming_keys[key.split()[0]] = 1
+        if len(alarming_keys) > 0:
             print(alarming_keys)
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
