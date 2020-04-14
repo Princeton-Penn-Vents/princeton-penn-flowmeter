@@ -25,13 +25,14 @@ from processor.remote_generator import RemoteGenerator
 
 DIR = Path(__file__).parent.absolute()
 
-guicolors = {"ALERT": QtGui.QColor(0, 0, 100),
-             "DISCON": QtGui.QColor(0, 0, 200),
-             "patient_border": "rgb(160,200,255)",
-             "text_ok" : "color: #4CB3EF;",
-             "text_alert" : "color: red;"
-            }
- 
+guicolors = {
+    "ALERT": QtGui.QColor(0, 0, 100),
+    "DISCON": QtGui.QColor(0, 0, 200),
+    "patient_border": "rgb(160,200,255)",
+    "text_ok": "color: #4CB3EF;",
+    "text_alert": "color: red;",
+}
+
 
 logging_directory = None
 
@@ -152,10 +153,9 @@ class PatientSensor(QtGui.QFrame):
         self.setStyleSheet(
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
-        self.last_status_change=int(1000 * datetime.now().timestamp())
+        self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
-        self.current_alarms={}
-        
+        self.current_alarms = {}
 
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
@@ -262,38 +262,44 @@ class PatientSensor(QtGui.QFrame):
                     self.graphview.setBackground(QtGui.QColor(0, 0, 0))
 
         for key in self.flow.alarms:
-            subkey=key.split()[0]
+            subkey = key.split()[0]
             if subkey not in self.current_alarms:
-                self.current_alarms[subkey]= t_now
+                self.current_alarms[subkey] = t_now
                 if subkey in self.alert.widget_lookup:
-                    valindex=self.alert.widget_lookup[subkey]
-                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_alert"])
-                    f = self.alert.val_widgets[valindex].font();
-                    f.setUnderline(True);
-                    self.alert.val_widgets[valindex].setFont(f);
-                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_alert"])
-                    f = self.alert.info_widgets[valindex].font();
-                    f.setUnderline(True);
-                    self.alert.info_widgets[valindex].setFont(f);
+                    valindex = self.alert.widget_lookup[subkey]
+                    self.alert.val_widgets[valindex].setStyleSheet(
+                        guicolors["text_alert"]
+                    )
+                    f = self.alert.val_widgets[valindex].font()
+                    f.setUnderline(True)
+                    self.alert.val_widgets[valindex].setFont(f)
+                    self.alert.info_widgets[valindex].setStyleSheet(
+                        guicolors["text_alert"]
+                    )
+                    f = self.alert.info_widgets[valindex].font()
+                    f.setUnderline(True)
+                    self.alert.info_widgets[valindex].setFont(f)
             self.current_alarms[subkey] = t_now
 
-        alarms_to_delete=[]
+        alarms_to_delete = []
         for key in self.current_alarms:
             if self.current_alarms[key] + 5000 < t_now:
                 if key in self.alert.widget_lookup:
-                    valindex=self.alert.widget_lookup[key]
+                    valindex = self.alert.widget_lookup[key]
                     self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
-                    f = self.alert.val_widgets[valindex].font();
-                    f.setUnderline(False);
-                    lab.setFont(f);
-                    self.alert.info_widgets[valindex].setStyleSheet(guicolors["text_ok"])
-                    f = self.alert.val_widgets[valindex].font();
-                    f.setUnderline(False);
-                    lab.setFont(f);
+                    f = self.alert.val_widgets[valindex].font()
+                    f.setUnderline(False)
+                    lab.setFont(f)
+                    self.alert.info_widgets[valindex].setStyleSheet(
+                        guicolors["text_ok"]
+                    )
+                    f = self.alert.val_widgets[valindex].font()
+                    f.setUnderline(False)
+                    lab.setFont(f)
                 alarms_to_delete.append(key)
         for key in alarms_to_delete:
             del self.current_alarms[key]
-                
+
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]

@@ -52,7 +52,7 @@ nbytesDP = 3
 # Establish SPI device on Bus 0, Device 0
 spiMCP3008 = spidev.SpiDev()
 spiMCP3008.open(0, 0)
-spiMCP3008.max_speed_hz = 1350000 # 500000
+spiMCP3008.max_speed_hz = 1350000  # 500000
 chanMP3V5004 = 0
 
 
@@ -156,6 +156,7 @@ def sdp3_handler(signum, frame):
             tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
             print(ts, tmptemp / 200.0)
         socket.send_json(d)
+
 
 # sdp3 interrupt file handler
 def sdp3_file_handler(signum, frame):

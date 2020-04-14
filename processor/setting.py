@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
 import threading
+from typing import List, Any
 
 
 class Setting:
-    def __init__(self, *, unit):
+    def __init__(self, *, name: str, unit: str = None, lcd_name: str = None):
+        self.name = name
+        self.lcd_name = lcd_name or name
+        assert (
+            len(self.lcd_name) <= 16
+        ), "Length of LCD names must be less than 16 chars"
         self.unit = unit
         self._lock = threading.Lock()
 
@@ -13,17 +19,27 @@ class Setting:
         return f"{self.value}{unit}"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self})"
+        return f"{self.__class__.__name__}({self}, name={self.name})"
 
     def __format__(self, format_spec):
         return str(self).__format__(format_spec)
 
 
 class IncrSetting(Setting):
-    def __init__(self, default, *, min, max, incr, unit=None):
+    def __init__(
+        self,
+        default: float,
+        *,
+        min: float,
+        max: float,
+        incr: float,
+        name: str,
+        unit: str = None,
+        lcd_name: str = None,
+    ):
         "Note: incr should be a nice floating point number"
 
-        super().__init__(unit=unit)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
 
         self._min = min
         self._max = max
@@ -47,17 +63,27 @@ class IncrSetting(Setting):
                 return False
 
     @property
-    def value(self):
+    def value(self) -> float:
         with self._lock:
             return self._value
 
 
 class SelectionSetting(Setting):
-    def __init__(self, default, listing, *, unit=None):
+    def __init__(
+        self,
+        default: int,
+        listing: List[Any],
+        *,
+        name: str,
+        unit: str = None,
+        lcd_name: str = None,
+    ):
 
-        super().__init__(unit=unit)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
 
-        assert 0 < default < len(listing)
+        assert (
+            0 < default < len(listing)
+        ), "Default must be an index into the list given"
 
         self._value = default
         self._listing = listing
@@ -79,6 +105,6 @@ class SelectionSetting(Setting):
                 return False
 
     @property
-    def value(self):
+    def value(self) -> Any:
         with self._lock:
             return self._listing[self._value]

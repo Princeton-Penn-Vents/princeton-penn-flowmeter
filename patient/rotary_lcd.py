@@ -35,13 +35,13 @@ class RotaryLCD(Rotary):
     def upper_display(self):
         ID = self["Sensor ID"].value
         ID_string = f"#{ID}"
-        current_name = self.current_key
+        current_name = self.value().lcd
         string = f"{current_name:<16} {ID_string:>3}"
         assert len(string) == 20
         self.lcd.upper(string)
 
     def lower_display(self):
-        current_item = self.current_item
+        current_item = self.value()
         string = f"{current_item:<20}"
         assert len(string) == 20
         self.lcd.lower(string)

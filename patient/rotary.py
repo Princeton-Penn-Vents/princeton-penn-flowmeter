@@ -11,7 +11,7 @@ class Mode(enum.Enum):
 
 
 class Rotary(LocalRotary):
-    def __init__(self, config, *, pi=None):
+    def __init__(self, config: dict, *, pi=None):
         super().__init__(RotaryCollection(config))
 
         self.mode = Mode.EDIT
@@ -50,15 +50,15 @@ class Rotary(LocalRotary):
         self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
         self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
 
-    def turned_display(self, up):
+    def turned_display(self, up: bool):
         "Override in subclass to customize"
         dir = "up" if up else "down"
-        print(f"Changed {self.items[self.current]} {dir}")
+        print(f"Changed {self.key()} {dir}")
         print(rotary)
 
     def pushed_display(self):
         "Override in subclass to customize"
-        print(f"Changed to {self.items[self.current]}")
+        print(f"Changed to {self.key()}")
         print(rotary)
 
     def clockwise(self):
@@ -96,6 +96,12 @@ class Rotary(LocalRotary):
     def alert(self):
         "Override in subclass to customize"
         print(f"Toggling alert status to {self.mode.name}")
+
+    def value(self):
+        return self.config.value()
+
+    def key(self):
+        return self.config.key()
 
     def close(self):
         super().close()
