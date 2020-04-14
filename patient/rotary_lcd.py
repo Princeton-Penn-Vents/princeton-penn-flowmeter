@@ -10,8 +10,6 @@ class RotaryLCD(Rotary):
         super().__init__(config)
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
-        for key in config:
-            assert len(key) <= 16, "Keys must be short enough to display"
 
         self.lcd = LCD(pi=self.pi)
         self.backlight = Backlight(pi=self.pi)
@@ -37,7 +35,7 @@ class RotaryLCD(Rotary):
         ID_string = f"#{ID}"
         current_name = self.value().lcd
         string = f"{current_name:<16} {ID_string:>3}"
-        assert len(string) == 20
+        assert len(string) == 20, f'Too long: "{string}" > 20 chars'
         self.lcd.upper(string)
 
     def lower_display(self):
