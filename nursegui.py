@@ -396,6 +396,7 @@ class NSFLogoWidget(QtWidgets.QWidget):
         layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
+
 class DateTimeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -412,6 +413,7 @@ class DateTimeWidget(QtWidgets.QWidget):
         layout.addStretch()
         layout.setSpacing(0)
         self.setLayout(layout)
+
 
 class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -476,10 +478,10 @@ class HeaderWidget(QtWidgets.QWidget):
         princeton_logo = PrincetonLogoWidget()
         graph_info = GraphLabelWidget()
         nsf_logo = NSFLogoWidget()
-        #dt_info = DateTimeWidget()
+        # dt_info = DateTimeWidget()
         layout.addWidget(princeton_logo, 6)
         layout.addWidget(graph_info, 6)
-        #layout.addWidget(dt_info, 6) # Would need to be updated periodically
+        # layout.addWidget(dt_info, 6) # Would need to be updated periodically
         layout.addWidget(nsf_logo, 2)
 
         self.setLayout(layout)
