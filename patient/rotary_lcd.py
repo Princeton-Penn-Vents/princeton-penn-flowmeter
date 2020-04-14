@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from patient.rotary import Rotary, DICT
+from patient.rotary import Rotary, DICT, Mode
 from patient.lcd import LCD
 from patient.backlight import Backlight
 
@@ -21,7 +21,7 @@ class RotaryLCD(Rotary):
 
     def pushed_display(self):
         self.lcd.clear()
-        if self.mode == self.Mode.ALARM:
+        if self.mode == Mode.ALARM:
             self.backlight.red()
         elif self.alarms:
             self.backlight.orange()
