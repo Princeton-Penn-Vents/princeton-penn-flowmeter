@@ -428,7 +428,7 @@ def alarm_record(old_record, timestamp, value, ismax):
         return record
 
 
-def alarms(rotary, alarms, updated, new_breaths, cumulative):
+def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
     alarms = dict(alarms)
     alarms.pop("Stale Data", None)  # handled specially in generator.py
 
@@ -506,3 +506,13 @@ def alarms(rotary, alarms, updated, new_breaths, cumulative):
             )
 
     return alarms
+
+def remove_alarms(alarms, latest_time, timeout):
+    new_alarms = {}
+    for key, value in alarms.items():
+        if key == "Stale Data":
+            new_alarms[key] = value
+        else:
+            if latest_time - value["last timestamp"] <= timeout:
+                new_alarms[key] = value
+    return new_alarms
