@@ -16,6 +16,7 @@ import numpy as np
 import os
 import sys
 import math
+from datetime import datetime
 from pathlib import Path
 
 from processor.generator import Status
@@ -145,7 +146,8 @@ class PatientSensor(QtGui.QFrame):
         self.setStyleSheet(
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
-
+        self.last_status_change=int(1000 * datetime.now().timestamp())
+        
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -235,16 +237,26 @@ class PatientSensor(QtGui.QFrame):
         #    self.flow.status=Status.ALERT
         # else:
         #    self.flow.status=Status.OK
+        
         if self.flow.status != self.alert.status:
-            self.alert.status = self.flow.status
+            t_now = int(1000 * datetime.now().timestamp())
+            if t_now > self.last_status_change + 5000: # 5seconds
+                self.last_status_change = t_now
+                self.alert.status = self.flow.status
 
-            if self.alert.status == Status.ALERT:
-                self.graphview.setBackground(guicolors["ALERT"])
-            elif self.alert.status == Status.DISCON:
-                self.graphview.setBackground(guicolors["DISCON"])
-            else:
-                self.graphview.setBackground(QtGui.QColor(0, 0, 0))
+                if self.alert.status == Status.ALERT:
+                    self.graphview.setBackground(guicolors["ALERT"])
+                elif self.alert.status == Status.DISCON:
+                    self.graphview.setBackground(guicolors["DISCON"])
+                else:
+                    self.graphview.setBackground(QtGui.QColor(0, 0, 0))
 
+        current_alarms = self.flow.alarms
+        alarming_keys = {}
+        for key in current_alarms:
+            alarming_keys[key.split()[0]]=1
+        if len(alarming_keys)>0:
+            print(alarming_keys)
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]
