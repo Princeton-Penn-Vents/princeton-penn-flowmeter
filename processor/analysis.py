@@ -433,7 +433,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
     alarms.pop("Stale Data", None)  # handled specially in generator.py
 
     if "PIP" in cumulative:
-        assert rotary["RR Max"].unit == "sec"
         if "RR" in cumulative and cumulative["RR"] > rotary["RR Max"].value:
             alarms["RR Max"] = alarm_record(
                 alarms.get("RR Max"),
@@ -442,7 +441,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 True,
             )
 
-        assert rotary["PIP Max"].unit == "cm-H2O"
         if "PIP" in cumulative and cumulative["PIP"] > rotary["PIP Max"].value:
             alarms["PIP Max"] = alarm_record(
                 alarms.get("PIP Max"),
@@ -451,7 +449,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 True,
             )
 
-        assert rotary["PIP Min"].unit == "cm-H2O"
         if "PIP" in cumulative and cumulative["PIP"] < rotary["PIP Min"].value:
             alarms["PIP Min"] = alarm_record(
                 alarms.get("PIP Min"),
@@ -460,7 +457,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 False,
             )
 
-        assert rotary["PEEP Max"].unit == "cm-H2O"
         if "PEEP" in cumulative and cumulative["PEEP"] > rotary["PEEP Max"].value:
             alarms["PEEP Max"] = alarm_record(
                 alarms.get("PEEP Max"),
@@ -469,7 +465,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 True,
             )
 
-        assert rotary["PEEP Min"].unit == "cm-H2O"
         if "PEEP" in cumulative and cumulative["PEEP"] < rotary["PEEP Min"].value:
             alarms["PEEP Min"] = alarm_record(
                 alarms.get("PEEP Min"),
@@ -478,7 +473,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 False,
             )
 
-        assert rotary["TVe Max"].unit == "ml"
         if "TVe" in cumulative and cumulative["TVe"] > rotary["TVe Max"].value:
             alarms["TVe Max"] = alarm_record(
                 alarms.get("TVe Max"),
@@ -487,7 +481,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 True,
             )
 
-        assert rotary["TVe Min"].unit == "ml"
         if "TVe" in cumulative and cumulative["TVe"] < rotary["TVe Min"].value:
             alarms["TVe Min"] = alarm_record(
                 alarms.get("TVe Min"),
@@ -496,7 +489,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 False,
             )
 
-        assert rotary["TVi Max"].unit == "ml"
         if "TVi" in cumulative and cumulative["TVi"] > rotary["TVi Max"].value:
             alarms["TVi Max"] = alarm_record(
                 alarms.get("TVi Max"),
@@ -505,7 +497,6 @@ def add_alarms(rotary, alarms, updated, new_breaths, cumulative):
                 True,
             )
 
-        assert rotary["TVi Min"].unit == "ml"
         if "TVi" in cumulative and cumulative["TVi"] < rotary["TVi Min"].value:
             alarms["TVi Min"] = alarm_record(
                 alarms.get("TVi Min"),
