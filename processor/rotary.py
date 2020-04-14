@@ -48,9 +48,9 @@ class RotaryModeBase(abc.ABC):
 
 
 class RotaryCollection(RotaryModeBase):
-    def __init__(self, dictionary):
+    def __init__(self, dictionary: Dict[str, Setting]):
         self._dict = dictionary
-        self._current = 0
+        self._current: int = 0
         self._items: List[str] = list(self._dict.keys())
 
     def push(self):
@@ -69,10 +69,10 @@ class RotaryCollection(RotaryModeBase):
         return self._dict[self._items[self._current]]
 
     def items(self):
-        return self.config.items()
+        return self._dict.items()
 
     def __getitem__(self, val):
-        return self[val]
+        return self._dict[val]
 
 
 class LocalRotary:
