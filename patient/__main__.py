@@ -34,6 +34,10 @@ oversampleADC = 16
 ADCsamples = []
 NReadoutTemp = 50 * oversampleADC
 NReadout = 0
+nbytesPN = 18
+nbytesSF = 9
+nbytesTEMP = 6
+nbytesDP = 3
 # outputFileName = "patient.dat"
 # f = open(outputFileName, "w")
 # sys.stdout = f
@@ -48,7 +52,7 @@ NReadout = 0
 # Establish SPI device on Bus 0, Device 0
 spiMCP3008 = spidev.SpiDev()
 spiMCP3008.open(0, 0)
-spiMCP3008.max_speed_hz = 500000
+spiMCP3008.max_speed_hz = 1350000 # 500000
 chanMP3V5004 = 0
 
 
@@ -80,7 +84,7 @@ pi.i2c_write_device(hSDP3, [0x3F, 0xF9])
 print("handle {}".format(hSDP3))
 pi.i2c_write_device(hSDP3, [0x36, 0x7C])
 pi.i2c_write_device(hSDP3, [0xE1, 0x02])
-nbytes = 18
+nbytes = nbytesPN
 dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
 # print(dataSDP3)
 bdataSDP3 = dataSDP3[1]
@@ -105,7 +109,7 @@ pi.i2c_write_device(hSDP3, [0x36, 0x15])
 
 # get initial values of differential pressure, temperature and the differential pressure scale factor
 time.sleep(0.020)
-nbytes = 9
+nbytes = nbytesSF
 dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
 # print(dataSDP3)
 bdataSDP3 = dataSDP3[1]
@@ -132,7 +136,6 @@ else:
 
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
-    #  global dpsf
     global NReadout, ADCsamples
     NReadout += 1
     tmpADC = getADC(chanMP3V5004)
@@ -142,25 +145,48 @@ def sdp3_handler(signum, frame):
         ADCsamples = []
         ts = int(1000 * time.time())
         if (NReadout % NReadoutTemp) == 0:
-            nbytes = 9
+            nbytes = nbytesTEMP
         else:
-            nbytes = 3
+            nbytes = nbytesDP
         tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
         btmpdataSDP3 = tmpdataSDP3[1]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
         d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
-        if myfile:
-            ds = json.dumps(d)
-            print(ds, file=myfile)
-            socket.send_string(ds)
+        if len(btmpdataSDP3) == nbytesTEMP:
+            tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
+            print(ts, tmptemp / 200.0)
+        socket.send_json(d)
+
+# sdp3 interrupt file handler
+def sdp3_file_handler(signum, frame):
+    global NReadout, ADCsamples
+    NReadout += 1
+    tmpADC = getADC(chanMP3V5004)
+    ADCsamples.append(tmpADC)
+    if (NReadout % oversampleADC) == 0:
+        ADCavg = np.mean(ADCsamples)
+        ADCsamples = []
+        ts = int(1000 * time.time())
+        if (NReadout % NReadoutTemp) == 0:
+            nbytes = nbytesTEMP
         else:
-            socket.send_json(d)
-        if len(btmpdataSDP3) == 9:
+            nbytes = nbytesDP
+        tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+        btmpdataSDP3 = tmpdataSDP3[1]
+        tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
+        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
+        ds = json.dumps(d)
+        print(ds, file=myfile)
+        socket.send_string(ds)
+        if len(btmpdataSDP3) == nbytesTEMP:
             tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
             print(ts, tmptemp / 200.0)
 
 
-signal.signal(signal.SIGALRM, sdp3_handler)
+if myfile:
+    signal.signal(signal.SIGALRM, sdp3_file_handler)
+else:
+    signal.signal(signal.SIGALRM, sdp3_handler)
 signal.setitimer(
     signal.ITIMER_REAL, 1, 1.0 / (ReadoutHz * oversampleADC)
 )  # Readout in Hz
