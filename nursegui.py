@@ -175,10 +175,11 @@ class PatientSensor(QtGui.QFrame):
 
         layout.addWidget(self.alert)
 
-        status = Status.OK if i % 7 != 1 else Status.ALERT
-
         if port is not None:
-            self.flow = RemoteGenerator(ip=ip, port=port + i)
+            if i == 7:   # hack to make this one always disconnected
+              self.flow = RemoteGenerator(ip=ip, port=port +100 + i)
+            else:
+              self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             self.flow = LocalGenerator(status, logging=logging_directory)
 
