@@ -90,6 +90,7 @@ class Rotary(LocalRotary):
                 self.alert()
             else:
                 self.mode = Mode.EDIT
+                self.alert()
 
             self._alarms = item
 
