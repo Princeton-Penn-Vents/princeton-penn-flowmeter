@@ -152,14 +152,10 @@ class PatientSensor(QtGui.QFrame):
         self.setStyleSheet(
             "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
         )  # borders
-<<<<<<< HEAD
         self.last_status_change=int(1000 * datetime.now().timestamp())
         self.label = i
         
-=======
-        self.last_status_change = int(1000 * datetime.now().timestamp())
 
->>>>>>> a47ba95947c05106421ce30ff1974b82d9aac1ad
         layout = QtWidgets.QHBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -267,15 +263,7 @@ class PatientSensor(QtGui.QFrame):
         current_alarms = self.flow.alarms
         alarming_keys = {}
         for key in current_alarms:
-<<<<<<< HEAD
             alarming_keys[key.split()[0]]=1
-        #if len(alarming_keys)>0:
-        #    print(alarming_keys,self.label)
-=======
-            alarming_keys[key.split()[0]] = 1
-        if len(alarming_keys) > 0:
-            print(alarming_keys)
->>>>>>> a47ba95947c05106421ce30ff1974b82d9aac1ad
         for key in self.alert.widget_lookup:
             valindex = self.alert.widget_lookup[key]
             # val = self.flow.cumulative[key]
