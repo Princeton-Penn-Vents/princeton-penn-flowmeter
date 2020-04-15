@@ -4,18 +4,21 @@ from processor.rotary import Setting
 from patient.rotary import Rotary, DICT
 from patient.lcd import LCD, Align
 from patient.backlight import Backlight
+import pigpio
 from typing import Dict
 
 
 class RotaryLCD(Rotary):
     def __init__(self, config: Dict[str, Setting]):
-        super().__init__(config)
-
-        assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
+        pi = pigpio.pi()
 
         self.lcd = LCD(pi=self.pi)
         self.backlight = Backlight(pi=self.pi)
         self.backlight.white()
+
+        super().__init__(config, pi=pi)
+
+        assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
 
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!

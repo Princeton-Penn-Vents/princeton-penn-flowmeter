@@ -12,12 +12,12 @@ class Mode(enum.Enum):
 
 
 class Rotary(LocalRotary):
-    def __init__(self, config: dict, *, pi=None):
+    def __init__(self, config: dict, *, pi: pigpio.pi = None):
         super().__init__(RotaryCollection(config))
 
         pinA = 17  # terminal A
         pinB = 27  # terminal B
-        pinSW = 22  # switch
+        pinSW = 18  # switch
         glitchFilter = 300  # ms
 
         self.pi = pigpio.pi() if pi is None else pi
