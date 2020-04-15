@@ -18,6 +18,7 @@ import sys
 import math
 from datetime import datetime
 from pathlib import Path
+from string import Template
 
 from processor.generator import Status
 from processor.local_generator import LocalGenerator
@@ -161,13 +162,11 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(self.graphview)
 
         gis = GraphInfo()
+        self.graph = {}
         for j, key in enumerate(gis.graph_labels):
-            attr_name = "graph_" + key
-            setattr(
-                self, attr_name, graphlayout.addPlot(x=[], y=[], name=key.capitalize())
-            )
-            getattr(self, attr_name).setMouseEnabled(False, False)
-            getattr(self, attr_name).invertX()
+            self.graph[key] = graphlayout.addPlot(x=[], y=[], name=key.capitalize())
+            self.graph[key].setMouseEnabled(False, False)
+            self.graph[key].invertX()
             if j != len(gis.graph_labels):
                 graphlayout.nextRow()
 
@@ -207,9 +206,8 @@ class PatientSensor(QtGui.QFrame):
         gis = GraphInfo()
 
         self.curves = {}
-        first_graph = getattr(self, "graph_" + gis.graph_labels[0])
-        for i, key in enumerate(gis.graph_labels):
-            graph = getattr(self, "graph_" + key)
+        first_graph = self.graph[gis.graph_labels[0]]
+        for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graph.plot(
                 self.flow.time, getattr(self.flow, key), pen=pen
@@ -220,9 +218,10 @@ class PatientSensor(QtGui.QFrame):
             graph.getAxis("left").setTicks([dy, []])
             if i != len(gis.graph_labels) - 1:
                 graph.hideAxis("bottom")
-            if i != 0:
-                first_graph.setXLink(graph)
             graph.addLine(y=0)
+
+        self.graph[gis.graph_labels[0]].setXLink(self.graph[gis.graph_labels[1]])
+        self.graph[gis.graph_labels[1]].setXLink(self.graph[gis.graph_labels[2]])
 
     @Slot()
     def update_plot(self):
@@ -230,8 +229,8 @@ class PatientSensor(QtGui.QFrame):
         self.flow.analyze()
         gis = GraphInfo()
 
-        for i, key in enumerate(gis.graph_labels):
-            graph = getattr(self, "graph_" + key)
+        # Fill in the data
+        for key in gis.graph_labels:
             self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
         t_now = int(1000 * datetime.now().timestamp())
@@ -244,6 +243,7 @@ class PatientSensor(QtGui.QFrame):
         self.alert.status = self.flow.status
 
         alarming_quanities = {key.split()[0] for key in self.flow.alarms}
+
         for key in self.alert.values:
             self.alert.values.set_value(
                 key,
@@ -314,8 +314,6 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel.setPixmap(logo)
 
         text = QtWidgets.QLabel("     Princeton Open Vent Monitor")
-        text.setFont(QtGui.QFont("Times", 20, QtGui.QFont.Bold))
-        text.setStyleSheet("color: #F58025;")
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(logolabel, 0, Qt.AlignVCenter)
         layout.addWidget(text, 0, Qt.AlignVCenter)
@@ -374,8 +372,6 @@ class GraphLabelWidget(QtWidgets.QWidget):
             )
 
         text = QtWidgets.QLabel("Graph settings")
-        text.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
-        text.setStyleSheet("QLabel { color: ghostwhite }")
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(text, 1, Qt.AlignVCenter)
         self.buttons = {}
@@ -384,12 +380,7 @@ class GraphLabelWidget(QtWidgets.QWidget):
             name_btn = QtWidgets.QPushButton(
                 key.capitalize() + "(" + gis.units[key] + ")"
             )
-            name_btn.setFont(QtGui.QFont("Times", 18, QtGui.QFont.Bold))
-            name_btn.setStyleSheet(
-                "QPushButton { background-color: 'transparent'; color: rgba("
-                + values[key]
-                + "); }"
-            )
+            name_btn.setProperty("graph", key)
             self.buttons[key] = name_btn
             layout.addWidget(name_btn, 1, Qt.AlignVCenter)
             name_btn.clicked.connect(self.click_graph_info)
@@ -451,8 +442,11 @@ class MainWindow(QtWidgets.QMainWindow):
         pg.setConfigOption("background", (0, 0, 0, 0))
 
         # Replace with proper importlib.resources if made a package
+        gis = GraphInfo()
         with open(DIR / "nurse" / "style.css") as f:
-            self.setStyleSheet(f.read())
+            s = Template(f.read())
+            t = s.substitute(**gis.graph_pens)
+            self.setStyleSheet(t)
 
         centralwidget = MainStack(
             self, *args, ip=ip, port=port, refresh=refresh, displays=displays, **kwargs

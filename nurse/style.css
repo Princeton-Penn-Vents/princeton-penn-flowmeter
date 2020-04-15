@@ -106,3 +106,40 @@ NumbersWidget > NumberLabel {
   padding: 2px 0px 0px 0px;
 }
 
+GraphLabelWidget > QLabel, PrincetonLogoWidget > QLabel {
+  font-family: Times;
+  font-weight: bold;
+}
+
+PrincetonLogoWidget > QLabel {
+  color: #F58025;
+  font-size: 20px;
+}
+
+GraphLabelWidget > QLabel {
+  color: ghostwhite;
+  font-size: 18px;
+}
+
+GraphLabelWidget > QPushButton {
+  font-family: Times;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: transparent;
+}
+
+GraphLabelWidget > QPushButton:hover {
+  background-color: #202020;
+}
+
+GraphLabelWidget > QPushButton[graph="flow"] {
+  color: rgb${flow};
+}
+
+GraphLabelWidget > QPushButton[graph="pressure"]{
+  color: rgb${pressure};
+}
+
+GraphLabelWidget > QPushButton[graph="volume"]{
+  color: rgb${volume};
+}
