@@ -12,7 +12,7 @@ nominal_breather:
   - max_breath_interval: 9000.0
   - measurement_error_flow: 1.0
   - measurement_error_pressure: 0.1
-  
+
 nominal_nonbreather:
   - sample_length: 20.0
   - breath_interval: 5000.0
