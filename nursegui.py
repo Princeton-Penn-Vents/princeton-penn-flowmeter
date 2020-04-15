@@ -41,33 +41,18 @@ class GraphInfo:
     def __init__(self):
         # the y limits ought to be configurable.
         self.graph_labels = ["flow", "pressure", "volume"]
-        self.graph_pens = {}
-        self.graph_pens["flow"] = (120, 255, 50)
-        self.graph_pens["pressure"] = (255, 120, 50)
-        self.graph_pens["volume"] = (255, 128, 255)
 
-        self.graph_pen_qcol = {}
-        for key in self.graph_pens:
-            self.graph_pen_qcol[key] = QtGui.QColor(
-                self.graph_pens[key][0],
-                self.graph_pens[key][1],
-                self.graph_pens[key][2],
-            )
+        self.graph_pens = {
+            "flow": (120, 255, 50),
+            "pressure": (255, 120, 50),
+            "volume": (255, 128, 255),
+        }
 
-        self.yLims = {}
-        self.yLims["flow"] = (-40, 30)
-        self.yLims["pressure"] = (0, 20)
-        self.yLims["volume"] = (0, 800)
+        self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
 
-        self.yTicks = {}
-        self.yTicks["flow"] = [-30, 0, 30]
-        self.yTicks["pressure"] = [0, 15]
-        self.yTicks["volume"] = [0, 750]
-
-        self.units = {}
-        self.units["flow"] = "L/m"
-        self.units["pressure"] = "cm H2O"
-        self.units["volume"] = "mL"
+        self.yLims = {"flow": (-40, 30), "pressure": (0, 20), "volume": (0, 800)}
+        self.yTicks = {"flow": [-30, 0, 30], "pressure": [0, 15], "volume": [0, 750]}
+        self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL"}
 
 
 class AlertWidget(QtWidgets.QWidget):
