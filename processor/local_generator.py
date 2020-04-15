@@ -12,6 +12,9 @@ class LocalGenerator(Generator):
         self.status = Status.OK
         self._force_status = status
 
+        if status == Status.DISCON:
+            self.status = status
+
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
@@ -22,6 +25,8 @@ class LocalGenerator(Generator):
         self._logging = logging
 
     def get_data(self):
+        if self._force_status == Status.DISCON:
+            return
         t = int(datetime.now().timestamp() * 1000)
         root = self._sim.get_from_timestamp(t, 5000)
         time = root["data"]["timestamps"]
@@ -33,25 +38,31 @@ class LocalGenerator(Generator):
         self._flow.inject(flow[-to_add:])
         self._pressure.inject(pressure[-to_add:])
 
+    def analize(self):
+        if self._force_status == Status.DISCON:
+            return
+        else:
+            return super().analize()
+
     @property
     def flow(self):
-        if self.status == Status.DISCON:
+        if self._force_status == Status.DISCON:
             return []
         return np.asarray(self._flow) * (
-            0.6 if self._force_status == Status.ALERT else 1
+            0.4 if self._force_status == Status.ALERT else 1
         )
 
     @property
     def pressure(self):
-        if self.status == Status.DISCON:
+        if self._force_status == Status.DISCON:
             return []
         return np.asarray(self._pressure) * (
-            0.6 if self._force_status == Status.ALERT else 1
+            0.4 if self._force_status == Status.ALERT else 1
         )
 
     @property
     def timestamps(self):
-        if self.status != Status.DISCON and len(self._time) > 0:
+        if self._force_status != Status.DISCON and len(self._time) > 0:
             return np.asarray(self._time)
         else:
             return np.array([], dtype=np.double)

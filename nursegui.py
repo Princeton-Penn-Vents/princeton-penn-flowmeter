@@ -18,7 +18,6 @@ import sys
 import math
 from datetime import datetime
 from pathlib import Path
-from functools import partial
 
 from processor.generator import Status
 from processor.local_generator import LocalGenerator
@@ -29,9 +28,6 @@ DIR = Path(__file__).parent.absolute()
 guicolors = {
     "ALERT": QtGui.QColor(0, 0, 100),
     "DISCON": QtGui.QColor(0, 0, 200),
-    "patient_border": "rgb(160,200,255)",
-    "text_ok": "color: #4CB3EF;",
-    "text_alert": "color: red;",
 }
 
 
@@ -118,7 +114,6 @@ class AlertWidget(QtWidgets.QWidget):
         self.setProperty("status", value.name)
         self.name_btn.style().unpolish(self.name_btn)
         self.name_btn.style().polish(self.name_btn)
-        # the rest is in the style.css
 
     def __init__(self, i: int):
         super().__init__()
@@ -150,10 +145,6 @@ class PatientSensor(QtGui.QFrame):
 
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setObjectName("PatientInfo")
-        self.setStyleSheet(
-            "#PatientInfo { border: 1px solid " + guicolors["patient_border"] + " }"
-        )  # borders
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
         self.current_alarms = {}
@@ -164,9 +155,8 @@ class PatientSensor(QtGui.QFrame):
         self.setLayout(layout)
 
         self.graphview = GraphicsView(parent=self, i=i)
-        self.graphview.setObjectName("GraphView")
         graphlayout = pg.GraphicsLayout()
-        graphlayout.setContentsMargins(0, 0, 0, 0)
+        graphlayout.setContentsMargins(0, 5, 0, 0)
         self.graphview.setCentralWidget(graphlayout)
         layout.addWidget(self.graphview)
 
@@ -187,11 +177,13 @@ class PatientSensor(QtGui.QFrame):
 
         if port is not None:
             if i == 7:  # hack to make this one always disconnected
-                self.flow = RemoteGenerator(ip=ip, port=port + 100 + i)
+                self.flow = RemoteGenerator()
             else:
                 self.flow = RemoteGenerator(ip=ip, port=port + i)
         else:
             status = Status.OK if i % 7 != 1 else Status.ALERT
+            if i == 7:
+                status = Status.DISCON
             self.flow = LocalGenerator(status, logging=logging_directory)
 
         self.alert.status = self.flow.status
@@ -245,13 +237,10 @@ class PatientSensor(QtGui.QFrame):
         t_now = int(1000 * datetime.now().timestamp())
 
         # Change of status requires a background color change
-        if self.alert.status != self.flow.status:
-            if self.alert.status == Status.ALERT:
-                self.graphview.setBackground(guicolors["ALERT"])
-            elif self.alert.status == Status.DISCON:
-                self.graphview.setBackground(guicolors["DISCON"])
-            else:
-                self.graphview.setBackground(QtGui.QColor(0, 0, 0))
+        if self.property("alert_status") != self.flow.status:
+            self.setProperty("alert_status", self.flow.status.name)
+            self.style().unpolish(self)
+            self.style().polish(self)
         self.alert.status = self.flow.status
 
         alarming_quanities = {key.split()[0] for key in self.flow.alarms}

@@ -1,5 +1,14 @@
 * {
+  background-color: transparent;
+}
+
+QApplication {
   background-color:black;
+}
+
+QPushButton {
+  border: none;
+  color: white;
 }
 
 QLabel {
@@ -62,6 +71,19 @@ AlertWidget[status="DISCON"] > QPushButton {
   border-radius: 3px
 }
 
+PatientSensor {
+  background-color: black;
+  border: 0.5px solid #202020;
+}
+
+PatientSensor[alert_status="ALERT"] {
+  background-color: #000050;
+}
+
+PatientSensor[alert_status="DISCON"] {
+  background-color: #000050;
+}
+
 NumbersWidget > QLabel {
   font-size: 20px;
 }
@@ -82,9 +104,5 @@ NumbersWidget > QLabel[measure="ERR"] {
 NumbersWidget > NumberLabel {
   font-size: 24px;
   padding: 2px 0px 0px 0px;
-}
-
-PatientSensor {
-    border: 1px #97DE79;
 }
 
