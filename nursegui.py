@@ -275,13 +275,13 @@ class PatientSensor(QtGui.QFrame):
                     self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
                     f = self.alert.val_widgets[valindex].font()
                     f.setUnderline(False)
-                    lab.setFont(f)
+                    self.alert.val_widgets[valindex].setFont(f)
                     self.alert.info_widgets[valindex].setStyleSheet(
                         guicolors["text_ok"]
                     )
                     f = self.alert.val_widgets[valindex].font()
                     f.setUnderline(False)
-                    lab.setFont(f)
+                    self.alert.val_widgets[valindex].setFont(f)
                 alarms_to_delete.append(key)
         for key in alarms_to_delete:
             del self.current_alarms[key]
