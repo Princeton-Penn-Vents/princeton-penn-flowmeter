@@ -33,6 +33,11 @@ AlertWidget[status="OK"] > QPushButton {
   border-radius: 3px
 }
 
+AlertWidget[status="OK"] > QPushButton:hover {
+  background-color: #222222;
+}
+
+
 AlertWidget[status="ALERT"] > QPushButton {
   color: white;
   font: bold;
@@ -57,16 +62,26 @@ AlertWidget[status="DISCON"] > QPushButton {
   border-radius: 3px
 }
 
-AlertWidget[status="OK"] > QLabel {
-  background-color: transparent; /* #97DE79; (151,222,121) */
+NumbersWidget > QLabel {
+  font-size: 20px;
 }
 
-AlertWidget[status="ALERT"] > QLabel {
-  background-color: #ED4337; /* (237, 67, 55) */
+NumbersWidget > QLabel[measure="OK"] {
+  color: #4CB3EF;
 }
 
-AlertWidget[status="DISCON"] > QLabel {
-  background-color: #4CB3EF ;   /* (76,179,239) */
+NumbersWidget > QLabel[measure="NONE"] {
+  color: #707070;
+}
+
+NumbersWidget > QLabel[measure="ERR"] {
+  color: red;
+  text-decoration: underline;
+}
+
+NumbersWidget > NumberLabel {
+  font-size: 24px;
+  padding: 2px 0px 0px 0px;
 }
 
 PatientSensor {

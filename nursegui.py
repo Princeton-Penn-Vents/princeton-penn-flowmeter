@@ -18,6 +18,7 @@ import sys
 import math
 from datetime import datetime
 from pathlib import Path
+from functools import partial
 
 from processor.generator import Status
 from processor.local_generator import LocalGenerator
@@ -55,13 +56,65 @@ class GraphInfo:
         self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL"}
 
 
+class NumberLabel(QtWidgets.QLabel):
+    pass
+
+
+class NumbersWidget(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        layout = QtWidgets.QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.setLayout(layout)
+
+        self.val_widgets = {}
+
+        info_strings = [
+            "RR",  # (breaths/min)
+            "TVi",  # (mL)
+            "TVe",  # (mL)
+            "PIP",  # (cm H2O)
+            "PEEP",  # (cm H2O)
+        ]
+
+        for info in info_strings:
+            val_widget = NumberLabel("---")
+            val_widget.setMinimumWidth(56)
+            self.val_widgets[info] = val_widget
+            layout.addRow(info, self.val_widgets[info])
+            self.set_value(info, None)
+
+    def set_value(self, info_str: str, value: float = None, ok: bool = True) -> None:
+        val_widget = self.val_widgets[info_str]
+        info_widget = self.layout().labelForField(val_widget)
+
+        val_widget.setText("---" if value is None else f"{value:.0f}")
+
+        prev = val_widget.property("measure")
+        curr = "NONE" if value is None else ("OK" if ok else "ERR")
+
+        if prev is None or prev != curr:
+            val_widget.setProperty("measure", curr)
+            info_widget.setProperty("measure", curr)
+            val_widget.style().unpolish(val_widget)
+            val_widget.style().polish(val_widget)
+            info_widget.style().unpolish(info_widget)
+            info_widget.style().polish(info_widget)
+
+    def __iter__(self):
+        return iter(self.val_widgets)
+
+
 class AlertWidget(QtWidgets.QWidget):
     @property
-    def status(self):
+    def status(self) -> Status:
         return Status[self.property("status")]
 
     @status.setter
-    def status(self, value):
+    def status(self, value: Status):
         self.setProperty("status", value.name)
         self.name_btn.style().unpolish(self.name_btn)
         self.name_btn.style().polish(self.name_btn)
@@ -73,47 +126,10 @@ class AlertWidget(QtWidgets.QWidget):
         self.setLayout(column_layout)
 
         self.name_btn = QtWidgets.QPushButton(str(i + 1))
-        column_layout.addWidget(self.name_btn)  # , 2)
+        column_layout.addWidget(self.name_btn)
 
-        self.info_strings = [
-            "RR",  # (breaths/min)
-            "TVi",  # (mL)
-            "TVe",  # (mL)
-            "PIP",  # (cm H2O)
-            "PEEP",  # (cm H2O)
-        ]
-
-        lower = QtWidgets.QWidget()
-        lower_layout = QtWidgets.QGridLayout()
-        lower_layout.setContentsMargins(0, 0, 0, 0)
-        lower_layout.setColumnMinimumWidth(1, 20)  # big enough - maybe too big?
-        lower_layout.setVerticalSpacing(0)
-        lower_layout.setSpacing(0)
-
-        lower.setLayout(lower_layout)
-        # Values seen before cumulative average values available
-        self.info_vals = [0, 0, 0, 0, 0]
-
-        self.info_widgets = []
-        self.val_widgets = []
-        self.last_number_updates = []
-        self.widget_lookup = {}
-        for j in range(len(self.info_strings)):
-            self.info_widgets.append(QtWidgets.QLabel(self.info_strings[j]))
-            self.val_widgets.append(QtWidgets.QLabel(str(int(self.info_vals[j]))))
-            self.info_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            self.info_widgets[-1].setStyleSheet(guicolors["text_ok"])
-            self.val_widgets[-1].setContentsMargins(0, 0, 0, 0)
-            self.val_widgets[-1].setAlignment(
-                QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-            )
-            self.val_widgets[-1].setStyleSheet(guicolors["text_ok"])
-            self.widget_lookup[self.info_strings[j]] = j
-            lower_layout.addWidget(self.info_widgets[-1], j, 0)
-            lower_layout.addWidget(self.val_widgets[-1], j, 1)
-            self.last_number_updates.append(int(1000 * datetime.now().timestamp()))
-
-        column_layout.addWidget(lower)
+        self.values = NumbersWidget()
+        column_layout.addWidget(self.values)
 
 
 class GraphicsView(pg.GraphicsView):
@@ -152,7 +168,7 @@ class PatientSensor(QtGui.QFrame):
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 0, 0, 0)
         self.graphview.setCentralWidget(graphlayout)
-        layout.addWidget(self.graphview)  # , 7)
+        layout.addWidget(self.graphview)
 
         gis = GraphInfo()
         for j, key in enumerate(gis.graph_labels):
@@ -226,74 +242,25 @@ class PatientSensor(QtGui.QFrame):
             graph = getattr(self, "graph_" + key)
             self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
-        # look for status changes
-        # useful for standalone testing
-        # import random
-        # if random.random()<0.1:
-        #    self.flow.status=Status.ALERT
-        # else:
-        #    self.flow.status=Status.OK
-
         t_now = int(1000 * datetime.now().timestamp())
-        if self.flow.status != self.alert.status:
-            if t_now > self.last_status_change + 5000:  # 5seconds
-                self.last_status_change = t_now
-                self.alert.status = self.flow.status
 
-                if self.alert.status == Status.ALERT:
-                    self.graphview.setBackground(guicolors["ALERT"])
-                elif self.alert.status == Status.DISCON:
-                    self.graphview.setBackground(guicolors["DISCON"])
-                else:
-                    self.graphview.setBackground(QtGui.QColor(0, 0, 0))
-
-        for key in self.flow.alarms:
-            subkey = key.split()[0]
-            if subkey not in self.current_alarms:
-                self.current_alarms[subkey] = t_now
-                if subkey in self.alert.widget_lookup:
-                    valindex = self.alert.widget_lookup[subkey]
-                    self.alert.val_widgets[valindex].setStyleSheet(
-                        guicolors["text_alert"]
-                    )
-                    f = self.alert.val_widgets[valindex].font()
-                    f.setUnderline(True)
-                    self.alert.val_widgets[valindex].setFont(f)
-                    self.alert.info_widgets[valindex].setStyleSheet(
-                        guicolors["text_alert"]
-                    )
-                    f = self.alert.info_widgets[valindex].font()
-                    f.setUnderline(True)
-                    self.alert.info_widgets[valindex].setFont(f)
-            self.current_alarms[subkey] = t_now
-
-        alarms_to_delete = []
-        for key in self.current_alarms:
-            if self.current_alarms[key] + 5000 < t_now:
-                if key in self.alert.widget_lookup:
-                    valindex = self.alert.widget_lookup[key]
-                    self.alert.val_widgets[valindex].setStyleSheet(guicolors["text_ok"])
-                    f = self.alert.val_widgets[valindex].font()
-                    f.setUnderline(False)
-                    self.alert.val_widgets[valindex].setFont(f)
-                    self.alert.info_widgets[valindex].setStyleSheet(
-                        guicolors["text_ok"]
-                    )
-                    f = self.alert.val_widgets[valindex].font()
-                    f.setUnderline(False)
-                    self.alert.val_widgets[valindex].setFont(f)
-                alarms_to_delete.append(key)
-        for key in alarms_to_delete:
-            del self.current_alarms[key]
-
-        for key in self.alert.widget_lookup:
-            valindex = self.alert.widget_lookup[key]
-            # val = self.flow.cumulative[key]
-            val = self.flow.cumulative.get(key)
-            if val:
-                self.alert.val_widgets[valindex].setText(str(int(round(val))))
+        # Change of status requires a background color change
+        if self.alert.status != self.flow.status:
+            if self.alert.status == Status.ALERT:
+                self.graphview.setBackground(guicolors["ALERT"])
+            elif self.alert.status == Status.DISCON:
+                self.graphview.setBackground(guicolors["DISCON"])
             else:
-                self.alert.val_widgets[valindex].setText("---")
+                self.graphview.setBackground(QtGui.QColor(0, 0, 0))
+        self.alert.status = self.flow.status
+
+        alarming_quanities = {key.split()[0] for key in self.flow.alarms}
+        for key in self.alert.values:
+            self.alert.values.set_value(
+                key,
+                value=self.flow.cumulative.get(key),
+                ok=key not in alarming_quanities,
+            )
 
 
 class PatientGrid(QtWidgets.QWidget):
@@ -517,7 +484,13 @@ def _interrupt_handler(signum, frame):
 
 
 def main(argv, *, fullscreen, no_display, **kwargs):
+    if "Fusion" in QtWidgets.QStyleFactory.keys():
+        QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
+    else:
+        print("Fusion style is not available, display may be platform dependent")
+
     app = QtWidgets.QApplication(argv)
+
     main = MainWindow(**kwargs)
     if no_display:
         # if there's no display, KeyboardInterrupt is the only way to quit
