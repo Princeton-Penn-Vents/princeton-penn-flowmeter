@@ -9,16 +9,35 @@ from typing import Dict
 
 
 class RotaryLCD(Rotary):
-    def __init__(self, config: Dict[str, Setting]):
-        pi = pigpio.pi()
-
-        self.lcd = LCD(pi=self.pi)
-        self.backlight = Backlight(pi=self.pi)
-        self.backlight.white()
+    def __init__(self, config: Dict[str, Setting], pi: pigpio.pi = None):
 
         super().__init__(config, pi=pi)
+        self.lcd = LCD(pi=pi)
+        self.backlight = Backlight(pi=pi)
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
+
+    def __enter__(self) -> "RotaryLCD":
+        self.lcd.__enter__()
+        self.backlight.__enter__()
+        super().__enter__()
+
+        self.backlight.white()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.backlight.cyan()
+        self.lcd.clear()
+        self.lcd.upper("Princeton Open Vent")
+        self.lcd.lower("Patient loop closed")
+
+        super().__exit__(*exc)
+        self.backlight.__exit__(*exc)
+        self.lcd.__exit__(*exc)
+
+        if self.pi is not None:
+            self.pi.stop()
+            self.pi = None
 
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!
@@ -62,22 +81,12 @@ class RotaryLCD(Rotary):
         self.upper_display()
         self.lower_display()
 
-    def close(self) -> None:
-        self.backlight.cyan()
-        self.lcd.clear()
-        self.lcd.upper("Princeton Open Vent")
-        self.lcd.lower("Patient loop closed")
-        self.lcd.close()
-        super().close()
-
 
 if __name__ == "__main__":
     import time
 
-    rotary = RotaryLCD(DICT)
-    rotary.display()
+    with RotaryLCD(DICT) as rotary:
+        rotary.display()
 
-    while True:
-        time.sleep(1)
-
-    rotary.close()
+        while True:
+            time.sleep(1)

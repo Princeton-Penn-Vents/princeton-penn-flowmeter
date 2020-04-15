@@ -4,7 +4,11 @@ import pigpio
 from processor.rotary import LocalRotary, DICT, RotaryCollection
 from processor.setting import Setting
 import enum
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, Optional
+
+pinA = 17  # terminal A
+pinB = 27  # terminal B
+pinSW = 18  # switch
 
 
 class Mode(enum.Enum):
@@ -15,42 +19,10 @@ class Mode(enum.Enum):
 class Rotary(LocalRotary):
     def __init__(self, config: dict, *, pi: pigpio.pi = None):
         super().__init__(RotaryCollection(config))
-        self.config : RotaryCollection
-
-        pinA = 17  # terminal A
-        pinB = 27  # terminal B
-        pinSW = 18  # switch
-        glitchFilter = 300  # ms
-
-        self.pi = pigpio.pi() if pi is None else pi
+        self.config: RotaryCollection
         self.alarm_filter: Callable[[str], bool] = lambda x: True
 
-        self.pi.set_mode(pinA, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinA, glitchFilter)
-
-        self.pi.set_mode(pinB, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinB, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinB, glitchFilter)
-
-        self.pi.set_mode(pinSW, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinSW, glitchFilter)
-
-        def rotary_turned(ch: int, _level: int, _tick: int):
-            if ch == pinA:
-                levelB = self.pi.read(pinB)
-                if levelB:
-                    self.clockwise()
-                else:
-                    self.counterclockwise()
-
-        def rotary_switch(ch:int, _level:int, _tick: int):
-            if ch == pinSW:
-                self.push()
-
-        self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
-        self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
+        self.pi: Optional[pigpio.pi] = pi
 
     def turned_display(self, up: bool) -> None:
         "Override in subclass to customize"
@@ -98,15 +70,50 @@ class Rotary(LocalRotary):
     def key(self) -> str:
         return self.config.key()
 
-    def close(self) -> None:
-        super().close()
+    def __enter__(self):
+        glitchFilter = 300  # ms
 
-        self.pi.stop()
-        self.pi = None # type: ignore
+        # Get pigio connection
+        if self.pi is None:
+            self.pi = pigpio.pi()
 
-    def __del__(self) -> None:
-        if self.pi is not None:
-            self.close()
+        self.pi.set_mode(pinA, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinA, glitchFilter)
+
+        self.pi.set_mode(pinB, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinB, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinB, glitchFilter)
+
+        self.pi.set_mode(pinSW, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinSW, glitchFilter)
+
+        pi = self.pi
+
+        def rotary_turned(ch: int, _level: int, _tick: int):
+            if ch == pinA:
+                levelB = pi.read(pinB)
+                if levelB:
+                    self.clockwise()
+                else:
+                    self.counterclockwise()
+
+        def rotary_switch(ch: int, _level: int, _tick: int):
+            if ch == pinSW:
+                self.push()
+
+        self._rotary_turned = self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
+        self._rotary_switch = self.pi.callback(
+            pinSW, pigpio.FALLING_EDGE, rotary_switch
+        )
+
+        return self
+
+    def __exit__(self, *exc):
+        assert self.pi is not None, 'Must use "with" to use'
+        self._rotary_turned.cancel()
+        self._rotary_switch.cancel()
 
 
 if __name__ == "__main__":

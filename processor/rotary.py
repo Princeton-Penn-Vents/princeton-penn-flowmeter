@@ -94,9 +94,6 @@ class LocalRotary:
     def __getitem__(self, item: str):
         return self.config[item]
 
-    def close(self):
-        pass
-
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"
         for key, value in self.config.items():

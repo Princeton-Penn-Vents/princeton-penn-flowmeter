@@ -12,17 +12,21 @@ class Align(enum.Enum):
     LEFT = enum.auto()
 
 
+DEVICE_LCD = 0x3C  # Slave 0x78 << 1
+pinRST = 26  # Soft Reset pin GPIO26
+
+
 class LCD:
-    DEVICE_LCD = 0x3C  # Slave 0x78 << 1
-    pinRST = 26  # Soft Reset pin GPIO26
-
     def __init__(self, *, pi: pigpio.pi = None):
+        self.pi = pi
 
+    def __enter__(self) -> "LCD":
         # Get pigio connection
-        self.pi = pigpio.pi() if pi is None else pi
+        if self.pi is None:
+            self.pi = pigpio.pi()
 
         # Get I2C bus handle
-        self.hLCD = self.pi.i2c_open(6, self.DEVICE_LCD)
+        self.hLCD = self.pi.i2c_open(6, DEVICE_LCD)
         print(self.hLCD)
 
         # initialize
@@ -53,19 +57,25 @@ class LCD:
 
         self.ctrl(0x06)  # Entry mode increment
 
+        return self
+
     def reset(self) -> None:
-        self.pi.write(self.pinRST, 0)
+        assert self.pi is not None, 'Must use "with" to use'
+        self.pi.write(pinRST, 0)
         time.sleep(0.002)
-        self.pi.write(self.pinRST, 1)
+        self.pi.write(pinRST, 1)
 
     def ctrl(self, value: int) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
         self.pi.i2c_write_device(self.hLCD, [0x00, value])
 
     def text(self, text: str) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
         b = text.encode("ascii")
         self.pi.i2c_write_device(self.hLCD, [0x40] + [*b])
 
     def upper(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
         if pos == Align.LEFT:
             pos = 0
         elif pos == Align.CENTER:
@@ -77,6 +87,7 @@ class LCD:
         self.text(text)
 
     def lower(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
         if pos == Align.LEFT:
             pos = 0
         elif pos == Align.CENTER:
@@ -90,19 +101,12 @@ class LCD:
     def clear(self) -> None:
         self.ctrl(0x01)
 
-    def close(self) -> None:
-        if hasattr(self, "hLCD"):
-            self.pi.i2c_close(self.hLCD)
-        self.pi.stop()
-        self.pi = None  # type: ignore
-
-    def __del__(self) -> None:
-        if self.pi is not None:
-            self.close()
+    def __exit__(self, *exc) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
+        self.pi.i2c_close(self.hLCD)
 
 
 if __name__ == "__main__":
-    lcd = LCD()
-    lcd.upper("HELLO", Align.CENTER)
-    lcd.lower("WORLD", Align.CENTER)
-    lcd.close()
+    with LCD() as lcd:
+        lcd.upper("HELLO", Align.CENTER)
+        lcd.lower("WORLD", Align.CENTER)
