@@ -135,8 +135,8 @@ class Generator(abc.ABC):
                     self._cumulative, updated, new_breaths
                 )
 
-                alarms = processor.analysis.add_alarms(
-                    self.rotary, alarms, updated, new_breaths, self._cumulative
+                self._alarms = processor.analysis.add_alarms(
+                    self.rotary, updated, new_breaths, self._cumulative
                 )
 
         timestamp = time.time()
@@ -156,12 +156,7 @@ class Generator(abc.ABC):
             if last_update_timediff >= stale_threshold:
                 stale[field] = last_update_timediff
         if len(stale) > 0:
-            alarms["Stale Data"] = stale
-
-        if len(realtime) > 0:
-            self._alarms = processor.analysis.remove_alarms(alarms, realtime[-1], 5.0)
-        else:
-            self._alarms = alarms
+            self._alarms["Stale Data"] = stale
 
         if hasattr(self, "status"):
             if self.alarms and self.status == Status.OK:

@@ -89,12 +89,12 @@ The other strings are all the cumulative measurements fields that have ever been
 
 ## Alarms
 
-Alarms are like cumulative measurements in that they are a fixed number of fields that change in place, rather than a growing sequence like the breath records. Alarms are raised when a cumulative value exceeds a predefined threshold, and they are "sticky" in the sense that once an analysis creates an alarm, subsequent analyses do not remove it, even if the quantity returns to a suitable value. Other processes might remove alarms.
+Alarms are like cumulative measurements in that they are a fixed number of fields that change in place, rather than a growing sequence like the breath records. Alarms are raised when a cumulative value exceeds a predefined threshold, and are immediately removed once the quantity returns to a suitable value.
 
 An alarm is either undefined (no values out of bounds) or a record with the following fields:
 
-   * **first timestamp (sec):** the **realtime** when the parameter first went out of bounds.
-   * **last timestamp (sec):** the **realtime** when the parameter was last observed out of bounds.
+   * **first timestamp (sec):** the **realtime** when the quantity first went out of bounds.
+   * **last timestamp (sec):** the **realtime** when the quantity was last observed out of bounds. (In other words, "now", because alarms disappear as soon as the quantity is in bounds.)
    * **extreme:** the most extreme value observed. For alarms of upper bounds, the **extreme** is the maximum value, and for alarms of lower bounds, the **extreme** is the minimum value.
 
 Thresholds for all alarms are derived from the rotary dial.
@@ -110,7 +110,7 @@ The following alarms are defined:
    * **TVi Max:** upper bound on the cumulative **TVi** value.
    * **TVi Min:** lower bound on the cumulative **TVi** value.
 
-The **Stale Data** alarm is configured with the rotary dial, but is otherwise special. It is not sticky: if a cumulative measurement ceases to be stale, it is removed. Also, it does not have the standard record structure: it is a dict from cumulative measurement field name to the time since its last measurement. See cumulative timestamps (above).
+The **Stale Data** alarm is configured with the rotary dial, but is otherwise special. It does not have the standard record structure: it is a dict from cumulative measurement field name to the time since its last measurement. See cumulative timestamps (above).
 
 ## Status of analysis products in the workflow
 
