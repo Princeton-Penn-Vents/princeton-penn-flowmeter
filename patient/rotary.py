@@ -2,8 +2,9 @@
 
 import pigpio
 from processor.rotary import LocalRotary, DICT, RotaryCollection
+from processor.setting import Setting
 import enum
-from typing import Callable
+from typing import Callable, Dict, Any
 
 
 class Mode(enum.Enum):
@@ -14,6 +15,7 @@ class Mode(enum.Enum):
 class Rotary(LocalRotary):
     def __init__(self, config: dict, *, pi: pigpio.pi = None):
         super().__init__(RotaryCollection(config))
+        self.config : RotaryCollection
 
         pinA = 17  # terminal A
         pinB = 27  # terminal B
@@ -35,7 +37,7 @@ class Rotary(LocalRotary):
         self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
         self.pi.set_glitch_filter(pinSW, glitchFilter)
 
-        def rotary_turned(ch, _level, _tick):
+        def rotary_turned(ch: int, _level: int, _tick: int):
             if ch == pinA:
                 levelB = self.pi.read(pinB)
                 if levelB:
@@ -43,66 +45,66 @@ class Rotary(LocalRotary):
                 else:
                     self.counterclockwise()
 
-        def rotary_switch(ch, _level, _tick):
+        def rotary_switch(ch:int, _level:int, _tick: int):
             if ch == pinSW:
                 self.push()
 
         self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
         self.pi.callback(pinSW, pigpio.FALLING_EDGE, rotary_switch)
 
-    def turned_display(self, up: bool):
+    def turned_display(self, up: bool) -> None:
         "Override in subclass to customize"
         dir = "up" if up else "down"
         print(f"Changed {self.key()} {dir}")
         print(rotary)
 
-    def pushed_display(self):
+    def pushed_display(self) -> None:
         "Override in subclass to customize"
         print(f"Changed to {self.key()}")
         print(rotary)
 
-    def clockwise(self):
+    def clockwise(self) -> None:
         self.config.clockwise()
         self.turned_display(up=True)
 
-    def counterclockwise(self):
+    def counterclockwise(self) -> None:
         self.config.counterclockwise()
         self.turned_display(up=False)
 
-    def push(self):
+    def push(self) -> None:
         self.config.push()
         self.pushed_display()
 
     @property
-    def alarms(self):
+    def alarms(self) -> Dict[str, Any]:
         return {k: v for k, v in self._alarms.items() if self.alarm_filter(k)}
 
     @alarms.setter
-    def alarms(self, item):
+    def alarms(self, item: Dict[str, Any]) -> None:
         if item != self._alarms:
             self._alarms = item
             self.alert()
 
-    def alert(self):
+    def alert(self) -> None:
         self.alert_display()
 
-    def alert_display(self):
+    def alert_display(self) -> None:
         "Override in subclass to customize"
-        print(f"Toggling alert status to {self.mode.name}")
+        print(f"Displaying alert status")
 
-    def value(self):
+    def value(self) -> Setting:
         return self.config.value()
 
-    def key(self):
+    def key(self) -> str:
         return self.config.key()
 
-    def close(self):
+    def close(self) -> None:
         super().close()
 
         self.pi.stop()
-        self.pi = None
+        self.pi = None # type: ignore
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.pi is not None:
             self.close()
 
