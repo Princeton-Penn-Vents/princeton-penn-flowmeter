@@ -229,16 +229,16 @@ class PatientSensor(QtGui.QFrame):
 
         if port is not None:
             if i == 7:  # hack to make this one always disconnected
-                self.flow = RemoteGenerator()
+                self.gen = RemoteGenerator()
             else:
-                self.flow = RemoteGenerator(ip=ip, port=port + i)
+                self.gen = RemoteGenerator(ip=ip, port=port + i)
         else:
             status = Status.OK if i % 7 != 1 else Status.ALERT
             if i == 7:
                 status = Status.DISCON
-            self.flow = LocalGenerator(status, logging=logging_directory)
+            self.gen = LocalGenerator(status, logging=logging_directory)
 
-        self.status = self.flow.status
+        self.status = self.gen.status
         self.title_widget.name_btn.clicked.connect(self.click_number)
 
         self.values = NumbersWidget()
@@ -251,13 +251,13 @@ class PatientSensor(QtGui.QFrame):
             try:
                 port = int(number)
             except ValueError:
-                self.flow = LocalGenerator(Status.DISCON, logging=logging_directory)
+                self.gen = LocalGenerator(Status.DISCON, logging=logging_directory)
                 return
-            self.flow = RemoteGenerator(port=port)
+            self.gen = RemoteGenerator(port=port)
 
     def set_plot(self):
-        self.flow.get_data()
-        self.flow.analyze()
+        self.gen.get_data()
+        self.gen.analyze()
 
         gis = GraphInfo()
 
@@ -266,7 +266,7 @@ class PatientSensor(QtGui.QFrame):
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graph.plot(
-                self.flow.time, getattr(self.flow, key), pen=pen
+                self.gen.time, getattr(self.gen, key), pen=pen
             )
 
             graph.setRange(xRange=(30, 0), yRange=gis.yLims[key])
@@ -281,34 +281,34 @@ class PatientSensor(QtGui.QFrame):
 
     @Slot()
     def update_plot(self):
-        self.flow.get_data()
-        self.flow.analyze()
+        self.gen.get_data()
+        self.gen.analyze()
 
         if self.isVisible():
             gis = GraphInfo()
 
             # Fill in the data
             for key in gis.graph_labels:
-                self.curves[key].setData(self.flow.time, getattr(self.flow, key))
+                self.curves[key].setData(self.gen.time, getattr(self.gen, key))
 
             t_now = int(1000 * datetime.now().timestamp())
 
             # Change of status requires a background color change
-            if self.property("alert_status") != self.flow.status:
-                self.setProperty("alert_status", self.flow.status.name)
+            if self.property("alert_status") != self.gen.status:
+                self.setProperty("alert_status", self.gen.status.name)
                 self.style().unpolish(self)
                 self.style().polish(self)
 
-            alarming_quanities = {key.split()[0] for key in self.flow.alarms}
+            alarming_quanities = {key.split()[0] for key in self.gen.alarms}
 
             for key in self.values:
                 self.values.set_value(
                     key,
-                    value=self.flow.cumulative.get(key),
+                    value=self.gen.cumulative.get(key),
                     ok=key not in alarming_quanities,
                 )
 
-        self.status = self.flow.status
+        self.status = self.gen.status
 
 
 class PatientGrid(QtWidgets.QWidget):

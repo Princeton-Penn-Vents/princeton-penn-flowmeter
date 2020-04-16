@@ -38,7 +38,7 @@ nbytesPN = 18
 nbytesSF = 9
 nbytesTEMP = 6
 nbytesDP = 3
-hystTEMP = 1.0 # change temperature is difference is higher than hystTemp
+hystTEMP = 1.0  # change temperature is difference is higher than hystTemp
 minTEMP = 37.0
 operTEMP = 40.0
 maxTEMP = 43.0
@@ -85,7 +85,7 @@ DEVICE_SDP3 = 0x21  # grounded ADDR pin
 # Get pigio connection
 pi = pigpio.pi()
 if not pi.connected:
-  exit()
+    exit()
 # Get I2C bus handle
 hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
 # first issue stop command
@@ -130,7 +130,7 @@ dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
 temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
 dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
-curTEMP = temp/200.0
+curTEMP = temp / 200.0
 print(
     "{} {:.4f} {:.4f}".format(
         time.time() * 1000, (float)(dp / dpsf), (float)(temp / 200.0)
@@ -165,15 +165,17 @@ def sdp3_handler(signum, frame):
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
         d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
         if len(btmpdataSDP3) == nbytesTEMP:
-            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4])/200.0
+            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
             print(ts, tmptemp, dcTEMP)
             deltatemp = tmptemp - curTEMP
-            if ( (deltatemp < hystTEMP/10.0) and (curTEMP < minTEMP) ):
-                dcTEMP+=dcSTEP
-                dcTEMP=min(dcMAX,dcTEMP)
-            if ( ((curTEMP > operTEMP) and (deltatemp > hystTEMP/20.0)) or (curTEMP > maxTEMP) ):
-                dcTEMP-=dcSTEP
-                dcTEMP=max(0,dcTEMP)
+            if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
+                dcTEMP += dcSTEP
+                dcTEMP = min(dcMAX, dcTEMP)
+            if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
+                curTEMP > maxTEMP
+            ):
+                dcTEMP -= dcSTEP
+                dcTEMP = max(0, dcTEMP)
             pi.set_PWM_dutycycle(pinPWM, dcTEMP)
             curTEMP = tmptemp
         socket.send_json(d)
@@ -202,15 +204,17 @@ def sdp3_file_handler(signum, frame):
         print(ds, file=myfile)
         socket.send_string(ds)
         if len(btmpdataSDP3) == nbytesTEMP:
-            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4])/200.0
+            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
             print(ts, tmptemp, dcTEMP)
             deltatemp = tmptemp - curTEMP
-            if ( (deltatemp < hystTEMP/10.0) and (curTEMP < minTEMP) ):
-                dcTEMP+=dcSTEP
-                dcTEMP=min(dcMAX,dcTEMP)
-            if ( ((curTEMP > operTEMP) and (deltatemp > hystTEMP/20.0)) or (curTEMP > maxTEMP) ):
-                dcTEMP-=dcSTEP
-                dcTEMP=max(0,dcTEMP)
+            if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
+                dcTEMP += dcSTEP
+                dcTEMP = min(dcMAX, dcTEMP)
+            if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
+                curTEMP > maxTEMP
+            ):
+                dcTEMP -= dcSTEP
+                dcTEMP = max(0, dcTEMP)
             pi.set_PWM_dutycycle(pinPWM, dcTEMP)
             curTEMP = tmptemp
 
