@@ -27,16 +27,6 @@ QPushButton {
   color: white;
 }
 
-QLabel {
-    color: floralwhite; /* #4CB3EF; */
-    border: 0px;
-    padding-top: -5px;
-    padding-bottom: -5px;
-    padding-left: 0px;
-    padding-right: 0px;
-    margin: 0px;
-}
-
 PatientSensor > PatientTitleWidget > QPushButton {
   color: white;
   font: bold;
@@ -131,27 +121,20 @@ NumbersWidget > NumberLabel {
   padding: 2px 0px 0px 0px;
 }
 
-GraphLabelWidget > QLabel, PrincetonLogoWidget > QLabel {
+HeaderWidget QLabel, HeaderWidget QPushButton {
+  color: floralwhite;
   font-family: Times;
   font-weight: bold;
+  margin-top: 4px;
+  font-size: 18px;
+  background-color: transparent;
 }
 
 PrincetonLogoWidget > QLabel {
   color: #F58025;
-  font-size: 20px;
-}
-
-GraphLabelWidget > QLabel {
-  color: ghostwhite;
-  font-size: 18px;
 }
 
 GraphLabelWidget > QPushButton {
-  font-family: Times;
-  font-weight: bold;
-  font-size: 18px;
-  background-color: transparent;
-  height: 26px;
   border-radius: 3px;
 }
 
