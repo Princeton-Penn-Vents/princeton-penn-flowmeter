@@ -63,7 +63,7 @@ def getADC(channel):
     # Perform SPI (spiMCP3008.xfer2 keeps CS asserted)
     r = spiMCP3008.xfer2([1, (8 + channel) << 4, 0])
     # Reformat
-    adcOut = ((r[1] & 3) << 8) + r[2]
+    adcOut = ((r[1] & 0xF) << 8) + r[2]
     return adcOut
 
 
