@@ -472,8 +472,12 @@ def main(argv, *, fullscreen, **kwargs):
         main.showFullScreen()
     else:
         size = app.screens()[0].availableSize()
-        main.resize(min(1920, size.width()), min(1080, size.height()))
-        main.show()
+        if size.width() < 1920 or size.height() < 1080:
+            main.resize(int(size.width()*.95), int(size.height()*.85))
+            main.showMaximized()
+        else:
+            main.resize(1920, 1080)
+            main.showNormal()
 
     sys.exit(app.exec_())
 

@@ -85,7 +85,7 @@ PatientSensor[alert_status="DISCON"] {
 }
 
 NumbersWidget > QLabel {
-  font-size: 20px;
+  font-size: 16px;
 }
 
 NumbersWidget > QLabel[measure="OK"] {
@@ -102,7 +102,7 @@ NumbersWidget > QLabel[measure="ERR"] {
 }
 
 NumbersWidget > NumberLabel {
-  font-size: 24px;
+  font-size: 20px;
   padding: 2px 0px 0px 0px;
 }
 
