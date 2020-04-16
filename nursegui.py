@@ -33,8 +33,8 @@ logging_directory = None
 
 
 class MainStack(QtWidgets.QWidget):
-    def __init__(self, *args, ip, port, refresh, displays, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, ip, port, refresh, displays, logging, offset):
+        super().__init__()
 
         height = math.ceil(math.sqrt(displays))
         width = math.ceil(displays / height)
@@ -52,12 +52,13 @@ class MainStack(QtWidgets.QWidget):
         for i in range(width):
             grid_layout.setColumnStretch(i, 3)
 
-        self.graphs = [
-            PatientSensor(i, ip=ip, port=port, logging=logging_directory)
-            for i in range(displays)
-        ]
-        for i, graph in enumerate(self.graphs):
-            grid_layout.addWidget(self.graphs[i], *reversed(divmod(i, height)))
+        self.graphs = []
+
+        for i in range(displays):
+            graph = PatientSensor(i + offset, ip=ip, port=port, logging=logging)
+            self.graphs.append(graph)
+
+            grid_layout.addWidget(graph, *reversed(divmod(i, height)))
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
@@ -67,8 +68,8 @@ class MainStack(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, ip, port, refresh, displays, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, ip, port, refresh, displays, **kwargs):
+        super().__init__()
         self.setObjectName("MainWindow")
 
         # May be expensive, probably only enable if we multithread the draw
@@ -83,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStyleSheet(t)
 
         self.main_stack = MainStack(
-            self, *args, ip=ip, port=port, refresh=refresh, displays=displays, **kwargs
+            ip=ip, port=port, refresh=refresh, displays=displays, **kwargs
         )
         stacked_widget = QtWidgets.QStackedWidget()
         stacked_widget.addWidget(self.main_stack)
@@ -152,20 +153,13 @@ if __name__ == "__main__":
         help="# of displays, currently not dynamic",
     )
     parser.add_argument(
+        "--offset", type=int, default=0, help="Offset the numbers by this amount"
+    )
+    parser.add_argument(
         "--logging",
-        default="",
         help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)",
     )
 
-    arg, unparsed_args = parser.parse_known_args()
-    if arg.logging != "":
-        logging_directory = arg.logging
+    args, unparsed_args = parser.parse_known_args()
 
-    main(
-        argv=sys.argv[:1] + unparsed_args,
-        ip=arg.ip,
-        port=arg.port,
-        fullscreen=arg.fullscreen,
-        displays=arg.displays,
-        refresh=arg.refresh,
-    )
+    main(argv=sys.argv[:1] + unparsed_args, **(args.__dict__))
