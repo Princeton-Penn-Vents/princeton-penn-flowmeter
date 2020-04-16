@@ -2,6 +2,7 @@
   background-color: transparent;
   margin: 0px;
   padding: 0px;
+  color: white;
 }
 
 QApplication {
@@ -27,49 +28,64 @@ QLabel {
     margin: 0px;
 }
 
-AlertWidget > QLabel {
-  background-color: yellow;
-  font: bold;
-  font-size: 20px;
-  color: black;
-  border-radius: 3px;
-}
-
-
-AlertWidget > QPushButton {
+PatientSensor > PatientTitleWidget > QPushButton {
   color: white;
   font: bold;
   font-size: 20px;
   border: none;
   border-radius: 3px;
-  padding-top: -1px;
-  padding-bottom: -1px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-right: 3px;
 }
 
-AlertWidget[status="OK"] > QPushButton {
+PatientSensor > PatientTitleWidget > QLineEdit {
+  padding: 1px 3px;
+  margin-right: 5px;
+  font-weight: bold;
+  font-size: 14pt;
+}
+
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton {
   background-color: 'transparent';
 }
 
-AlertWidget[status="OK"] > QPushButton:hover {
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton:hover {
   background-color: #303030;
 }
 
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QLineEdit {
+  background-color: #32373C;
+}
 
-AlertWidget[status="ALERT"] > QPushButton {
+
+PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton {
   background-color: #ED4337;
 }
 
-AlertWidget[status="ALERT"] > QPushButton:hover {
+PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton:hover {
   background-color: #AD2337;
 }
 
-AlertWidget[status="DISCON"] > QPushButton {
+PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QLineEdit {
+  background-color: #602020;
+}
+
+
+PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton {
   background-color: #4CB3EF;
 }
 
-AlertWidget[status="DISCON"] > QPushButton:hover {
+PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton:hover {
   background-color: #2C93AF;
 }
+
+PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QLineEdit {
+  background-color: #204080;
+}
+
 
 PatientSensor {
   background-color: black;

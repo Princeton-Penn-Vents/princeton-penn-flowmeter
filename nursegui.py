@@ -31,9 +31,56 @@ guicolors = {
     "DISCON": QtGui.QColor(0, 0, 200),
 }
 
+prefill = [
+    'Room 342, Joe Black, AGE 23',
+    'Room 123, Jane Green, AGE 67',
+    'Room 324, Jerry Mouse, AGE 82',
+    'Room 243, Tom Cat, AGE 79',
+    'Room 432, Mary Jones, AGE 18',
+    'Room 654, June Adam, AGE 56',
+    'Room 102, A. Smith, AGE 94',
+    'Room 124, UNKNOWN, AGE 60',
+    'Room 125, Gandalf the Grey, AGE 65',
+    'Room 164, Luke Skywalker, AGE 43',
+    'Room 167, Indiana Jones, AGE 82',
+    'Room 169, Wonder Woman, AGE 34',
+    'Room 180, Rose Flower, AGE 39',
+    'Room 181, Thor, AGE 700',
+    'Room 182, Beaver Cleaver, AGE 62',
+    'Room 183, Ebeneezer Scrooge, AGE 99',
+    'Room 184, Ru N. Ning, AGE 43',
+    'Room 185, O. U. Tof, AGE 50',
+    'Room 186, Good Names, AGE 77',
+    'Room 187, Good Bye, AGE 59',
+]
 
 logging_directory = None
 
+
+# Layout factory functions
+def HBoxLayout():
+    layout = QtWidgets.QHBoxLayout()
+    layout.setSpacing(0)
+    layout.setContentsMargins(0, 0, 0, 0)
+    return layout
+
+def VBoxLayout():
+    layout = QtWidgets.QVBoxLayout()
+    layout.setSpacing(0)
+    layout.setContentsMargins(0, 0, 0, 0)
+    return layout
+
+def FormLayout():
+    layout = QtWidgets.QFormLayout()
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+    return layout
+
+def GridLayout():
+    layout = QtWidgets.QGridLayout()
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+    return layout
 
 class GraphInfo:
     def __init__(self):
@@ -61,10 +108,7 @@ class NumbersWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QtWidgets.QFormLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
+        layout = FormLayout()
         self.setLayout(layout)
 
         self.val_widgets = {}
@@ -105,27 +149,26 @@ class NumbersWidget(QtWidgets.QWidget):
         return iter(self.val_widgets)
 
 
-class AlertWidget(QtWidgets.QWidget):
-    @property
-    def status(self) -> Status:
-        return Status[self.property("status")]
+class PatientTitleWidget(QtWidgets.QWidget):
+    def __init__(self, i: int):
+        super().__init__()
 
-    @status.setter
-    def status(self, value: Status):
-        self.setProperty("status", value.name)
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
+        self.name_btn = QtWidgets.QPushButton(f"{i + 1}:")
+        layout.addWidget(self.name_btn)
+
+        self.name_edit = QtWidgets.QLineEdit()
+        self.name_edit.setText(prefill[i])
+        layout.addWidget(self.name_edit)
+
+    def repolish(self):
         self.name_btn.style().unpolish(self.name_btn)
         self.name_btn.style().polish(self.name_btn)
 
-    def __init__(self, i: int):
-        super().__init__()
-        column_layout = QtWidgets.QVBoxLayout()
-        self.setLayout(column_layout)
-
-        self.name_btn = QtWidgets.QPushButton(str(i + 1))
-        column_layout.addWidget(self.name_btn)
-
-        self.values = NumbersWidget()
-        column_layout.addWidget(self.values)
+        self.name_edit.style().unpolish(self.name_edit)
+        self.name_edit.style().polish(self.name_edit)
 
 
 class GraphicsView(pg.GraphicsView):
@@ -139,10 +182,16 @@ class GraphicsView(pg.GraphicsView):
         super().mousePressEvent(event)
 
 
+
 class PatientSensor(QtGui.QFrame):
     @property
     def status(self):
-        return Status[self.property("status")]
+        return Status[self.property("alert_status")]
+
+    @status.setter
+    def status(self, value: Status):
+        self.setProperty("alert_status", value.name)
+        self.title_widget.repolish()
 
     def __init__(self, i, *args, ip, port, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,16 +199,20 @@ class PatientSensor(QtGui.QFrame):
         self.label = i
         self.current_alarms = {}
 
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = HBoxLayout()
         self.setLayout(layout)
+
+        layout_left = VBoxLayout()
+        layout.addLayout(layout_left)
+
+        self.title_widget = PatientTitleWidget(i)
+        layout_left.addWidget(self.title_widget)
 
         self.graphview = GraphicsView(parent=self, i=i)
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 5, 0, 0)
         self.graphview.setCentralWidget(graphlayout)
-        layout.addWidget(self.graphview)
+        layout_left.addWidget(self.graphview)
 
         gis = GraphInfo()
         self.graph = {}
@@ -169,10 +222,6 @@ class PatientSensor(QtGui.QFrame):
             self.graph[key].invertX()
             if j != len(gis.graph_labels):
                 graphlayout.nextRow()
-
-        self.alert = AlertWidget(i)
-
-        layout.addWidget(self.alert)
 
         if port is not None:
             if i == 7:  # hack to make this one always disconnected
@@ -185,8 +234,11 @@ class PatientSensor(QtGui.QFrame):
                 status = Status.DISCON
             self.flow = LocalGenerator(status, logging=logging_directory)
 
-        self.alert.status = self.flow.status
-        self.alert.name_btn.clicked.connect(self.click_number)
+        self.status = self.flow.status
+        self.title_widget.name_btn.clicked.connect(self.click_number)
+
+        self.values = NumbersWidget()
+        layout.addWidget(self.values)
 
     @Slot()
     def click_number(self):
@@ -240,12 +292,12 @@ class PatientSensor(QtGui.QFrame):
             self.setProperty("alert_status", self.flow.status.name)
             self.style().unpolish(self)
             self.style().polish(self)
-        self.alert.status = self.flow.status
+        self.status = self.flow.status
 
         alarming_quanities = {key.split()[0] for key in self.flow.alarms}
 
-        for key in self.alert.values:
-            self.alert.values.set_value(
+        for key in self.values:
+            self.values.set_value(
                 key,
                 value=self.flow.cumulative.get(key),
                 ok=key not in alarming_quanities,
@@ -256,15 +308,13 @@ class PatientGrid(QtWidgets.QWidget):
     def __init__(self, *args, width, **kwargs):
         super().__init__(*args, **kwargs)
 
-        layout = QtWidgets.QGridLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = GridLayout()
+        self.setLayout(layout)
 
         # Avoid wiggles when updating
         for i in range(width):
             layout.setColumnStretch(i, 3)
 
-        self.setLayout(layout)
 
 
 class MainStack(QtWidgets.QWidget):
@@ -274,17 +324,14 @@ class MainStack(QtWidgets.QWidget):
         height = math.ceil(math.sqrt(displays))
         width = math.ceil(displays / height)
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = VBoxLayout()
+        self.setLayout(layout)
 
         if displays > 3:  # avoid adding this to small screens
             headerwidget = HeaderWidget(self)
             layout.addWidget(headerwidget)
         patientwidget = PatientGrid(self, width=width)
         layout.addWidget(patientwidget)
-
-        self.setLayout(layout)
 
         self.graphs = [
             PatientSensor(i, ip=ip, port=port, parent=patientwidget)
@@ -309,9 +356,9 @@ class MainStack(QtWidgets.QWidget):
 class PrincetonLogoWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
         logo = QPixmap("images/PUsig2-158C-shield.png").scaledToWidth(18)
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
@@ -322,29 +369,27 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         layout.addWidget(text, 0, Qt.AlignVCenter)
         layout.addStretch()
         layout.setSpacing(0)
-        self.setLayout(layout)
 
 
 class NSFLogoWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
         logo = QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
         layout.addWidget(logolabel, 0, Qt.AlignVCenter)
         layout.setAlignment(Qt.AlignRight)
-        self.setLayout(layout)
 
 
 class DateTimeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
         now = datetime.now()
         nowstring = now.strftime("%d %b %Y %H:%M:%S")
         text = QtWidgets.QLabel(nowstring)
@@ -353,16 +398,14 @@ class DateTimeWidget(QtWidgets.QWidget):
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(text, 0, Qt.AlignVCenter)
         layout.addStretch()
-        layout.setSpacing(0)
-        self.setLayout(layout)
 
 
 class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+
+        layout = HBoxLayout()
+        self.setLayout(layout)
 
         gis = GraphInfo()
 
@@ -388,8 +431,6 @@ class GraphLabelWidget(QtWidgets.QWidget):
             layout.addWidget(name_btn, 1, Qt.AlignVCenter)
             name_btn.clicked.connect(self.click_graph_info)
 
-        self.setLayout(layout)
-
     @Slot()
     def click_graph_info(self):
         # ok - this needs to get generalized and extended
@@ -406,9 +447,8 @@ class GraphLabelWidget(QtWidgets.QWidget):
 class HeaderWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = HBoxLayout()
+        self.setLayout(layout)
 
         princeton_logo = PrincetonLogoWidget()
         graph_info = GraphLabelWidget()
@@ -419,7 +459,6 @@ class HeaderWidget(QtWidgets.QWidget):
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically
         layout.addWidget(nsf_logo, 2)
 
-        self.setLayout(layout)
 
     @Slot()
     def click_header(self):
