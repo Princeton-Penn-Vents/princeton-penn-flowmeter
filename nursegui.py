@@ -275,6 +275,9 @@ class MainStack(QtWidgets.QWidget):
         width = math.ceil(displays / height)
 
         layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+
         if displays > 3:  # avoid adding this to small screens
             headerwidget = HeaderWidget(self)
             layout.addWidget(headerwidget)
