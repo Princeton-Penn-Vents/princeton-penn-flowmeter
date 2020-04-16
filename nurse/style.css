@@ -6,6 +6,10 @@ QApplication {
   background-color:black;
 }
 
+QMainWindow  {
+  background-color: #32373C;
+}
+
 QPushButton {
   border: none;
   color: white;
