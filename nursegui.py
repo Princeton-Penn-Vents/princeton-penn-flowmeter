@@ -179,11 +179,12 @@ class GraphicsView(pg.GraphicsView):
     def __init__(self, *args, i, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_plot = i
+        self.i = i
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            print(f"Clicked {self.current_plot + 1}")
         super().mousePressEvent(event)
+        if event.button() == QtCore.Qt.LeftButton:
+            self.parent().parent().parent().parent().parent().drilldown_activate(self.i)
 
 
 class PatientSensor(QtGui.QFrame):
@@ -282,29 +283,32 @@ class PatientSensor(QtGui.QFrame):
     def update_plot(self):
         self.flow.get_data()
         self.flow.analyze()
-        gis = GraphInfo()
 
-        # Fill in the data
-        for key in gis.graph_labels:
-            self.curves[key].setData(self.flow.time, getattr(self.flow, key))
+        if self.isVisible():
+            gis = GraphInfo()
 
-        t_now = int(1000 * datetime.now().timestamp())
+            # Fill in the data
+            for key in gis.graph_labels:
+                self.curves[key].setData(self.flow.time, getattr(self.flow, key))
 
-        # Change of status requires a background color change
-        if self.property("alert_status") != self.flow.status:
-            self.setProperty("alert_status", self.flow.status.name)
-            self.style().unpolish(self)
-            self.style().polish(self)
+            t_now = int(1000 * datetime.now().timestamp())
+
+            # Change of status requires a background color change
+            if self.property("alert_status") != self.flow.status:
+                self.setProperty("alert_status", self.flow.status.name)
+                self.style().unpolish(self)
+                self.style().polish(self)
+
+            alarming_quanities = {key.split()[0] for key in self.flow.alarms}
+
+            for key in self.values:
+                self.values.set_value(
+                    key,
+                    value=self.flow.cumulative.get(key),
+                    ok=key not in alarming_quanities,
+                )
+
         self.status = self.flow.status
-
-        alarming_quanities = {key.split()[0] for key in self.flow.alarms}
-
-        for key in self.values:
-            self.values.set_value(
-                key,
-                value=self.flow.cumulative.get(key),
-                ok=key not in alarming_quanities,
-            )
 
 
 class PatientGrid(QtWidgets.QWidget):
@@ -349,10 +353,6 @@ class MainStack(QtWidgets.QWidget):
             graph.qTimer.setInterval(refresh)
             graph.qTimer.timeout.connect(graph.update_plot)
             graph.qTimer.start()
-
-    def closeEvent(self):
-        for graph in self.graphs:
-            graph.flow.close()
 
 
 class PrincetonLogoWidget(QtWidgets.QWidget):
@@ -462,16 +462,6 @@ class HeaderWidget(QtWidgets.QWidget):
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically
         layout.addWidget(nsf_logo, 2)
 
-    @Slot()
-    def click_header(self):
-        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
-        if ok:
-            try:
-                port = int(number)
-            except ValueError:
-                return
-            print("hi there", number)
-
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, ip, port, refresh, displays, **kwargs):
@@ -489,18 +479,31 @@ class MainWindow(QtWidgets.QMainWindow):
             t = s.substitute(**gis.graph_pens)
             self.setStyleSheet(t)
 
-        centralwidget = MainStack(
+        self.main_stack = MainStack(
             self, *args, ip=ip, port=port, refresh=refresh, displays=displays, **kwargs
         )
-        self.setCentralWidget(centralwidget)
+        stacked_widget = QtWidgets.QStackedWidget()
+        stacked_widget.addWidget(self.main_stack)
+
+        inner_screen = QtWidgets.QPushButton(f"Return to main screen")
+        inner_screen.clicked.connect(self.drilldown_deactivate)
+        stacked_widget.addWidget(inner_screen)
+
+        self.setCentralWidget(stacked_widget)
+
+    @Slot()
+    def drilldown_deactivate(self):
+        stacked_widget = self.centralWidget()
+        stacked_widget.setCurrentIndex(0)
+
+    def drilldown_activate(self, i):
+        stacked_widget = self.centralWidget()
+        stacked_widget.setCurrentIndex(1)
+        print(f"Activating {i}")
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
-
-    def closeEvent(self, event):
-        self.centralWidget().closeEvent()
-        super().closeEvent(event)
 
 
 def main(argv, *, fullscreen, **kwargs):
