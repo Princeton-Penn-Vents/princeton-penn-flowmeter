@@ -434,9 +434,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(*args, **kwargs)
         self.setObjectName("MainWindow")
 
-        if displays > 4:
-            self.resize(1920, 1080)
-
         # May be expensive, probably only enable if we multithread the draw
         # pg.setConfigOptions(antialias=True)
         pg.setConfigOption("background", (0, 0, 0, 0))
@@ -462,11 +459,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(event)
 
 
-def _interrupt_handler(signum, frame):
-    QtGui.QApplication.quit()
-
-
-def main(argv, *, fullscreen, no_display, **kwargs):
+def main(argv, *, fullscreen, **kwargs):
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     else:
@@ -475,14 +468,13 @@ def main(argv, *, fullscreen, no_display, **kwargs):
     app = QtWidgets.QApplication(argv)
 
     main = MainWindow(**kwargs)
-    if no_display:
-        # if there's no display, KeyboardInterrupt is the only way to quit
-        signal.signal(signal.SIGINT, _interrupt_handler)
+    if fullscreen:
+        main.showFullScreen()
     else:
-        if fullscreen:
-            main.showFullScreen()
-        else:
-            main.show()
+        size = app.screens()[0].availableSize()
+        main.resize(min(1920, size.width()), min(1080, size.height()))
+        main.show()
+
     sys.exit(app.exec_())
 
 
@@ -498,11 +490,6 @@ if __name__ == "__main__":
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
     parser.add_argument("--fullscreen", action="store_true")
-    parser.add_argument(
-        "--no-display",
-        action="store_true",
-        help="Prevents the main window from appearing; for debugging",
-    )
     parser.add_argument(
         "--displays",
         "-n",
@@ -525,7 +512,6 @@ if __name__ == "__main__":
         ip=arg.ip,
         port=arg.port,
         fullscreen=arg.fullscreen,
-        no_display=arg.no_display,
         displays=arg.displays,
         refresh=arg.refresh,
     )
