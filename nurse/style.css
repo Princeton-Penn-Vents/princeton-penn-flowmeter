@@ -13,6 +13,15 @@ QMainWindow  {
   background-color: #32373C;
 }
 
+HeaderWidget QLabel {
+  margin-left: 4px;
+}
+
+HeaderWidget QPushButton {
+  padding-left: 2px;
+  padding-left: 2px;
+}
+
 QPushButton {
   border: none;
   color: white;

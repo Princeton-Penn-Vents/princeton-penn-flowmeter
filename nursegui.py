@@ -32,26 +32,26 @@ guicolors = {
 }
 
 prefill = [
-    'Room 342, Joe Black, AGE 23',
-    'Room 123, Jane Green, AGE 67',
-    'Room 324, Jerry Mouse, AGE 82',
-    'Room 243, Tom Cat, AGE 79',
-    'Room 432, Mary Jones, AGE 18',
-    'Room 654, June Adam, AGE 56',
-    'Room 102, A. Smith, AGE 94',
-    'Room 124, UNKNOWN, AGE 60',
-    'Room 125, Gandalf the Grey, AGE 65',
-    'Room 164, Luke Skywalker, AGE 43',
-    'Room 167, Indiana Jones, AGE 82',
-    'Room 169, Wonder Woman, AGE 34',
-    'Room 180, Rose Flower, AGE 39',
-    'Room 181, Thor, AGE 700',
-    'Room 182, Beaver Cleaver, AGE 62',
-    'Room 183, Ebeneezer Scrooge, AGE 99',
-    'Room 184, Ru N. Ning, AGE 43',
-    'Room 185, O. U. Tof, AGE 50',
-    'Room 186, Good Names, AGE 77',
-    'Room 187, Good Bye, AGE 59',
+    "Room 342, Joe Black, AGE 23",
+    "Room 123, Jane Green, AGE 67",
+    "Room 324, Jerry Mouse, AGE 82",
+    "Room 243, Tom Cat, AGE 79",
+    "Room 432, Mary Jones, AGE 18",
+    "Room 654, June Adam, AGE 56",
+    "Room 102, A. Smith, AGE 94",
+    "Room 124, UNKNOWN, AGE 60",
+    "Room 125, Gandalf the Grey, AGE 65",
+    "Room 164, Luke Skywalker, AGE 43",
+    "Room 167, Indiana Jones, AGE 82",
+    "Room 169, Wonder Woman, AGE 34",
+    "Room 180, Rose Flower, AGE 39",
+    "Room 181, Thor, AGE 700",
+    "Room 182, Beaver Cleaver, AGE 62",
+    "Room 183, Ebeneezer Scrooge, AGE 99",
+    "Room 184, Ru N. Ning, AGE 43",
+    "Room 185, O. U. Tof, AGE 50",
+    "Room 186, Good Names, AGE 77",
+    "Room 187, Good Bye, AGE 59",
 ]
 
 logging_directory = None
@@ -64,11 +64,13 @@ def HBoxLayout():
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
 
+
 def VBoxLayout():
     layout = QtWidgets.QVBoxLayout()
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
+
 
 def FormLayout():
     layout = QtWidgets.QFormLayout()
@@ -76,11 +78,13 @@ def FormLayout():
     layout.setSpacing(0)
     return layout
 
+
 def GridLayout():
     layout = QtWidgets.QGridLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     return layout
+
 
 class GraphInfo:
     def __init__(self):
@@ -180,7 +184,6 @@ class GraphicsView(pg.GraphicsView):
         if event.button() == QtCore.Qt.LeftButton:
             print(f"Clicked {self.current_plot + 1}")
         super().mousePressEvent(event)
-
 
 
 class PatientSensor(QtGui.QFrame):
@@ -316,7 +319,6 @@ class PatientGrid(QtWidgets.QWidget):
             layout.setColumnStretch(i, 3)
 
 
-
 class MainStack(QtWidgets.QWidget):
     def __init__(self, *args, ip, port, refresh, displays, **kwargs):
         super().__init__(*args, **kwargs)
@@ -327,9 +329,9 @@ class MainStack(QtWidgets.QWidget):
         layout = VBoxLayout()
         self.setLayout(layout)
 
-        if displays > 3:  # avoid adding this to small screens
-            headerwidget = HeaderWidget(self)
-            layout.addWidget(headerwidget)
+        headerwidget = HeaderWidget(self)
+        layout.addWidget(headerwidget)
+
         patientwidget = PatientGrid(self, width=width)
         layout.addWidget(patientwidget)
 
@@ -363,7 +365,8 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
 
-        text = QtWidgets.QLabel("     Princeton Open Vent Monitor")
+        text = QtWidgets.QLabel("Princeton Open Vent Monitor")
+        text.setMinimumWidth(90)
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(logolabel, 0, Qt.AlignVCenter)
         layout.addWidget(text, 0, Qt.AlignVCenter)
@@ -459,7 +462,6 @@ class HeaderWidget(QtWidgets.QWidget):
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically
         layout.addWidget(nsf_logo, 2)
 
-
     @Slot()
     def click_header(self):
         number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
@@ -515,7 +517,7 @@ def main(argv, *, fullscreen, **kwargs):
     else:
         size = app.screens()[0].availableSize()
         if size.width() < 1920 or size.height() < 1080:
-            main.resize(int(size.width()*.95), int(size.height()*.85))
+            main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
             main.showMaximized()
         else:
             main.resize(1920, 1080)
