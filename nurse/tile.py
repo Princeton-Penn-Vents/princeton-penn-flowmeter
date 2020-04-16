@@ -37,8 +37,7 @@ class NumbersWidget(QtWidgets.QWidget):
 
         info_strings = [
             "RR",  # (breaths/min)
-            "TVi",  # (mL)
-            "TVe",  # (mL)
+            "TV",  # (mL)
             "PIP",  # (cm H2O)
             "PEEP",  # (cm H2O)
         ]
@@ -78,11 +77,11 @@ class PatientTitleWidget(QtWidgets.QWidget):
         layout = HBoxLayout()
         self.setLayout(layout)
 
-        self.name_btn = QtWidgets.QPushButton(f"{i + 1}:")
+        self.name_btn = QtWidgets.QPushButton(f"{i+1}:")
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(prefill[i])
+        self.name_edit.setText(prefill[i] if i < 20 else f"Patient {i+1}")
         layout.addWidget(self.name_edit)
 
     def repolish(self):
@@ -219,6 +218,8 @@ class PatientSensor(QtGui.QFrame):
                 self.style().polish(self)
 
             alarming_quanities = {key.split()[0] for key in self.gen.alarms}
+            if "TVi" or "TVe" in alarming_quanities:
+                alarming_quanities.add("TV")
 
             for key in self.values:
                 self.values.set_value(
