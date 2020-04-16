@@ -171,7 +171,6 @@ class PatientSensor(QtGui.QFrame):
         gis = GraphInfo()
 
         self.curves = {}
-        first_graph = self.graph[gis.graph_labels[0]]
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graph.plot(

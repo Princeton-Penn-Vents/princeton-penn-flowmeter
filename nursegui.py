@@ -24,6 +24,7 @@ from nurse.qt import (
 from nurse.common import style_path, GraphInfo
 from nurse.header import HeaderWidget
 from nurse.tile import PatientSensor
+from nurse.drilldown import DrillDownWidget
 
 from processor.generator import Status
 from processor.local_generator import LocalGenerator
@@ -101,18 +102,20 @@ class MainWindow(QtWidgets.QMainWindow):
         stacked_widget = QtWidgets.QStackedWidget()
         stacked_widget.addWidget(self.main_stack)
 
-        inner_screen = QtWidgets.QPushButton(f"Return to main screen")
-        inner_screen.clicked.connect(self.drilldown_deactivate)
-        stacked_widget.addWidget(inner_screen)
+        self.drilldown = DrillDownWidget(refresh=refresh)
+        self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
+        stacked_widget.addWidget(self.drilldown)
 
         self.setCentralWidget(stacked_widget)
 
     @Slot()
     def drilldown_deactivate(self):
+        self.drilldown.gen = None
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(0)
 
     def drilldown_activate(self, i):
+        self.drilldown.gen = self.main_stack.graphs[i].gen
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(1)
         print(f"Activating {i}")
