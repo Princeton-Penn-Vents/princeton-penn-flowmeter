@@ -102,7 +102,7 @@ class GraphicsView(pg.GraphicsView):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
-            self.parent().parent().parent().parent().parent().drilldown_activate(self.i)
+            self.parent().parent().parent().parent().drilldown_activate(self.i)
 
 
 class PatientSensor(QtGui.QFrame):

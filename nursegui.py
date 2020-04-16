@@ -32,18 +32,6 @@ from processor.remote_generator import RemoteGenerator
 logging_directory = None
 
 
-class PatientGrid(QtWidgets.QWidget):
-    def __init__(self, *args, width, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        layout = GridLayout()
-        self.setLayout(layout)
-
-        # Avoid wiggles when updating
-        for i in range(width):
-            layout.setColumnStretch(i, 3)
-
-
 class MainStack(QtWidgets.QWidget):
     def __init__(self, *args, ip, port, refresh, displays, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,19 +45,19 @@ class MainStack(QtWidgets.QWidget):
         headerwidget = HeaderWidget(self)
         layout.addWidget(headerwidget)
 
-        patientwidget = PatientGrid(self, width=width)
-        layout.addWidget(patientwidget)
+        grid_layout = GridLayout()
+        layout.addLayout(grid_layout)
+
+        # Avoid wiggles when updating
+        for i in range(width):
+            grid_layout.setColumnStretch(i, 3)
 
         self.graphs = [
-            PatientSensor(
-                i, ip=ip, port=port, parent=patientwidget, logging=logging_directory
-            )
+            PatientSensor(i, ip=ip, port=port, logging=logging_directory)
             for i in range(displays)
         ]
         for i, graph in enumerate(self.graphs):
-            patientwidget.layout().addWidget(
-                self.graphs[i], *reversed(divmod(i, height))
-            )
+            grid_layout.addWidget(self.graphs[i], *reversed(divmod(i, height)))
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
