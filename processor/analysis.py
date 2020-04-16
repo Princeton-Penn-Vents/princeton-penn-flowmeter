@@ -176,6 +176,9 @@ def measure_breaths(time, flow, volume, pressure):
                     diff = volume[full_index] - breath["empty volume"]
                     if diff > 0:
                         breath["inspiratory tidal volume"] = diff
+                exhale_time = t - breath_times[i - 2][1]
+                if abs(exhale_time) > 0:
+                    breath["exhale time"] = exhale_time
             if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
                 diff = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
                 if diff > 0:
@@ -217,6 +220,9 @@ def measure_breaths(time, flow, volume, pressure):
                     diff = breath["full volume"] - volume[empty_index]
                     if diff > 0:
                         breath["expiratory tidal volume"] = diff
+                inhale_time = t - breath_times[i - 2][1]
+                if abs(inhale_time) > 0:
+                    breath["inhale time"] = inhale_time
 
         elif which == 3:
             breath["exhale timestamp"] = t
@@ -407,6 +413,23 @@ def cumulative(cumulative, updated, new_breaths):
                     cumulative["TV"] * cumulative["RR"] / 1000.0
                 )
                 updated_fields.add("breath volume rate")
+            if "inhale time" in breath:
+                cumulative["inhale time"] = moving_average(
+                    cumulative,
+                    updated_fields,
+                    "inhale time",
+                    breath["inhale time"],
+                )
+            if "exhale time" in breath:
+                cumulative["exhale time"] = moving_average(
+                    cumulative,
+                    updated_fields,
+                    "exhale time",
+                    breath["exhale time"],
+                )
+            if "inhale time" in cumulative and "exhale time" in cumulative:
+                cumulative["I:E time ratio"] = (cumulative["inhale time"] /
+                                                cumulative["exhale time"])
 
     return cumulative, updated_fields
 
