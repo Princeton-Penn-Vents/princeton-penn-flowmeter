@@ -75,8 +75,8 @@ class MainStack(QtWidgets.QWidget):
             graph.set_plot()
 
             graph.qTimer = QtCore.QTimer()
-            graph.qTimer.setInterval(refresh)
             graph.qTimer.timeout.connect(graph.update_plot)
+            graph.qTimer.setSingleShot(True)
             graph.qTimer.start()
 
 

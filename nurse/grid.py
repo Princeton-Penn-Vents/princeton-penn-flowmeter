@@ -3,6 +3,7 @@ import pyqtgraph as pg
 import math
 from datetime import datetime
 from string import Template
+import time
 
 from nurse.qt import (
     QtCore,
@@ -189,6 +190,7 @@ class PatientSensor(QtGui.QFrame):
 
     @Slot()
     def update_plot(self):
+        tic = time.monotonic()
         self.gen.get_data()
         self.gen.analyze_as_needed()
 
@@ -216,4 +218,12 @@ class PatientSensor(QtGui.QFrame):
                     ok=key not in alarming_quanities,
                 )
 
+        toc = time.monotonic()
+        t = (toc - tic) * (len(self.parent().graphs) + 1)
+        guess_each = int(t * 1000 * 1.1) + 20
+
+        if not self.isVisible():
+            guess_each += 1000
+
         self.status = self.gen.status
+        self.qTimer.start(max(guess_each, 50))
