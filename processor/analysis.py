@@ -176,13 +176,6 @@ def measure_breaths(time, flow, volume, pressure):
                     diff = volume[full_index] - breath["empty volume"]
                     if diff > 0:
                         breath["inspiratory tidal volume"] = diff
-                exhale_time = t - breath_times[i - 2][1]
-                if abs(exhale_time) > 0:
-                    breath["exhale time"] = exhale_time
-            if len(breaths) > 0 and "empty timestamp" in breaths[-1]:
-                diff = breath["empty timestamp"] - breaths[-1]["empty timestamp"]
-                if diff > 0:
-                    breath["time since last"] = diff
 
             breaths.append(breath)
             breath = {}
@@ -220,9 +213,6 @@ def measure_breaths(time, flow, volume, pressure):
                     diff = breath["full volume"] - volume[empty_index]
                     if diff > 0:
                         breath["expiratory tidal volume"] = diff
-                inhale_time = t - breath_times[i - 2][1]
-                if abs(inhale_time) > 0:
-                    breath["inhale time"] = inhale_time
 
         elif which == 3:
             breath["exhale timestamp"] = t
@@ -245,7 +235,10 @@ def measure_breaths(time, flow, volume, pressure):
                 if start_index < index:
                     breath["max pressure"] = np.max(pressure[start_index:index])
 
-    if len(breath) != 0:
+    if ("empty timestamp" in breath or
+        "inhale timestamp" in breath or
+        "full timestamp" in breath or
+        "exhale timestamp" in breath):
         breaths.append(breath)
 
     return breaths
@@ -315,8 +308,76 @@ def combine_breaths(old_breaths, new_breaths):
             del new_breaths[j]
 
     breaths.extend(new_breaths)
+    breaths.sort(key=average_any_times)
+
+    # The dicts in breaths, updated, and new_breaths are the same objects,
+    # so updating the superset (breaths) affects them all.
+
+    # Adding time-difference quantities.
+    for i, breath in enumerate(breaths):
+        if ("empty timestamp" in breath and
+            "full timestamp" in breath and
+            breath["empty timestamp"] > breath["full timestamp"]):
+            breath["exhale time"] = (breath["empty timestamp"] -
+                                     breath["full timestamp"])
+        elif (i > 0 and
+              "empty timestamp" in breath and
+              "full timestamp" in breaths[i - 1] and
+              breath["empty timestamp"] > breaths[i - 1]["full timestamp"]):
+            breath["exhale time"] = (breath["empty timestamp"] -
+                                     breaths[i - 1]["full timestamp"])
+
+        if ("full timestamp" in breath and
+            "empty timestamp" in breath and
+            breath["full timestamp"] > breath["empty timestamp"]):
+            breath["inhale time"] = (breath["full timestamp"] -
+                                     breath["empty timestamp"])
+        elif (i > 0 and
+              "full timestamp" in breath and
+              "empty timestamp" in breaths[i - 1] and
+              breath["full timestamp"] > breaths[i - 1]["empty timestamp"]):
+            breath["inhale time"] = (breath["full timestamp"] -
+                                     breaths[i - 1]["empty timestamp"])
+
+        if (i > 0 and
+            "empty timestamp" in breath and
+            "empty timestamp" in breaths[i - 1] and
+            breath["empty timestamp"] > breaths[i - 1]["empty timestamp"]):
+            breath["time since last"] = (breath["empty timestamp"] -
+                                         breaths[i - 1]["empty timestamp"])
+        elif (i > 0 and
+            "full timestamp" in breath and
+            "full timestamp" in breaths[i - 1] and
+            breath["full timestamp"] > breaths[i - 1]["full timestamp"]):
+            breath["time since last"] = (breath["full timestamp"] -
+                                         breaths[i - 1]["full timestamp"])
+        elif (i > 0 and
+            "inhale timestamp" in breath and
+            "inhale timestamp" in breaths[i - 1] and
+            breath["inhale timestamp"] > breaths[i - 1]["inhale timestamp"]):
+            breath["time since last"] = (breath["inhale timestamp"] -
+                                         breaths[i - 1]["inhale timestamp"])
+        elif (i > 0 and
+            "exhale timestamp" in breath and
+            "exhale timestamp" in breaths[i - 1] and
+            breath["exhale timestamp"] > breaths[i - 1]["exhale timestamp"]):
+            breath["time since last"] = (breath["exhale timestamp"] -
+                                         breaths[i - 1]["exhale timestamp"])
 
     return breaths, updated, new_breaths
+
+
+def average_any_times(breath):
+    times = []
+    if "empty timestamp" in breath:
+        times.append(breath["empty timestamp"])
+    if "inhale timestamp" in breath:
+        times.append(breath["inhale timestamp"])
+    if "full timestamp" in breath:
+        times.append(breath["full timestamp"])
+    if "exhale timestamp" in breath:
+        times.append(breath["exhale timestamp"])
+    return sum(times) / len(times)   # every breath has at least one
 
 
 # default alpha is 0.3: value changes after about 3 breaths
@@ -430,6 +491,7 @@ def cumulative(cumulative, updated, new_breaths):
             if "inhale time" in cumulative and "exhale time" in cumulative:
                 cumulative["I:E time ratio"] = (cumulative["inhale time"] /
                                                 cumulative["exhale time"])
+                updated_fields.add("I:E time ratio")
 
     return cumulative, updated_fields
 
