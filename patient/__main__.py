@@ -38,6 +38,14 @@ nbytesPN = 18
 nbytesSF = 9
 nbytesTEMP = 6
 nbytesDP = 3
+hystTEMP = 1.0 # change temperature is difference is higher than hystTemp
+minTEMP = 37.0
+operTEMP = 40.0
+maxTEMP = 43.0
+dcTEMP = 0
+dcSTEP = 5
+dcMAX = 180
+pinPWM = 13
 # outputFileName = "patient.dat"
 # f = open(outputFileName, "w")
 # sys.stdout = f
@@ -76,6 +84,8 @@ def getADC(channel):
 DEVICE_SDP3 = 0x21  # grounded ADDR pin
 # Get pigio connection
 pi = pigpio.pi()
+if not pi.connected:
+  exit()
 # Get I2C bus handle
 hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
 # first issue stop command
@@ -120,6 +130,7 @@ dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
 temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
 dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
+curTEMP = temp/200.0
 print(
     "{} {:.4f} {:.4f}".format(
         time.time() * 1000, (float)(dp / dpsf), (float)(temp / 200.0)
@@ -137,6 +148,7 @@ else:
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
     global NReadout, ADCsamples
+    global curTEMP, hystTEMP, minTEMP, operTEMP, maxTEMP, dcTEMP, pinPWM, dcSTEP, dcMAX
     NReadout += 1
     tmpADC = getADC(chanMP3V5004)
     ADCsamples.append(tmpADC)
@@ -153,14 +165,24 @@ def sdp3_handler(signum, frame):
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
         d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
         if len(btmpdataSDP3) == nbytesTEMP:
-            tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
-            print(ts, tmptemp / 200.0)
+            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4])/200.0
+            print(ts, tmptemp, dcTEMP)
+            deltatemp = tmptemp - curTEMP
+            if ( (deltatemp < hystTEMP/10.0) and (curTEMP < minTEMP) ):
+                dcTEMP+=dcSTEP
+                dcTEMP=min(dcMAX,dcTEMP)
+            if ( ((curTEMP > operTEMP) and (deltatemp > hystTEMP/20.0)) or (curTEMP > maxTEMP) ):
+                dcTEMP-=dcSTEP
+                dcTEMP=max(0,dcTEMP)
+            pi.set_PWM_dutycycle(pinPWM, dcTEMP)
+            curTEMP = tmptemp
         socket.send_json(d)
 
 
 # sdp3 interrupt file handler
 def sdp3_file_handler(signum, frame):
     global NReadout, ADCsamples
+    global curTEMP, hystTEMP, minTEMP, operTEMP, maxTEMP, dcTEMP, pinPWM, dcSTEP, dcMAX
     NReadout += 1
     tmpADC = getADC(chanMP3V5004)
     ADCsamples.append(tmpADC)
@@ -180,8 +202,17 @@ def sdp3_file_handler(signum, frame):
         print(ds, file=myfile)
         socket.send_string(ds)
         if len(btmpdataSDP3) == nbytesTEMP:
-            tmptemp = (btmpdataSDP3[3] << 8) | btmpdataSDP3[4]
-            print(ts, tmptemp / 200.0)
+            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4])/200.0
+            print(ts, tmptemp, dcTEMP)
+            deltatemp = tmptemp - curTEMP
+            if ( (deltatemp < hystTEMP/10.0) and (curTEMP < minTEMP) ):
+                dcTEMP+=dcSTEP
+                dcTEMP=min(dcMAX,dcTEMP)
+            if ( ((curTEMP > operTEMP) and (deltatemp > hystTEMP/20.0)) or (curTEMP > maxTEMP) ):
+                dcTEMP-=dcSTEP
+                dcTEMP=max(0,dcTEMP)
+            pi.set_PWM_dutycycle(pinPWM, dcTEMP)
+            curTEMP = tmptemp
 
 
 if myfile:
@@ -202,6 +233,7 @@ forever = threading.Event()
 def signal_handler(signal, frame):
     print("You pressed Ctrl+C!")
     pi.i2c_close(hSDP3)
+    pi.set_PWM_dutycycle(pinPWM, 0)
     pi.stop()
     forever.set()
 
