@@ -78,22 +78,3 @@ class DrillDownWidget(QtWidgets.QWidget):
             # Fill in the data
             for key in gis.graph_labels:
                 self.curves[key].setData(self.gen.time, getattr(self.gen, key))
-
-            t_now = int(1000 * datetime.now().timestamp())
-
-            # Change of status requires a background color change
-            if self.property("alert_status") != self.gen.status:
-                self.setProperty("alert_status", self.gen.status.name)
-                self.style().unpolish(self)
-                self.style().polish(self)
-
-            alarming_quanities = {key.split()[0] for key in self.gen.alarms}
-            if "TVi" in alarming_quanities or "TVe" in alarming_quanities:
-                alarming_quanities.add("TV")
-
-            for key in self.values:
-                self.values.set_value(
-                    key,
-                    value=self.gen.cumulative.get(key),
-                    ok=key not in alarming_quanities,
-                )
