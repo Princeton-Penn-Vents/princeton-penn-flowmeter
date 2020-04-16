@@ -40,13 +40,14 @@ class NumbersWidget(QtWidgets.QWidget):
             "TV",  # (mL)
             "PIP",  # (cm H2O)
             "PEEP",  # (cm H2O)
+            "I:E time ratio",
         ]
 
         for info in info_strings:
             val_widget = NumberLabel("---")
             val_widget.setMinimumWidth(56)
             self.val_widgets[info] = val_widget
-            layout.addRow(info, self.val_widgets[info])
+            layout.addRow(info.split()[0], self.val_widgets[info])
             self.set_value(info, None)
 
     def set_value(self, info_str: str, value: float = None, ok: bool = True) -> None:
@@ -114,10 +115,11 @@ class PatientSensor(QtGui.QFrame):
         self.setProperty("alert_status", value.name)
         self.title_widget.repolish()
 
-    def __init__(self, i, *args, ip, port, logging=None, **kwargs):
+    def __init__(self, i, *args, gen, logging=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
+        self.gen = gen
         self.current_alarms = {}
         self.logging = logging
 
@@ -144,17 +146,6 @@ class PatientSensor(QtGui.QFrame):
             self.graph[key].invertX()
             if j != len(gis.graph_labels):
                 graphlayout.nextRow()
-
-        if port is not None:
-            if i == 7:  # hack to make this one always disconnected
-                self.gen = RemoteGenerator()
-            else:
-                self.gen = RemoteGenerator(ip=ip, port=port + i)
-        else:
-            status = Status.OK if i % 7 != 1 else Status.ALERT
-            if i == 7:
-                status = Status.DISCON
-            self.gen = LocalGenerator(status, logging=self.logging)
 
         self.status = self.gen.status
         self.title_widget.name_btn.clicked.connect(self.click_number)
@@ -218,7 +209,7 @@ class PatientSensor(QtGui.QFrame):
                 self.style().polish(self)
 
             alarming_quanities = {key.split()[0] for key in self.gen.alarms}
-            if "TVi" or "TVe" in alarming_quanities:
+            if "TVi" in alarming_quanities or "TVe" in alarming_quanities:
                 alarming_quanities.add("TV")
 
             for key in self.values:

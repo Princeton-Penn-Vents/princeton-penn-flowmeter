@@ -55,7 +55,19 @@ class MainStack(QtWidgets.QWidget):
         self.graphs = []
 
         for i in range(displays):
-            graph = PatientSensor(i + offset, ip=ip, port=port, logging=logging)
+            # A bit hacky for testing - will become a --debug flag later
+            if port is not None:
+                if i == 7:  # hack to make this one always disconnected
+                    gen = RemoteGenerator()
+                else:
+                    gen = RemoteGenerator(ip=ip, port=port + i)
+            else:
+                status = Status.OK if i % 7 != 1 else Status.ALERT
+                if i == 7:
+                    status = Status.DISCON
+                gen = LocalGenerator(status, logging=logging)
+
+            graph = PatientSensor(i + offset, gen=gen, logging=logging)
             self.graphs.append(graph)
 
             grid_layout.addWidget(graph, *reversed(divmod(i, height)))
