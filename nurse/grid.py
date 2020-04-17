@@ -191,17 +191,18 @@ class PatientSensor(QtGui.QFrame):
     @Slot()
     def update_plot(self):
         tic = time.monotonic()
-        self.gen.get_data()
-        self.gen.analyze_as_needed()
+        gis = GraphInfo()
 
-        if self.isVisible():
-            gis = GraphInfo()
+        with self.gen.lock:
+            self.gen.get_data()
+            self.gen.analyze_as_needed()
 
             # Fill in the data
             for key in gis.graph_labels:
-                self.curves[key].setData(self.gen.time, getattr(self.gen, key))
-
-            t_now = int(1000 * datetime.now().timestamp())
+                if self.isVisible():
+                    self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+                else:
+                    self.curves[key].setData([], [])
 
             # Change of status requires a background color change
             if self.property("alert_status") != self.gen.status:

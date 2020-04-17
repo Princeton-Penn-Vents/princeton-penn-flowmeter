@@ -3,6 +3,7 @@ import pyqtgraph as pg
 import math
 from datetime import datetime
 from string import Template
+import time
 
 from nurse.qt import (
     QtCore,
@@ -76,11 +77,6 @@ class DrilldownWidget(QtWidgets.QWidget):
         for i, gen in enumerate(self.graphs):
             grid_layout.addWidget(AlarmBox(i, gen=gen), *divmod(i, 2))
 
-        self.qTimer = QtCore.QTimer()
-        self.qTimer.setInterval(refresh)
-        self.qTimer.timeout.connect(self.patient.update_plot)
-        self.qTimer.start()
-
 
 class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, i, *, gen):
@@ -120,6 +116,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         left_layout.addWidget(QtWidgets.QLabel("Alarm settings"))
         right_layout.addWidget(QtWidgets.QLabel("Extra plot and settings"))
 
+        self.qTimer = QtCore.QTimer()
+        self.qTimer.setSingleShot(True)
+        self.qTimer.timeout.connect(self.update_plot)
+
     def set_plot(self):
 
         gis = GraphInfo()
@@ -137,7 +137,18 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def update_plot(self):
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
+            tic = time.monotonic()
 
-            # Fill in the data
-            for key in gis.graph_labels:
-                self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+            with self.gen.lock:
+                self.gen.get_data()
+                self.gen.analyze_as_needed()
+
+                # Fill in the data
+                for key in gis.graph_labels:
+                    self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+
+            toc = time.monotonic()
+            t = toc - tic
+            guess_each = int(t * 1000 * 1.1) + 30
+
+            self.qTimer.start(max(guess_each, 100))
