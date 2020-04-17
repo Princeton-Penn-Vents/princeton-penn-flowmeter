@@ -166,19 +166,16 @@ class PatientSensor(QtGui.QFrame):
             self.gen = RemoteGenerator(port=port)
 
     def set_plot(self):
-        self.gen.get_data()
-        self.gen.analyze()
 
         gis = GraphInfo()
 
         self.curves = {}
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
-            self.curves[key] = graph.plot(
-                self.gen.time, getattr(self.gen, key), pen=pen
-            )
 
-            graph.setRange(xRange=(30, 0), yRange=gis.yLims[key])
+            self.curves[key] = graph.plot([], [], pen=pen)
+
+            graph.setRange(xRange=(15, 0), yRange=gis.yLims[key])
             dy = [(value, str(value)) for value in gis.yTicks[key]]
             graph.getAxis("left").setTicks([dy, []])
             if i != len(gis.graph_labels) - 1:
@@ -200,7 +197,10 @@ class PatientSensor(QtGui.QFrame):
             # Fill in the data
             for key in gis.graph_labels:
                 if self.isVisible():
-                    self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+                    select = self.gen.time < 15
+                    self.curves[key].setData(
+                        self.gen.time[select], getattr(self.gen, key)[select]
+                    )
                 else:
                     self.curves[key].setData([], [])
 

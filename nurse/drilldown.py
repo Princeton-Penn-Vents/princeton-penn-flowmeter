@@ -108,6 +108,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         for j, key in enumerate(gis.graph_labels):
             self.graph[key] = graphlayout.addPlot(x=[], y=[], name=key.capitalize())
             self.graph[key].invertX()
+            self.graph[key].setRange(xRange=(30, 0))
             if j != len(gis.graph_labels):
                 graphlayout.nextRow()
 
