@@ -197,7 +197,7 @@ class PatientSensor(QtGui.QFrame):
             # Fill in the data
             for key in gis.graph_labels:
                 if self.isVisible():
-                    select = self.gen.time < 15
+                    select = self.gen.time < 15 if len(self.gen.time) else slice(None)
                     self.curves[key].setData(
                         self.gen.time[select], getattr(self.gen, key)[select]
                     )
