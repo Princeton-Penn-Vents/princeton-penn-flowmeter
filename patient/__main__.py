@@ -21,7 +21,7 @@ import zmq
 import atexit
 import threading
 import typing
-import numpy as np
+#import numpy as np
 
 # ------------------
 # output file setup
@@ -153,7 +153,9 @@ def sdp3_handler(signum, frame):
     tmpADC = getADC(chanMP3V5004)
     ADCsamples.append(tmpADC)
     if (NReadout % oversampleADC) == 0:
-        ADCavg = np.mean(ADCsamples)
+        ADCavg = 0
+        if len(ADCsamples):
+          ADCavg = sum(ADCsamples)/float(len(ADCsamples))
         ADCsamples = []
         ts = int(1000 * time.time())
         if (NReadout % NReadoutTemp) == 0:
@@ -187,7 +189,9 @@ def sdp3_file_handler(signum, frame):
     tmpADC = getADC(chanMP3V5004)
     ADCsamples.append(tmpADC)
     if (NReadout % oversampleADC) == 0:
-        ADCavg = np.mean(ADCsamples)
+        ADCavg = 0
+        if len(ADCsamples):
+          ADCavg = sum(ADCsamples)/float(len(ADCsamples))
         ADCsamples = []
         ts = int(1000 * time.time())
         if (NReadout % NReadoutTemp) == 0:
