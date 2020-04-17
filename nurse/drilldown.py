@@ -51,7 +51,7 @@ class DrilldownWidget(QtWidgets.QWidget):
     def graphs(self):
         return self.parent().main_stack.graphs
 
-    def __init__(self, *, parent, refresh):
+    def __init__(self, *, parent):
         super().__init__(parent=parent)
 
         layout = VBoxLayout()
