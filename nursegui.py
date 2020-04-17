@@ -23,7 +23,7 @@ from nurse.qt import (
 
 from nurse.common import style_path, GraphInfo
 from nurse.header import MainHeaderWidget
-from nurse.tile import PatientSensor
+from nurse.grid import PatientSensor
 from nurse.drilldown import DrilldownWidget
 
 from processor.generator import Status
