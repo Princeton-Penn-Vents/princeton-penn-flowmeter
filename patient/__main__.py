@@ -20,8 +20,7 @@ import json
 import zmq
 import atexit
 import threading
-import typing
-#import numpy as np
+from typing import Optional, TextIO
 
 # ------------------
 # output file setup
@@ -137,7 +136,7 @@ print(
     )
 )
 
-myfile: typing.Optional[typing.TextIO]
+myfile = None  # type: Optional[TextIO]
 
 if arg.file:
     myfile = open(arg.file, "a")
@@ -155,7 +154,7 @@ def sdp3_handler(signum, frame):
     if (NReadout % oversampleADC) == 0:
         ADCavg = 0
         if len(ADCsamples):
-          ADCavg = sum(ADCsamples)/float(len(ADCsamples))
+            ADCavg = sum(ADCsamples) / float(len(ADCsamples))
         ADCsamples = []
         ts = int(1000 * time.time())
         if (NReadout % NReadoutTemp) == 0:
@@ -193,7 +192,7 @@ def sdp3_file_handler(signum, frame):
     if (NReadout % oversampleADC) == 0:
         ADCavg = 0
         if len(ADCsamples):
-          ADCavg = sum(ADCsamples)/float(len(ADCsamples))
+            ADCavg = sum(ADCsamples) / float(len(ADCsamples))
         ADCsamples = []
         ts = int(1000 * time.time())
         if (NReadout % NReadoutTemp) == 0:

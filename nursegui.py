@@ -133,6 +133,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.windowState() & Qt.WindowFullScreen
             )
 
+    def closeEvent(self, evt):
+        for graph in self.main_stack.graphs:
+            graph.gen.close()
+        super().closeEvent(evt)
+
 
 def main(argv, *, fullscreen, **kwargs):
     if "Fusion" in QtWidgets.QStyleFactory.keys():

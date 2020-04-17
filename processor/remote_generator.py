@@ -20,12 +20,17 @@ class RemoteGenerator(Generator):
 
     def get_data(self):
         (
-            self.status,
+            status,
             self.last_update,
             self._time,
             self._flow,
             self._pressure,
         ) = self._thread.get_data()
+
+        if status == Status.DISCON:
+            self.status = Status.DISCON
+        elif self.status == Status.DISCON:
+            self.status = Status.OK
 
         if len(self._time) > 0:
             self._last_ts = self._time[-1]

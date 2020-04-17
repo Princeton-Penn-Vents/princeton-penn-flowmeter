@@ -195,7 +195,7 @@ class PatientSensor(QtGui.QFrame):
 
         with self.gen.lock:
             self.gen.get_data()
-            self.gen.analyze_as_needed()
+            ana = self.gen.analyze_as_needed()
 
             # Fill in the data
             for key in gis.graph_labels:
@@ -204,20 +204,23 @@ class PatientSensor(QtGui.QFrame):
                 else:
                     self.curves[key].setData([], [])
 
-            # Change of status requires a background color change
-            if self.property("alert_status") != self.gen.status:
-                self.setProperty("alert_status", self.gen.status.name)
-                self.style().unpolish(self)
-                self.style().polish(self)
+            if ana:
+                # Change of status requires a background color change
+                if self.property("alert_status") != self.gen.status:
+                    self.setProperty("alert_status", self.gen.status.name)
+                    self.style().unpolish(self)
+                    self.style().polish(self)
 
-            alarming_quanities = {key.split()[0] for key in self.gen.alarms}
+                self.status = self.gen.status
 
-            for key in self.values:
-                self.values.set_value(
-                    key,
-                    value=self.gen.cumulative.get(key),
-                    ok=key not in alarming_quanities,
-                )
+                alarming_quanities = {key.split()[0] for key in self.gen.alarms}
+
+                for key in self.values:
+                    self.values.set_value(
+                        key,
+                        value=self.gen.cumulative.get(key),
+                        ok=key not in alarming_quanities,
+                    )
 
         toc = time.monotonic()
         t = (toc - tic) * (len(self.parent().graphs) + 1)
@@ -226,5 +229,4 @@ class PatientSensor(QtGui.QFrame):
         if not self.isVisible():
             guess_each += 1000
 
-        self.status = self.gen.status
         self.qTimer.start(max(guess_each, 50))
