@@ -34,7 +34,7 @@ logging_directory = None
 
 
 class MainStack(QtWidgets.QWidget):
-    def __init__(self, *, ip, port, refresh, displays, logging, offset):
+    def __init__(self, *, ip, port, displays, logging, offset):
         super().__init__()
 
         height = math.ceil(math.sqrt(displays))
@@ -81,7 +81,7 @@ class MainStack(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *, ip, port, refresh, displays, **kwargs):
+    def __init__(self, *, ip, port, displays, **kwargs):
         super().__init__()
         self.setObjectName("MainWindow")
 
@@ -96,13 +96,11 @@ class MainWindow(QtWidgets.QMainWindow):
             t = s.substitute(**gis.graph_pens)
             self.setStyleSheet(t)
 
-        self.main_stack = MainStack(
-            ip=ip, port=port, refresh=refresh, displays=displays, **kwargs
-        )
+        self.main_stack = MainStack(ip=ip, port=port, displays=displays, **kwargs)
         stacked_widget = QtWidgets.QStackedWidget()
         stacked_widget.addWidget(self.main_stack)
 
-        self.drilldown = DrilldownWidget(refresh=refresh, parent=self)
+        self.drilldown = DrilldownWidget(parent=self)
         self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
         stacked_widget.addWidget(self.drilldown)
 
@@ -164,9 +162,6 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
-    parser.add_argument(
-        "--refresh", default=1000, type=int, help="Screen refresh timer, in ms"
-    )
     parser.add_argument(
         "--port", type=int, help="Select a starting port (8100 recommended)"
     )
