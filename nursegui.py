@@ -118,6 +118,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def drilldown_activate(self, i):
         self.drilldown.gen = self.main_stack.graphs[i].gen
+        self.drilldown.patient.qTimer.start()
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(1)
 

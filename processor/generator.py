@@ -1,6 +1,7 @@
 import abc
 import enum
 import os
+import threading
 import time
 import warnings
 
@@ -42,6 +43,7 @@ class Generator(abc.ABC):
         self._last_ana = time.monotonic()
         self.status: Status
         self._logging: Union[str, Path]
+        self.lock = threading.Lock()
 
     def analyze_as_needed(self) -> bool:
         if time.monotonic() - self._last_ana < self.analyze_every:

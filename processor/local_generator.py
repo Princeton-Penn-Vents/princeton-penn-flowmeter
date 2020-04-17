@@ -34,9 +34,10 @@ class LocalGenerator(Generator):
         pressure = root["data"]["pressures"]
 
         to_add = new_elements(self._time, time)
-        self._time.inject(time[-to_add:])
-        self._flow.inject(flow[-to_add:])
-        self._pressure.inject(pressure[-to_add:])
+        if to_add:
+            self._time.inject(time[-to_add:])
+            self._flow.inject(flow[-to_add:])
+            self._pressure.inject(pressure[-to_add:])
 
     def analize(self):
         if self._force_status == Status.DISCON:
