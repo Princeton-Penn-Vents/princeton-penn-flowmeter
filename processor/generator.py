@@ -60,12 +60,8 @@ class Generator(abc.ABC):
             },
         }
 
-    def analyze(self):
+    def analyze_timeseries(self):
         realtime = self.realtime
-        alarms = self._alarms
-
-        updated_fields = set()
-
         if len(realtime) > 0:
             if getattr(self, "_logging", None):
                 if os.path.exists(self._logging) and not os.path.isdir(self._logging):
@@ -120,6 +116,15 @@ class Generator(abc.ABC):
             self._volume_shift = -self._volume_unshifted_min
             self._volume = self._volume + self._volume_shift
 
+    def analyze(self):
+        self.analyze_timeseries()
+
+        realtime = self.realtime
+        alarms = self._alarms
+
+        updated_fields = set()
+
+        if len(realtime) > 0:
             breaths = processor.analysis.measure_breaths(
                 realtime, self.flow, self.volume, self.pressure
             )
