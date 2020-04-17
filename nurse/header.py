@@ -1,4 +1,4 @@
-from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
+from nurse.qt import QtWidgets, QtGui, QtCore, Qt, Slot, HBoxLayout
 from nurse.common import GraphInfo
 
 
@@ -110,6 +110,11 @@ class MainHeaderWidget(HeaderWidget):
 
         nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo, 2)
+
+        self.fs_exit = QtWidgets.QPushButton("X")
+        self.fs_exit.setObjectName("exit_btn")
+        self.fs_exit.setVisible(False)
+        layout.addWidget(self.fs_exit)
 
         # dt_info = DateTimeWidget()
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically

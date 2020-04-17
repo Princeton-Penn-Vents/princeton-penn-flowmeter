@@ -43,8 +43,8 @@ class MainStack(QtWidgets.QWidget):
         layout = VBoxLayout()
         self.setLayout(layout)
 
-        headerwidget = MainHeaderWidget(self)
-        layout.addWidget(headerwidget)
+        self.header = MainHeaderWidget(self)
+        layout.addWidget(self.header)
 
         grid_layout = GridLayout()
         layout.addLayout(grid_layout)
@@ -108,6 +108,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(stacked_widget)
 
+        self.main_stack.header.fs_exit.clicked.connect(self.close)
+
     @Slot()
     def drilldown_deactivate(self):
         self.drilldown.gen = None
@@ -122,7 +124,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
-            self.close()
+            stacked_widget = self.centralWidget()
+            if stacked_widget.currentIndex() != 0:
+                self.drilldown_deactivate()
+
+    def changeEvent(self, evt):
+        super().changeEvent(evt)
+        if evt.type() == QtCore.QEvent.WindowStateChange:
+            self.main_stack.header.fs_exit.setVisible(
+                self.windowState() & Qt.WindowFullScreen
+            )
 
 
 def main(argv, *, fullscreen, **kwargs):

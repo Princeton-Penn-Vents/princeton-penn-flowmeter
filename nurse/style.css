@@ -130,6 +130,15 @@ PrincetonLogoWidget > QLabel {
   color: #F58025;
 }
 
+HeaderWidget > QPushButton#exit_btn {
+  background-color: red;
+  min-width: 26px;
+  border-radius: 6px;
+  font-family: sans-serif;
+  margin-right: 4px;
+  margin-left: 8px;
+}
+
 GraphLabelWidget > QPushButton {
   border-radius: 3px;
 }
