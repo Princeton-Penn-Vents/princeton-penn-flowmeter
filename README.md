@@ -58,6 +58,69 @@ python3 -m pip install black pytest mypy   # Useful for development, skip for pr
 
 ## Patient box
 
+
+Basic install instructions for a new RPi4:  Once you have the RPi4 with an HDMI screen, USB keyboard and mouse, plug in the power cord.
+It will load an operating system install tool called NOOBs. You choose US keyboard from the pulldown
+and click to install Raspbian. This will take ~1 hour to complete and runs on its own.
+
+After it reboots, it will ask you to change root password.
+You should also go into interfaces and enable ssh, spi, i2c.
+You might reboot again.
+
+The tough part will be to connect this on the wireless. I think eduroam should work - click on the upper left WiFi icon and login.
+
+Then you need to do this once:
+
+Click on a terminal icon and execute these commands (copy `config.txt` to the disk from the email - could use a memory stick).
+
+```bash
+sudo cp config.txt /boot/config.txt
+sudo systemctl enable pigpiod
+sudo apt-get update
+sudo apt-get install python3-scipy
+sudo apt-get install python3-numpy
+python3 -m pip install pyyaml
+sudo apt-get install python3-pyqt5
+python3 -m pip install pyqtgraph
+git clone https://github.com/princeton-penn-vents/princeton-penn-flowmeter
+```
+Now, you have all the code. I would reboot the RPi4 (this will start pigpiod).
+
+To execute the readout, click on a terminal icon, then in the shell:
+
+```
+cd princeton-penn-flowmeter
+python3 ./patient/__main__.py —-file data.out
+```
+
+This will start printing temperature settings every second to the screen - will thermalize at 40C with the temperature servo,
+and it will be recording pressure (in ADC counts from 0 to 4095) and flow rate (in signed integer) and the time in milliseconds (with a precision of microseconds).
+
+You can `^C` at any time and look at the data. This will print it to the screen:
+
+
+```bash
+cat data.out
+```
+
+For `/boot/config.txt`:  These lines change:
+
+```
+dtparam=i2c_arm=on,baudrate=200000
+dtparam=spi=on
+```
+
+These lines are added:
+
+```
+dtoverlay=i2c1,pins_2_3
+dtoverlay=i2c6,pins_22_23
+```
+
+---
+
+<details><summary>Previous notes: (click to expand)</summary>
+
 #### pigpio requires:
 
 ```bash
@@ -84,6 +147,10 @@ import smbus
 lsmod | grep spi (check that spidev and spi_bcm2708 are running)
 spidev is there by default
 ```
+
+</details>
+
+---
 
 # Acknowledgements
 
