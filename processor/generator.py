@@ -2,9 +2,12 @@ import abc
 import enum
 import os
 import time
+import warnings
 
 import numpy as np
 from datetime import datetime
+from typing import Dict, Any, List, Optional, Union
+from pathlib import Path
 
 import processor.analysis
 import processor.rotary
@@ -24,23 +27,36 @@ COLOR = {
 
 
 class Generator(abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._volume = np.array([], dtype=np.double)
         self._old_realtime = None
-        self._volume_unshifted_min = None
+        self._volume_unshifted_min: Optional[Any] = None
         self._volume_shift = 0.0
-        self._breaths = []
-        self._cumulative = {}
-        self._cumulative_timestamps = {}
-        self._alarms = {}
+        self._breaths: List[Any] = []
+        self._cumulative: Dict[str, Any] = {}
+        self._cumulative_timestamps: Dict[str, Any] = {}
+        self._alarms: Dict[str, Any] = {}
         self.rotary = processor.rotary.LocalRotary(processor.rotary.DICT)
         self.last_update = None
+        self.analyze_every = 2  # seconds
+        self._last_ana = time.monotonic()
+        self.status: Status
+        self._logging: Union[str, Path]
+
+    def analyze_as_needed(self) -> bool:
+        if time.monotonic() - self._last_ana < self.analyze_every:
+            self.analyze_timeseries()
+            return False
+        else:
+            self.analyze()
+            self._last_ana = time.monotonic()
+            return True
 
     @abc.abstractmethod
     def get_data(self):
         pass
 
-    def prepare(self, *, from_timestamp=None):
+    def prepare(self, *, from_timestamp=None) -> Dict[str, Any]:
         if from_timestamp is None:
             window = slice(min(len(self.timestamps), 50 * 5), None)
         elif from_timestamp == 0:
@@ -60,7 +76,7 @@ class Generator(abc.ABC):
             },
         }
 
-    def analyze_timeseries(self):
+    def analyze_timeseries(self) -> None:
         realtime = self.realtime
         if len(realtime) > 0:
             if getattr(self, "_logging", None):
@@ -116,7 +132,7 @@ class Generator(abc.ABC):
             self._volume_shift = -self._volume_unshifted_min
             self._volume = self._volume + self._volume_shift
 
-    def analyze(self):
+    def analyze(self) -> None:
         self.analyze_timeseries()
 
         realtime = self.realtime

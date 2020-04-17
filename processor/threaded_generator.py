@@ -59,7 +59,7 @@ class GeneratorThread(threading.Thread):
                 self._flow.inject(flow[-to_add:])
                 self._pressure.inject(pressure[-to_add:])
 
-            time.sleep(1)
+            time.sleep(0.1)
 
     def get_data(self):
         with self._lock:

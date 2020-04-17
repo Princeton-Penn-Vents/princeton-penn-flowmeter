@@ -62,12 +62,12 @@ class Collector(Generator):
         self._analyzer_thread.start()
 
     def _analyzer(self):
+        self._last_ana = time.monotonic()
         while not self._thread.signal_end.is_set():
-            time.sleep(1.0)
-
+            time.sleep(0.1)
             self.get_data()
-            self.analyze()
-            self.rotary.alarms = self.alarms
+            if self.analyze_as_needed():
+                self.rotary.alarms = self.alarms
 
     def get_data(self):
         self._time, self._flow, self._pressure = self._thread.get_data()

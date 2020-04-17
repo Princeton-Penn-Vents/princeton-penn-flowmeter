@@ -190,7 +190,7 @@ class PatientSensor(QtGui.QFrame):
     @Slot()
     def update_plot(self):
         self.gen.get_data()
-        self.gen.analyze()
+        self.gen.analyze_as_needed()
 
         if self.isVisible():
             gis = GraphInfo()
