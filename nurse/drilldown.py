@@ -13,34 +13,99 @@ from nurse.qt import (
     HBoxLayout,
     VBoxLayout,
     FormLayout,
+    GridLayout,
 )
 
 from nurse.common import guicolors, prefill, GraphInfo
+from nurse.header import HeaderWidget, PrincetonLogoWidget
 
 from processor.generator import Status
 
 
-class DrillDownWidget(QtWidgets.QWidget):
-    def __init__(self, *, refresh):
+class DrilldownHeaderWidget(HeaderWidget):
+    def __init__(self):
         super().__init__()
-        self.gen = None
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
+        layout.addWidget(PrincetonLogoWidget())
+        layout.addStretch()
+        layout.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
+        layout.addStretch()
+        self.return_btn = QtWidgets.QPushButton("Return to main view")
+        self.return_btn.setObjectName("return_btn")
+        layout.addWidget(self.return_btn)
+
+
+class DrilldownWidget(QtWidgets.QWidget):
+    @property
+    def gen(self):
+        return self.patient.gen
+
+    @gen.setter
+    def gen(self, value):
+        self.patient.gen = value
+
+    @property
+    def graphs(self):
+        return self.parent().main_stack.graphs
+
+    def __init__(self, *, parent, refresh):
+        super().__init__(parent=parent)
 
         layout = VBoxLayout()
         self.setLayout(layout)
 
-        upper_bar = HBoxLayout()
-        layout.addLayout(upper_bar)
+        header = DrilldownHeaderWidget()
+        self.return_btn = header.return_btn
+        layout.addWidget(header)
 
-        upper_bar.addWidget(QtWidgets.QLabel("Princeton Open Vent Monitor"))
-        upper_bar.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
-        self.return_btn = QtWidgets.QPushButton("Return")
-        upper_bar.addWidget(self.return_btn)
+        columns_layout = HBoxLayout()
+        layout.addLayout(columns_layout)
+
+        self.patient = PatientDrilldownWidget()
+        columns_layout.addWidget(self.patient)
+
+        side_layout = VBoxLayout()
+        columns_layout.addLayout(side_layout)
+
+        grid_layout = GridLayout()
+        side_layout.addLayout(grid_layout)
+        side_layout.addStretch()
+
+        for i, gen in enumerate(self.graphs):
+            grid_layout.addWidget(AlarmBox(i, gen=gen), *divmod(i, 2))
+
+        self.qTimer = QtCore.QTimer()
+        self.qTimer.setInterval(refresh)
+        self.qTimer.timeout.connect(self.patient.update_plot)
+        self.qTimer.start()
+
+
+class AlarmBox(QtWidgets.QPushButton):
+    def __init__(self, i, *, gen):
+        super().__init__(str(i))
+
+
+class PatientDrilldownWidget(QtWidgets.QFrame):
+    def __init__(self):
+        super().__init__()
+        self.gen = None
+
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
+        left_layout = VBoxLayout()
+        layout.addLayout(left_layout)
+
+        right_layout = VBoxLayout()
+        layout.addLayout(right_layout)
 
         self.graphview = pg.GraphicsView(parent=self)
         graphlayout = pg.GraphicsLayout()
 
         self.graphview.setCentralWidget(graphlayout)
-        layout.addWidget(self.graphview)
+        left_layout.addWidget(self.graphview)
 
         gis = GraphInfo()
         self.graph = {}
@@ -52,10 +117,8 @@ class DrillDownWidget(QtWidgets.QWidget):
 
         self.set_plot()
 
-        self.qTimer = QtCore.QTimer()
-        self.qTimer.setInterval(refresh)
-        self.qTimer.timeout.connect(self.update_plot)
-        self.qTimer.start()
+        left_layout.addWidget(QtWidgets.QLabel("Alarm settings"))
+        right_layout.addWidget(QtWidgets.QLabel("Extra plot and settings"))
 
     def set_plot(self):
 

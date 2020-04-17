@@ -22,9 +22,9 @@ from nurse.qt import (
 )
 
 from nurse.common import style_path, GraphInfo
-from nurse.header import HeaderWidget
+from nurse.header import MainHeaderWidget
 from nurse.tile import PatientSensor
-from nurse.drilldown import DrillDownWidget
+from nurse.drilldown import DrilldownWidget
 
 from processor.generator import Status
 from processor.local_generator import LocalGenerator
@@ -43,7 +43,7 @@ class MainStack(QtWidgets.QWidget):
         layout = VBoxLayout()
         self.setLayout(layout)
 
-        headerwidget = HeaderWidget(self)
+        headerwidget = MainHeaderWidget(self)
         layout.addWidget(headerwidget)
 
         grid_layout = GridLayout()
@@ -102,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         stacked_widget = QtWidgets.QStackedWidget()
         stacked_widget.addWidget(self.main_stack)
 
-        self.drilldown = DrillDownWidget(refresh=refresh)
+        self.drilldown = DrilldownWidget(refresh=refresh, parent=self)
         self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
         stacked_widget.addWidget(self.drilldown)
 

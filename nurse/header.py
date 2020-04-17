@@ -17,7 +17,6 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(logolabel, 0, Qt.AlignVCenter)
         layout.addWidget(text, 0, Qt.AlignVCenter)
-        layout.addStretch()
         layout.setSpacing(0)
 
 
@@ -93,16 +92,24 @@ class GraphLabelWidget(QtWidgets.QWidget):
 
 
 class HeaderWidget(QtWidgets.QWidget):
+    pass
+
+
+class MainHeaderWidget(HeaderWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         layout = HBoxLayout()
         self.setLayout(layout)
 
         princeton_logo = PrincetonLogoWidget()
-        graph_info = GraphLabelWidget()
-        nsf_logo = NSFLogoWidget()
-        # dt_info = DateTimeWidget()
         layout.addWidget(princeton_logo, 6)
+        layout.addStretch()
+
+        graph_info = GraphLabelWidget()
         layout.addWidget(graph_info, 6)
-        # layout.addWidget(dt_info, 6) # Would need to be updated periodically
+
+        nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo, 2)
+
+        # dt_info = DateTimeWidget()
+        # layout.addWidget(dt_info, 6) # Would need to be updated periodically

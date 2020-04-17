@@ -37,7 +37,7 @@ class NumbersWidget(QtWidgets.QWidget):
 
         info_strings = [
             "RR",  # (breaths/min)
-            "TV",  # (mL)
+            "TVe",  # (mL)
             "PIP",  # (cm H2O)
             "PEEP",  # (cm H2O)
             "I:E time ratio",
@@ -208,8 +208,6 @@ class PatientSensor(QtGui.QFrame):
                 self.style().polish(self)
 
             alarming_quanities = {key.split()[0] for key in self.gen.alarms}
-            if "TVi" in alarming_quanities or "TVe" in alarming_quanities:
-                alarming_quanities.add("TV")
 
             for key in self.values:
                 self.values.set_value(
