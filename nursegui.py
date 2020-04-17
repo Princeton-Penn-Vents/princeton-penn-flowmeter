@@ -120,7 +120,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.drilldown.gen = self.main_stack.graphs[i].gen
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(1)
-        print(f"Activating {i}")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
