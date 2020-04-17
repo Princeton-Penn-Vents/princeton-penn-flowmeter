@@ -40,6 +40,7 @@ A breath record may have any of the following fields. (Field names include space
    * **full pressure (cm-H₂O):** the original, unsmoothed **pressure** at the time of **full**, which is often but not necessarily equal to **max pressure**.
    * **full volume (mL):** the original, unsmoothed **volume** at the time of **full**, which is always the maximum for this breath.
    * **expiratory tidal volume (mL):** the difference between the **full volume** and the previous **empty volume**, if it exists. This quantity is always positive and is a relative volume, computed within a single time-series buffer, so it is not sensitive to changes in the absolute **volume**.
+   * **inhale time (sec):** the **realtime** difference between **empty** and **full**, through the inhale.
    * **exhale timestamp (sec):** the **realtime** when the **flow** is at a minimum (extremely negative).
    * **exhale flow (L/min):** the original, unsmoothed **flow** at the time of **exhale**.
    * **exhale dV/dt (mL/sec):** the smoothed **flow** at the time of **exhale**, converted into mL and seconds.
@@ -49,6 +50,7 @@ A breath record may have any of the following fields. (Field names include space
    * **empty timestamp (sec):** the **realtime** when the **volume** is at a minimum.
    * **empty pressure (cm-H₂O):** the original, unsmoothed **pressure** at the time of **empty**, which is often but not necessarily equal to **min pressure**.
    * **empty volume (mL):** the original, unsmoothed **volume** at the time of **empty**, which is always the minimum for this breath.
+   * **exhale time (sec):** the **realtime** difference between **full** and **empty**, through the exhale.
    * **time since last (sec):** the time difference between this breath (at **empty**) and the previous breath (at its **empty**).
 
 ## Recomputing breath records
@@ -78,6 +80,9 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **inhale compliance (ml/cm-H₂O):** the EWMA of **inhale compliance** from breath records.
    * **exhale compliance (ml/cm-H₂O):** the EWMA of **exhale compliance** from breath records.
    * **breath volume rate (L/min):** the instantaneous product of **TV** and **RR**.
+   * **inhale time (sec):** the EWMA of **inhale time**.
+   * **exhale time (sec):** the EWMA of **exhale time**.
+   * **I:E time ratio (unitless):** the instantaneous ratio of **inhale time** over **exhale time**.
 
 ## Cumulative timestamps
 
