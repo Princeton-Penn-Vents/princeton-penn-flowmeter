@@ -164,7 +164,6 @@ def sdp3_handler(signum, frame):
         tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
         btmpdataSDP3 = tmpdataSDP3[1]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
-        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
         if len(btmpdataSDP3) == nbytesTEMP:
             tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
             print(ts, tmptemp, dcTEMP)
@@ -179,6 +178,9 @@ def sdp3_handler(signum, frame):
                 dcTEMP = max(0, dcTEMP)
             pi.set_PWM_dutycycle(pinPWM, dcTEMP)
             curTEMP = tmptemp
+            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp, "C": curTEMP, "D": dcTEMP}
+        else:
+            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
         socket.send_json(d)
 
 
@@ -202,10 +204,6 @@ def sdp3_file_handler(signum, frame):
         tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
         btmpdataSDP3 = tmpdataSDP3[1]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
-        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
-        ds = json.dumps(d)
-        print(ds, file=myfile)
-        socket.send_string(ds)
         if len(btmpdataSDP3) == nbytesTEMP:
             tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
             print(ts, tmptemp, dcTEMP)
@@ -220,6 +218,12 @@ def sdp3_file_handler(signum, frame):
                 dcTEMP = max(0, dcTEMP)
             pi.set_PWM_dutycycle(pinPWM, dcTEMP)
             curTEMP = tmptemp
+            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp, "C": curTEMP, "D": dcTEMP}
+        else:
+            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
+        socket.send_json(d)
+        ds = json.dumps(d)
+        print(ds, file=myfile)
 
 
 if myfile:
