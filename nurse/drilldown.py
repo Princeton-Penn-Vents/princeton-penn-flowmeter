@@ -96,6 +96,10 @@ class DrilldownWidget(QtWidgets.QWidget):
     def activate(self, i: int):
         "Call this to activate or switch drilldown screens!"
 
+        for box in self.alarm_boxes:
+            box.active = False
+        self.alarm_boxes[i].active = True
+
         main_stack = self.parent().parent().main_stack
 
         name_btn = main_stack.graphs[i].title_widget.name_btn
@@ -114,6 +118,7 @@ class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, i, *, gen):
         super().__init__(str(i + 1))
         self.i = i
+        self.active = False
 
     @property
     def status(self) -> Status:
@@ -121,8 +126,9 @@ class AlarmBox(QtWidgets.QPushButton):
 
     @status.setter
     def status(self, value: Status):
-        if value.name != self.property("alert_status"):
-            self.setProperty("alert_status", value.name)
+        value_name = value.name + ("_ACTIVE" if self.active else "")
+        if value_name != self.property("alert_status"):
+            self.setProperty("alert_status", value_name)
             self.style().unpolish(self)
             self.style().polish(self)
 

@@ -62,7 +62,8 @@ AlarmBox[alert_status="ALERT"] {
 }
 
 PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton:hover,
-AlarmBox[alert_status="ALERT"]:hover {
+AlarmBox[alert_status="ALERT"]:hover,
+AlarmBox[alert_status="ALERT_ACTIVE"] {
   background-color: #AD2337;
 }
 
@@ -77,7 +78,8 @@ AlarmBox[alert_status="DISCON"] {
 }
 
 PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton:hover,
-AlarmBox[alert_status="DISCON"]:hover {
+AlarmBox[alert_status="DISCON"]:hover,
+AlarmBox[alert_status="DISCON_ACTIVE"] {
   background-color: #2C93AF;
 }
 
@@ -184,6 +186,11 @@ AlarmBox {
   max-height: 50px;
   font-weight: bold;
   font-size: 24pt;
+}
+
+AlarmBox[alert_status="OK"]:hover,
+AlarmBox[alert_status="OK_ACTIVE"] {
+  background-color: #404040;
 }
 
 DrilldownHeaderWidget > QPushButton#return_btn {
