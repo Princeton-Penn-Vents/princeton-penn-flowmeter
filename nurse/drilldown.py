@@ -142,50 +142,74 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.setLayout(layout)
 
         left_layout = VBoxLayout()
-        layout.addLayout(left_layout)
+        layout.addLayout(left_layout, 2)
 
         right_layout = VBoxLayout()
-        layout.addLayout(right_layout)
+        layout.addLayout(right_layout, 1)
 
         self.title = PatientTitle()
         left_layout.addWidget(self.title)
 
         self.graphview = pg.GraphicsView(parent=self)
-        graphlayout = pg.GraphicsLayout()
+        graph_layout = pg.GraphicsLayout()
+        self.graphview.setCentralWidget(graph_layout)
+        left_layout.addWidget(self.graphview, 4)
 
-        self.graphview.setCentralWidget(graphlayout)
-        left_layout.addWidget(self.graphview)
+        phaseview = pg.GraphicsView(parent=self)
+        phase_layout = pg.GraphicsLayout()
+        phaseview.setCentralWidget(phase_layout)
+        right_layout.addWidget(phaseview)
 
-        gis = GraphInfo()
-        self.graph = {}
-        for j, key in enumerate(gis.graph_labels):
-            self.graph[key] = graphlayout.addPlot(x=[], y=[], name=key.capitalize())
-            self.graph[key].invertX()
-            self.graph[key].setRange(xRange=(30, 0))
-            if j != len(gis.graph_labels):
-                graphlayout.nextRow()
-
-        self.set_plot()
+        self.set_plot(graph_layout, phase_layout)
 
         left_layout.addWidget(QtWidgets.QLabel("Alarm settings"))
-        right_layout.addWidget(QtWidgets.QLabel("Extra plot and settings"))
+        self.alarm_cut_text = QtWidgets.QTextEdit()
+        self.alarm_cut_text.setReadOnly(True)
+        left_layout.addWidget(self.alarm_cut_text, 1)
+
+        right_layout.addWidget(QtWidgets.QLabel("Values"))
+        self.cumulative_text = QtWidgets.QTextEdit()
+        self.cumulative_text.setReadOnly(True)
+        right_layout.addWidget(self.cumulative_text)
+
+        right_layout.addWidget(QtWidgets.QLabel("Active Alarms"))
+        self.active_alarm_text = QtWidgets.QTextEdit()
+        self.active_alarm_text.setReadOnly(True)
+        right_layout.addWidget(self.active_alarm_text)
+
+        right_layout.addWidget(QtWidgets.QLabel("Nurse log"))
+        self.log_edit = QtWidgets.QTextEdit()
+        right_layout.addWidget(self.log_edit)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.setSingleShot(True)
         self.qTimer.timeout.connect(self.update_plot)
 
-    def set_plot(self):
-
+    def set_plot(self, graph_layout, phase_layout):
         gis = GraphInfo()
+
+        graphs = {}
         self.curves = {}
 
-        for i, (key, graph) in enumerate(self.graph.items()):
-            pen = pg.mkPen(color=gis.graph_pens[key], width=2)
-            self.curves[key] = graph.plot([], [], pen=pen)
-            graph.addLine(y=0)
+        for j, key in enumerate(gis.graph_labels):
+            graphs[key] = graph_layout.addPlot(x=[], y=[], name=key.capitalize())
+            graphs[key].invertX()
+            graphs[key].setRange(xRange=(30, 0))
+            if j != len(gis.graph_labels):
+                graph_layout.nextRow()
 
-        self.graph[gis.graph_labels[0]].setXLink(self.graph[gis.graph_labels[1]])
-        self.graph[gis.graph_labels[1]].setXLink(self.graph[gis.graph_labels[2]])
+            pen = pg.mkPen(color=gis.graph_pens[key], width=2)
+            self.curves[key] = graphs[key].plot([], [], pen=pen)
+            graphs[key].addLine(y=0)
+
+        self.phase_graph = phase_layout.addPlot(x=[], y=[], name="Phase")
+
+        self.phase = self.phase_graph.plot([], [], pen=pg.mkPen(color=(200, 200, 0)))
+        self.phase_graph.setLabel("left", "Pressure", units="cm H2O")
+        self.phase_graph.setLabel("bottom", "Volume", units="mL")
+
+        graphs[gis.graph_labels[0]].setXLink(graphs[gis.graph_labels[1]])
+        graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
 
     @Slot()
     def update_plot(self):
@@ -195,11 +219,25 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             with self.gen.lock:
                 self.gen.get_data()
-                self.gen.analyze_as_needed()
+                full = self.gen.analyze_as_needed()
 
                 # Fill in the data
                 for key in gis.graph_labels:
                     self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+
+                self.phase.setData(self.gen.pressure, self.gen.flow)
+
+                if True:
+                    cumulative = "\n".join(
+                        f"{k}: {v:g}" for k, v in self.gen.cumulative.items()
+                    )
+                    self.cumulative_text.setText(cumulative)
+
+                    expand = lambda s: "".join(f"\n  {k}: {v:g}" for k, v in s.items())
+                    active_alarms = "\n".join(
+                        f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
+                    )
+                    self.active_alarm_text.setText(active_alarms)
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
