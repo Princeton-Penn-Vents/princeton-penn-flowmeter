@@ -7,17 +7,32 @@ import numpy as np
 import threading
 import zmq
 import time
+from typing import Optional, Dict, Any
+
+
+def dig(d, key, *args, default=None):
+    ret = d.get(key)
+    if ret is None:
+        return default
+    elif not args:
+        return ret
+    else:
+        return dig(ret, *args, default=default)
 
 
 class CollectorThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, config: Optional[Dict[str, Any]]):
+
+        self._flow_scale = dig("flow", "scale", default=1)
+        self._flow_offset = dig("flow", "offset", default=0)
+        self._pressure_scale = dig("flow", "scale", default=1)
+        self._pressure_offset = dig("flow", "offset", default=0)
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
         self._pressure = Rolling(window_size=30 * 50)
 
         self._lock = threading.Lock()
-
         self.signal_end = threading.Event()
 
         super().__init__()
@@ -35,8 +50,10 @@ class CollectorThread(threading.Thread):
 
             with self._lock:
                 self._time.inject(j["t"])
-                self._flow.inject(j["F"])
-                self._pressure.inject(j["P"])
+                self._flow.inject(j["F"] * self._flow_scale - self._flow_offset)
+                self._pressure.inject(
+                    j["P"] * self._pressure_scale - self._pressure_offset
+                )
 
     def get_data(self):
         with self._lock:
@@ -48,20 +65,20 @@ class CollectorThread(threading.Thread):
 
 
 class Collector(Generator):
-    def __init__(self):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__()
 
         self._time = np.array([], dtype=np.int64)
         self._flow = np.array([], dtype=np.double)
         self._pressure = np.array([], dtype=np.double)
 
-        self._thread = CollectorThread()
+        self._thread = CollectorThread(config=config)
         self._thread.start()
 
         self._analyzer_thread = threading.Thread(target=self._analyzer)
         self._analyzer_thread.start()
 
-    def _analyzer(self):
+    def _analyzer(self) -> None:
         self._last_ana = time.monotonic()
         while not self._thread.signal_end.is_set():
             time.sleep(0.1)
@@ -69,7 +86,7 @@ class Collector(Generator):
             if self.analyze_as_needed():
                 self.rotary.alarms = self.alarms
 
-    def get_data(self):
+    def get_data(self) -> None:
         self._time, self._flow, self._pressure = self._thread.get_data()
 
     @property
@@ -84,7 +101,7 @@ class Collector(Generator):
     def pressure(self):
         return self._pressure
 
-    def close(self):
+    def close(self) -> None:
         self._thread.signal_end.set()
         self._thread.join()
         self._analyzer_thread.join()
@@ -107,12 +124,3 @@ if __name__ == "__main__":
 # Sadly, since we are not making this a full proper python package (at the moment),
 # we have to do the following to run this file for testing:
 # PYTHONPATH=$PWD ./patient/collector.py
-
-# For full project:
-
-# poll the device input for current values (at least every second)
-# Run analysis code
-# Wait for https comms and respond if asked
-# (possible) changes in dial
-# (possible) display LCD
-# Set colors on LCD
