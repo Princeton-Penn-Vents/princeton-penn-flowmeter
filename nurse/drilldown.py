@@ -23,6 +23,13 @@ from nurse.header import HeaderWidget, PrincetonLogoWidget
 from processor.generator import Status
 
 
+def update_textbox(textbox, text):
+    if textbox.toPlainText() != text:
+        val = textbox.verticalScrollBar().value()
+        textbox.setText(text)
+        textbox.verticalScrollBar().setValue(val)
+
+
 class DrilldownHeaderWidget(HeaderWidget):
     def __init__(self):
         super().__init__()
@@ -108,7 +115,8 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.patient.title.activate(name_btn.text(), name_edit)
 
         self.patient.gen = main_stack.graphs[i].gen
-        self.patient.qTimer.start()
+        self.patient.update_plot(True)
+        self.patient.qTimer.start(50)
 
     def deactivate(self):
         self.patient.gen = None
@@ -212,7 +220,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
 
     @Slot()
-    def update_plot(self):
+    def update_plot(self, first=False):
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
             tic = time.monotonic()
@@ -227,17 +235,22 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                 self.phase.setData(self.gen.pressure, self.gen.flow)
 
-                if True:
+                if full or first:
                     cumulative = "\n".join(
                         f"{k}: {v:g}" for k, v in self.gen.cumulative.items()
                     )
-                    self.cumulative_text.setText(cumulative)
+                    update_textbox(self.cumulative_text, cumulative)
 
                     expand = lambda s: "".join(f"\n  {k}: {v:g}" for k, v in s.items())
                     active_alarms = "\n".join(
                         f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
                     )
-                    self.active_alarm_text.setText(active_alarms)
+                    update_textbox(self.active_alarm_text, active_alarms)
+
+                rotary_text = "\n".join(
+                    f"{v.name}: {v.value:g} {v.unit}" for v in self.gen.rotary.values()
+                )
+                update_textbox(self.alarm_cut_text, rotary_text)
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack

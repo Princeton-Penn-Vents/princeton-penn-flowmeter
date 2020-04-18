@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import threading
-from typing import List, Any
+from typing import List, Any, Dict, Union
+import abc
 
 
-class Setting:
+class Setting(abc.ABC):
     def __init__(self, *, name: str, unit: str = None, lcd_name: str = None):
         self.name = name
         self.lcd_name = lcd_name or name
@@ -14,14 +15,22 @@ class Setting:
         self.unit = unit
         self._lock = threading.Lock()
 
-    def __str__(self):
+    @property
+    @abc.abstractmethod
+    def value(self) -> float:
+        pass
+
+    def __str__(self) -> str:
         unit = "" if self.unit is None else f" {self.unit}"
         return f"{self.value}{unit}"
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self}, name={self.name})"
 
-    def __format__(self, format_spec):
+    def to_dict(self) -> Dict[str, Union[str, float]]:
+        return {"name": self.name, "value": self.value}
+
+    def __format__(self, format_spec: str) -> str:
         return str(self).__format__(format_spec)
 
 
@@ -46,7 +55,8 @@ class IncrSetting(Setting):
         self._value = default
         self._incr = incr
 
-    def up(self):
+    def up(self) -> bool:
+        "Return true if not at limit"
         with self._lock:
             if self._value < self._max:
                 self._value += self._incr
@@ -54,7 +64,8 @@ class IncrSetting(Setting):
             else:
                 return False
 
-    def down(self):
+    def down(self) -> bool:
+        "Return true if not at limit"
         with self._lock:
             if self._value > self._min:
                 self._value -= self._incr
@@ -88,7 +99,8 @@ class SelectionSetting(Setting):
         self._value = default
         self._listing = listing
 
-    def up(self):
+    def up(self) -> bool:
+        "Return true if not at limit"
         with self._lock:
             if self._value < len(self._listing) - 1:
                 self._value += 1
@@ -96,7 +108,8 @@ class SelectionSetting(Setting):
             else:
                 return False
 
-    def down(self):
+    def down(self) -> bool:
+        "Return true if not at limit"
         with self._lock:
             if self._value > 0:
                 self._value -= 1

@@ -70,7 +70,9 @@ class Generator(abc.ABC):
         return {
             "version": 1,
             "time": datetime.now().timestamp(),
-            "alarms": {},
+            "alarms": self.alarms,
+            "cumulative": self.cumulative,
+            "rotary": self.rotary.to_dict(),
             "data": {
                 "timestamps": self.timestamps[window].tolist(),
                 "flows": self.flow[window].tolist(),

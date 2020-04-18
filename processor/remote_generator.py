@@ -25,6 +25,7 @@ class RemoteGenerator(Generator):
             self._time,
             self._flow,
             self._pressure,
+            rotary,
         ) = self._thread.get_data()
 
         if status == Status.DISCON:
@@ -34,6 +35,9 @@ class RemoteGenerator(Generator):
 
         if len(self._time) > 0:
             self._last_ts = self._time[-1]
+
+        for k, v in rotary.items():
+            self.rotary[k].value = v
 
     @property
     def flow(self):

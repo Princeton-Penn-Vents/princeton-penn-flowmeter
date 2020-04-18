@@ -3,7 +3,7 @@
 import sys
 import time
 import abc
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union, Any, ValuesView
 
 from processor.setting import Setting, IncrSetting, SelectionSetting
 
@@ -71,6 +71,9 @@ class RotaryCollection(RotaryModeBase):
     def value(self) -> Setting:
         return self._dict[self._items[self._current]]
 
+    def values(self) -> ValuesView[Setting]:
+        return self._dict.values()
+
     def items(self):
         return self._dict.items()
 
@@ -83,6 +86,10 @@ class LocalRotary:
         self.config = config
         self._alarms: Dict[str, Any] = {}
 
+    def to_dict(self):
+        "Convert config to dict"
+        return {k: v.to_dict() for k, v in self.config.items()}
+
     @property
     def alarms(self):
         return self._alarms
@@ -93,6 +100,9 @@ class LocalRotary:
 
     def __getitem__(self, item: str):
         return self.config[item]
+
+    def values(self) -> ValuesView[Setting]:
+        return self.config.values()
 
     def __repr__(self):
         out = f"{self.__class__.__name__}(\n"

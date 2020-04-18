@@ -4,6 +4,7 @@ import requests
 import threading
 import time
 from datetime import datetime
+from typing import Dict, Any, Tuple, Optional
 
 import processor.analysis
 from processor.rolling import Rolling, new_elements
@@ -11,7 +12,7 @@ from processor.generator import Status
 
 
 class GeneratorThread(threading.Thread):
-    def __init__(self, address):
+    def __init__(self, address: str):
         self._address = address
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
@@ -19,14 +20,15 @@ class GeneratorThread(threading.Thread):
         self._pressure = Rolling(window_size=30 * 50)
 
         self._lock = threading.Lock()
-        self._last_update = None
+        self._last_update: Optional[float] = None
+        self._rotary: Dict[str, Any] = {}
 
         self.signal_end = threading.Event()
         self.status = Status.DISCON
 
         super().__init__()
 
-    def run(self):
+    def run(self) -> None:
         # If no valid port, don't try (disconnected)
         if self._address is None:
             return
@@ -58,10 +60,11 @@ class GeneratorThread(threading.Thread):
                 self._time.inject(times[-to_add:])
                 self._flow.inject(flow[-to_add:])
                 self._pressure.inject(pressure[-to_add:])
+                self._rotary = root.get("rotary", {})
 
             time.sleep(0.1)
 
-    def get_data(self):
+    def get_data(self) -> Tuple[Status, Optional[float], Any, Any, Any, Dict[str, Any]]:
         with self._lock:
             return (
                 self.status,
@@ -69,7 +72,5 @@ class GeneratorThread(threading.Thread):
                 np.asarray(self._time).copy(),
                 np.asarray(self._flow).copy(),
                 np.asarray(self._pressure).copy(),
+                self._rotary,
             )
-
-    def analyze(self):
-        self._breaths = nurse.analysis.measure_breaths(self)
