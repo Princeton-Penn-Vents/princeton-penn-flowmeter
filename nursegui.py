@@ -110,13 +110,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @Slot()
     def drilldown_deactivate(self):
-        self.drilldown.gen = None
+        self.drilldown.deactivate()
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(0)
 
     def drilldown_activate(self, i):
-        self.drilldown.gen = self.main_stack.graphs[i].gen
-        self.drilldown.patient.qTimer.start()
+        self.drilldown.activate(i)
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(1)
 

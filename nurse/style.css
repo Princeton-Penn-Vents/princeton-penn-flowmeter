@@ -167,6 +167,14 @@ PatientDrilldownWidget {
   background-color: black;
 }
 
+PatientDrilldownWidget > PatientTitle > QLabel,
+PatientDrilldownWidget > PatientTitle > QLineEdit {
+  margin: 5px;
+  padding: 3px;
+  font-weight: bold;
+  font-size: 36px;
+}
+
 AlarmBox {
   background-color: #606060;
   margin: 2px;

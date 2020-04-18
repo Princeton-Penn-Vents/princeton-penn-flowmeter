@@ -38,19 +38,25 @@ class DrilldownHeaderWidget(HeaderWidget):
         layout.addWidget(self.return_btn)
 
 
+class PatientTitle(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = HBoxLayout()
+        self.setLayout(layout)
+
+        self.name_lbl = QtWidgets.QLabel("X")
+        layout.addWidget(self.name_lbl)
+
+        self.name_edit = QtWidgets.QLineEdit()
+        layout.addWidget(self.name_edit)
+
+    def activate(self, number: str, mirror: QtWidgets.QLineEdit):
+        self.name_lbl.setText(number)
+        self.name_edit.setText(mirror.text())
+        self.name_edit.textChanged.connect(mirror.setText)
+
+
 class DrilldownWidget(QtWidgets.QWidget):
-    @property
-    def gen(self):
-        return self.patient.gen
-
-    @gen.setter
-    def gen(self, value):
-        self.patient.gen = value
-
-    @property
-    def graphs(self):
-        return self.parent().main_stack.graphs
-
     def __init__(self, *, parent):
         super().__init__(parent=parent)
 
@@ -74,7 +80,10 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout.addLayout(grid_layout)
         side_layout.addStretch()
 
-        self.alarm_boxes = [AlarmBox(i, gen=gen) for i, gen in enumerate(self.graphs)]
+        self.alarm_boxes = [
+            AlarmBox(i, gen=gen)
+            for i, gen in enumerate(self.parent().main_stack.graphs)
+        ]
         for alarm_box in self.alarm_boxes:
             grid_layout.addWidget(alarm_box, *divmod(alarm_box.i, 2))
             alarm_box.clicked.connect(self.click_alarm)
@@ -84,10 +93,26 @@ class DrilldownWidget(QtWidgets.QWidget):
         alarm_box = self.sender()
         self.parent().parent().drilldown_activate(alarm_box.i)
 
+    def activate(self, i: int):
+        "Call this to activate or switch drilldown screens!"
+
+        main_stack = self.parent().parent().main_stack
+
+        name_btn = main_stack.graphs[i].title_widget.name_btn
+        name_edit = main_stack.graphs[i].title_widget.name_edit
+
+        self.patient.title.activate(name_btn.text(), name_edit)
+
+        self.patient.gen = main_stack.graphs[i].gen
+        self.patient.qTimer.start()
+
+    def deactivate(self):
+        self.patient.gen = None
+
 
 class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, i, *, gen):
-        super().__init__(str(i))
+        super().__init__(str(i + 1))
         self.i = i
 
     @property
@@ -115,6 +140,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         right_layout = VBoxLayout()
         layout.addLayout(right_layout)
+
+        self.title = PatientTitle()
+        left_layout.addWidget(self.title)
 
         self.graphview = pg.GraphicsView(parent=self)
         graphlayout = pg.GraphicsLayout()
