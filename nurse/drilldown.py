@@ -75,12 +75,20 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout.addStretch()
 
         for i, gen in enumerate(self.graphs):
-            grid_layout.addWidget(AlarmBox(i, gen=gen), *divmod(i, 2))
+            alarm_box = AlarmBox(i, gen=gen)
+            grid_layout.addWidget(alarm_box, *divmod(i, 2))
+            alarm_box.clicked.connect(self.click_alarm)
+
+    @Slot()
+    def click_alarm(self):
+        alarm_box = self.sender()
+        self.parent().parent().drilldown_activate(alarm_box.i)
 
 
 class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, i, *, gen):
         super().__init__(str(i))
+        self.i = i
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
