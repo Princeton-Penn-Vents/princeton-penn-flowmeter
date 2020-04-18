@@ -74,9 +74,9 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout.addLayout(grid_layout)
         side_layout.addStretch()
 
-        for i, gen in enumerate(self.graphs):
-            alarm_box = AlarmBox(i, gen=gen)
-            grid_layout.addWidget(alarm_box, *divmod(i, 2))
+        self.alarm_boxes = [AlarmBox(i, gen=gen) for i, gen in enumerate(self.graphs)]
+        for alarm_box in self.alarm_boxes:
+            grid_layout.addWidget(alarm_box, *divmod(alarm_box.i, 2))
             alarm_box.clicked.connect(self.click_alarm)
 
     @Slot()
@@ -89,6 +89,17 @@ class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, i, *, gen):
         super().__init__(str(i))
         self.i = i
+
+    @property
+    def status(self) -> Status:
+        return Status[self.property("alert_status")]
+
+    @status.setter
+    def status(self, value: Status):
+        if value.name != self.property("alert_status"):
+            self.setProperty("alert_status", value.name)
+            self.style().unpolish(self)
+            self.style().polish(self)
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
@@ -155,6 +166,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 # Fill in the data
                 for key in gis.graph_labels:
                     self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+
+            patient = self.parent()
+            main_stack = patient.parent().parent().main_stack
+
+            for alarm_box in patient.alarm_boxes:
+                alarm_box.status = main_stack.graphs[alarm_box.i].gen.status
 
             toc = time.monotonic()
             t = toc - tic
