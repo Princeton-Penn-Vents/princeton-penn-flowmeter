@@ -141,8 +141,6 @@ myfile = None  # type: Optional[TextIO]
 if arg.file:
     myfile = open(arg.file, "a")
     atexit.register(myfile.close)
-else:
-    myfile = None
 
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
