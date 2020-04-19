@@ -37,7 +37,7 @@ class RemoteGenerator(Generator):
             self._last_ts = self._time[-1]
 
         for k, v in rotary.items():
-            self.rotary[k].value = v
+            self.rotary[k].value = v["value"]
 
     @property
     def flow(self):

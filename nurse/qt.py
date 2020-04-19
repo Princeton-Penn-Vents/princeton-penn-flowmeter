@@ -1,5 +1,10 @@
 # Names are selected to be like PySide
 
+import os
+
+if "PYQTGRAPH_QT_LIB" in os.environ:
+    os.environ["PYQTGRAPH_QT_LIB"] = "PyQt5"
+
 from pyqtgraph.Qt import QtCore, QtWidgets, QtGui
 
 Qt = QtCore.Qt
