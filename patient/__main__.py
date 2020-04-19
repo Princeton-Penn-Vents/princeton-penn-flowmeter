@@ -140,7 +140,7 @@ print(
 myfile = None  # type: Optional[TextIO]
 
 if arg.file:
-    myfile = open(arg.file, "a")
+    myfile = open(arg.file, "w")
     atexit.register(myfile.close)
 
 # sdp3 interrupt handler
