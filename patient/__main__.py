@@ -20,6 +20,7 @@ import json
 import zmq
 import atexit
 import threading
+from path import Path
 from typing import Optional, TextIO
 
 # ------------------
@@ -140,8 +141,19 @@ print(
 myfile = None  # type: Optional[TextIO]
 
 if arg.file:
-    myfile = open(arg.file, "w")
-    atexit.register(myfile.close)
+    file_path = Path(arg.file)
+    i = 0
+    while True:
+        try:
+            name = "{n}{i:04}{s}".format(n=file_path.stem, i=i, s=file_path.suffix)
+            new_file_path = file_path.with_name(name)
+            myfile = open(new_file_path, "x")
+            print("Logging:", new_file_path)
+            atexit.register(myfile.close)
+            break
+        except FileExistsError:
+            i += 1
+
 
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
@@ -220,8 +232,8 @@ def sdp3_file_handler(signum, frame):
             d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp, "C": curTEMP, "D": dcTEMP}
         else:
             d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
-        socket.send_json(d)
         ds = json.dumps(d)
+        socket.send_string(ds)
         print(ds, file=myfile)
 
 
