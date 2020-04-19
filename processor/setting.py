@@ -15,14 +15,14 @@ class Setting(abc.ABC):
         self.unit = unit
         self._lock = threading.Lock()
 
-    @property
+    @property  # type: ignore
     @abc.abstractmethod
     def value(self):
         pass
 
     @value.setter  # type: ignore
     @abc.abstractmethod
-    def value_set(self, val):
+    def value(self, val):
         pass
 
     def __str__(self) -> str:
@@ -84,7 +84,7 @@ class IncrSetting(Setting):
             return self._value
 
     @value.setter  # type: ignore
-    def value_set(self, val: float):
+    def value(self, val: float):
         # Only used to set values remotely
         with self._lock:
             self._value = val
@@ -134,7 +134,7 @@ class SelectionSetting(Setting):
             return self._listing[self._value]
 
     @value.setter  # type: ignore
-    def value_set(self, val: float):
+    def value(self, val: float):
         # Only used to set values remotely
         with self._lock:
             self._value = self._listing.index(val)
