@@ -23,10 +23,10 @@ def dig(d, key, *args, default=None):
 class CollectorThread(threading.Thread):
     def __init__(self, config: Optional[Dict[str, Any]]):
 
-        self._flow_scale = dig("flow", "scale", default=1)
-        self._flow_offset = dig("flow", "offset", default=0)
-        self._pressure_scale = dig("flow", "scale", default=1)
-        self._pressure_offset = dig("flow", "offset", default=0)
+        self._flow_scale = dig(config, "device", "flow", "scale", default=1)
+        self._flow_offset = dig(config, "device", "flow", "offset", default=0)
+        self._pressure_scale = dig(config, "device", "pressure", "scale", default=1)
+        self._pressure_offset = dig(config, "device", "flow", "offset", default=0)
 
         self._time = Rolling(window_size=30 * 50, dtype=np.int64)
         self._flow = Rolling(window_size=30 * 50)
