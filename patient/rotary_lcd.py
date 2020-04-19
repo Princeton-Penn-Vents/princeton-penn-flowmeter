@@ -39,6 +39,8 @@ class RotaryLCD(Rotary):
             self.pi.stop()
             self.pi = None
 
+        return super().__enter__(*exc)
+
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!
         self.lower_display()

@@ -41,3 +41,10 @@ def GridLayout():
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     return layout
+
+
+def update_textbox(textbox, text):
+    if textbox.toPlainText() != text:
+        val = textbox.verticalScrollBar().value()
+        textbox.setText(text)
+        textbox.verticalScrollBar().setValue(val)

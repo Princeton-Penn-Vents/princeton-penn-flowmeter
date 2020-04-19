@@ -19,15 +19,9 @@ from nurse.qt import (
 
 from nurse.common import guicolors, prefill, GraphInfo
 from nurse.header import HeaderWidget, PrincetonLogoWidget
+from nurse.qt import update_textbox
 
 from processor.generator import Status
-
-
-def update_textbox(textbox, text):
-    if textbox.toPlainText() != text:
-        val = textbox.verticalScrollBar().value()
-        textbox.setText(text)
-        textbox.verticalScrollBar().setValue(val)
 
 
 class DrilldownHeaderWidget(HeaderWidget):

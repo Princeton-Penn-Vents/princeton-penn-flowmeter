@@ -108,12 +108,14 @@ class Rotary(LocalRotary):
             pinSW, pigpio.FALLING_EDGE, rotary_switch
         )
 
-        return self
+        return super().__enter__()
 
     def __exit__(self, *exc):
         assert self.pi is not None, 'Must use "with" to use'
         self._rotary_turned.cancel()
         self._rotary_switch.cancel()
+
+        return super().__exit__(exc)
 
 
 if __name__ == "__main__":

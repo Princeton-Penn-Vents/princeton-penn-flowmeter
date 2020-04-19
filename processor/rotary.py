@@ -109,3 +109,9 @@ class LocalRotary:
         for key, value in self.config.items():
             out += f"  {key} : {value}\n"
         return out + "\n)"
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
