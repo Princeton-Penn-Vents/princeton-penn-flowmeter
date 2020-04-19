@@ -56,6 +56,7 @@ class PatientTitle(QtWidgets.QWidget):
         layout.addWidget(self.name_edit)
 
     def activate(self, number: str, mirror: QtWidgets.QLineEdit):
+        self.name_edit.disconnect()
         self.name_lbl.setText(number)
         self.name_edit.setText(mirror.text())
         self.name_edit.textChanged.connect(mirror.setText)

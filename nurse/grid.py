@@ -229,4 +229,4 @@ class PatientSensor(QtGui.QFrame):
         if not self.isVisible():
             guess_each += 1000
 
-        self.qTimer.start(max(guess_each, 50))
+        self.qTimer.start(max(guess_each, 100))
