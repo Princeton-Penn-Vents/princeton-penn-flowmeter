@@ -12,6 +12,7 @@ args = parser.parse_args()
 import zmq
 import contextlib
 import time
+import json
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)  # publish (broadcast)
@@ -29,14 +30,25 @@ def controlled_time(t):
     time.sleep(max(remaining, 0))
 
 
-i = 0
+with open(args.input) as f:
+    for line in f:
+        with controlled_time(1 / rate):
+            socket.send_string(line)
+
+before = json.loads(line)
+timestamp = before["t"]
+
+i = 1
+
 while args.repeat == 0 or i < args.repeat:
-    if i > 0:
-        print(f"Re-serving: {i}")
+    print(f"Re-serving: {i}")
 
     with open(args.input) as f:
         for line in f:
             with controlled_time(1 / rate):
-                socket.send_string(line)
+                current = json.loads(line)
+                timestamp += 50
+                current["t"] = timestamp
+                socket.send_json(current)
 
     i += 1
