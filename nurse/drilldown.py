@@ -39,6 +39,10 @@ class DrilldownHeaderWidget(HeaderWidget):
         layout.addWidget(PrincetonLogoWidget())
         layout.addStretch()
         layout.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
+
+        layout.addStretch()
+        self.freeze_btn = QtWidgets.QCheckBox("Freeze")
+        layout.addWidget(self.freeze_btn)
         layout.addStretch()
         self.return_btn = QtWidgets.QPushButton("Return to main view")
         self.return_btn.setObjectName("return_btn")
@@ -70,9 +74,9 @@ class DrilldownWidget(QtWidgets.QWidget):
         layout = VBoxLayout()
         self.setLayout(layout)
 
-        header = DrilldownHeaderWidget()
-        self.return_btn = header.return_btn
-        layout.addWidget(header)
+        self.header = DrilldownHeaderWidget()
+        self.return_btn = self.header.return_btn
+        layout.addWidget(self.header)
 
         columns_layout = HBoxLayout()
         layout.addLayout(columns_layout)
@@ -224,33 +228,42 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
             tic = time.monotonic()
+            t = 0
 
             with self.gen.lock:
                 self.gen.get_data()
                 full = self.gen.analyze_as_needed()
 
-                # Fill in the data
-                for key in gis.graph_labels:
-                    self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+                if not first and self.parent().header.freeze_btn.checkState():
+                    # Let's not retry too soon.
+                    t += 50 / 1000
+                else:
 
-                self.phase.setData(self.gen.pressure, self.gen.flow)
+                    # Fill in the data
+                    for key in gis.graph_labels:
+                        self.curves[key].setData(self.gen.time, getattr(self.gen, key))
 
-                if full or first:
-                    cumulative = "\n".join(
-                        f"{k}: {v:g}" for k, v in self.gen.cumulative.items()
+                    self.phase.setData(self.gen.pressure, self.gen.flow)
+
+                    if full or first:
+                        cumulative = "\n".join(
+                            f"{k}: {v:g}" for k, v in self.gen.cumulative.items()
+                        )
+                        update_textbox(self.cumulative_text, cumulative)
+
+                        expand = lambda s: "".join(
+                            f"\n  {k}: {v:g}" for k, v in s.items()
+                        )
+                        active_alarms = "\n".join(
+                            f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
+                        )
+                        update_textbox(self.active_alarm_text, active_alarms)
+
+                    rotary_text = "\n".join(
+                        f"{v.name}: {v.value:g} {v.unit}"
+                        for v in self.gen.rotary.values()
                     )
-                    update_textbox(self.cumulative_text, cumulative)
-
-                    expand = lambda s: "".join(f"\n  {k}: {v:g}" for k, v in s.items())
-                    active_alarms = "\n".join(
-                        f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
-                    )
-                    update_textbox(self.active_alarm_text, active_alarms)
-
-                rotary_text = "\n".join(
-                    f"{v.name}: {v.value:g} {v.unit}" for v in self.gen.rotary.values()
-                )
-                update_textbox(self.alarm_cut_text, rotary_text)
+                    update_textbox(self.alarm_cut_text, rotary_text)
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
@@ -259,7 +272,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 alarm_box.status = main_stack.graphs[alarm_box.i].gen.status
 
             toc = time.monotonic()
-            t = toc - tic
+            t += toc - tic
             guess_each = int(t * 1000 * 1.1) + 30
 
             self.qTimer.start(max(guess_each, 100))
