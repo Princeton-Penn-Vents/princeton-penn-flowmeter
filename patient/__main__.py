@@ -91,6 +91,7 @@ hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
 pi.i2c_write_device(hSDP3, [0x3F, 0xF9])
 # read product number and serial number
 print("handle {}".format(hSDP3))
+time.sleep(0.5)
 pi.i2c_write_device(hSDP3, [0x36, 0x7C])
 pi.i2c_write_device(hSDP3, [0xE1, 0x02])
 nbytes = nbytesPN

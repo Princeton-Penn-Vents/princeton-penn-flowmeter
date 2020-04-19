@@ -46,7 +46,7 @@ class LCD:
         self.ctrl(0x14)  # Set bias 1/5
         self.ctrl(0x78)  # Set contrast low
         self.ctrl(0x5E)  # ICON display, Booster on, Contrast high
-        time.sleep(0.3)
+        time.sleep(1.0)
 
         self.ctrl(0x6D)  # Font on, Amp ratio 6
         time.sleep(0.3)
