@@ -20,7 +20,7 @@ import json
 import zmq
 import atexit
 import threading
-from path import Path
+from pathlib import Path
 from typing import Optional, TextIO
 
 # ------------------
