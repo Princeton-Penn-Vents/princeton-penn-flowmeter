@@ -1,9 +1,21 @@
 from processor.rotary import LocalRotary
 from processor.setting import Setting, SelectionSetting, IncrSetting
+from processor.display_settings import CurrentSetting
 from processor.generator import Generator
 from typing import Dict
 
-from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Qt, update_textbox
+from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Signal, Qt, update_textbox
+
+
+class RedrawSettings(QtCore.QObject):
+    changed = Signal()
+
+
+class RotaryGUI(LocalRotary):
+    signal: RedrawSettings
+
+    def external_update(self) -> None:
+        self.signal.changed.emit()
 
 
 class SelectionSettingGUI(QtWidgets.QComboBox):
@@ -12,7 +24,7 @@ class SelectionSettingGUI(QtWidgets.QComboBox):
         self.setting = setting
 
         for choice in setting._listing:
-            self.addItem(f"{choice:g}{setting.unit if setting.unit else ''}")
+            self.addItem(f"{choice}{setting.unit if setting.unit else ''}")
         self.setCurrentIndex(setting._value)
         self.setEditable(False)
         self.currentIndexChanged.connect(self.change_rotary)
@@ -21,6 +33,25 @@ class SelectionSettingGUI(QtWidgets.QComboBox):
     def change_rotary(self, index: int):
         self.setting._value = index
         print(self.setting)
+
+
+class CurrentSettingGUI(QtWidgets.QComboBox):
+    def __init__(self, setting: CurrentSetting, signal: RedrawSettings):
+        super().__init__()
+        self.setting = setting
+
+        for i in range(len(setting)):
+            self.addItem(f"{setting.print_setting(i)}")
+        self.setCurrentIndex(setting._value)
+        self.setEditable(False)
+
+        signal.changed.connect(self.redraw)
+
+    @Slot()
+    def redraw(self):
+        setting = self.setting
+        for i in range(len(setting)):
+            self.setItemText(i, f"{setting.print_setting(i)}")
 
 
 class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
@@ -42,9 +73,9 @@ class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
         print(self.setting)
 
 
-class DisplaySettingGUI(QtWidgets.QWidget):
+class DisplaySettingGUI(QtWidgets.QLabel):
     def __init__(self, setting: Setting):
-        super().__init__(f"{setting.value:g}")
+        super().__init__(f"{setting.value}")
 
 
 class UpdatingDisplay(QtWidgets.QTextEdit):
@@ -79,8 +110,10 @@ class CumulativeWidget(UpdatingDisplay):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rotary: LocalRotary, gen: Generator):
+    def __init__(self, rotary: RotaryGUI, gen: Generator):
         super().__init__()
+
+        rotary.signal = RedrawSettings()
 
         main = QtWidgets.QWidget()
         self.setCentralWidget(main)
@@ -90,13 +123,16 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addLayout(form_layout)
 
         for setting in rotary.values():
-            if isinstance(setting, IncrSetting):
+            if isinstance(setting, CurrentSetting):
+                widget = CurrentSettingGUI(setting, rotary.signal)
+            elif isinstance(setting, IncrSetting):
                 widget = IncrSettingGUI(setting)
             elif isinstance(setting, SelectionSetting):
                 widget = SelectionSettingGUI(setting)
             else:
                 widget = DisplaySettingGUI(setting)
 
+            widget.setMinimumWidth(250)
             form_layout.addRow(setting.name, widget)
 
         alarms_layout = QtWidgets.QVBoxLayout()

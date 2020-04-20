@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pigpio
-from processor.rotary import LocalRotary, DICT, RotaryCollection
+from processor.rotary import LocalRotary, RotaryCollection
 from processor.setting import Setting
 import enum
 from typing import Callable, Dict, Any, Optional
@@ -70,7 +70,7 @@ class Rotary(LocalRotary):
     def key(self) -> str:
         return self.config.key()
 
-    def __enter__(self):
+    def __enter__(self) -> Rotary:
         glitchFilter = 300  # ms
 
         # Get pigio connection
@@ -110,7 +110,7 @@ class Rotary(LocalRotary):
 
         return super().__enter__()
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc) -> None:
         assert self.pi is not None, 'Must use "with" to use'
         self._rotary_turned.cancel()
         self._rotary_switch.cancel()
@@ -120,8 +120,9 @@ class Rotary(LocalRotary):
 
 if __name__ == "__main__":
     import signal
+    from processor.settings import NURSE_DICT
 
-    rotary = Rotary(DICT)
+    rotary = Rotary(NURSE_DICT)
 
     while True:
         signal.pause()

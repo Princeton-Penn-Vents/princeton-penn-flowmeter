@@ -85,6 +85,14 @@ class Collector(Generator):
             self.get_data()
             if self.analyze_as_needed():
                 self.rotary.alarms = self.alarms
+                if "Current Setting" in self.rotary:
+                    setting = self.rotary["Current Setting"]
+                    RR = self.cumulative.get("RR", 0.0)
+
+                    setting.from_processor(
+                        F=[1.5] * 9, P=[3.5] * 9, RR=[RR] * 9,
+                    )
+                    self.rotary.external_update()
 
     def get_data(self) -> None:
         self._time, self._flow, self._pressure = self._thread.get_data()

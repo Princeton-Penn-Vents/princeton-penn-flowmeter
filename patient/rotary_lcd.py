@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from processor.rotary import Setting
-from patient.rotary import Rotary, DICT
+from patient.rotary import Rotary
 from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 import pigpio
@@ -16,6 +16,9 @@ class RotaryLCD(Rotary):
         self.backlight = Backlight(pi=pi)
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
+
+    def external_update(self) -> None:
+        self.display()
 
     def __enter__(self) -> "RotaryLCD":
         self.lcd.__enter__()
@@ -39,7 +42,8 @@ class RotaryLCD(Rotary):
             self.pi.stop()
             self.pi = None
 
-        return super().__enter__(*exc)
+        super().__enter__(*exc)
+        return None
 
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!
@@ -86,8 +90,9 @@ class RotaryLCD(Rotary):
 
 if __name__ == "__main__":
     import time
+    from processor.settings import NURSE_DICT
 
-    with RotaryLCD(DICT) as rotary:
+    with RotaryLCD(NURSE_DICT) as rotary:
         rotary.display()
 
         while True:
