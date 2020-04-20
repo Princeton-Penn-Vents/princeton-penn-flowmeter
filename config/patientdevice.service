@@ -1,0 +1,13 @@
+[Unit]
+Description=Patient Device
+After=pigpiod.service
+
+[Service]
+Type=simple
+User=pi
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/patient/__main__.py --file /home/pi/princeton-penn-flowmeter/datalog.out
+WorkingDirectory=/home/pi/princeton-penn-flowmeter
+Restart=always
+
+[Install]
+WantedBy=patientloop.service

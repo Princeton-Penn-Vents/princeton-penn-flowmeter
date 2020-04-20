@@ -1,0 +1,13 @@
+[Unit]
+Description=Patient Loop
+After=patientdevice.service
+
+[Service]
+Type=simple
+User=pi
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/patient_loop.py
+WorkingDirectory=/home/pi/princeton-penn-flowmeter
+Restart=always
+
+[Install]
+WantedBy=default.target
