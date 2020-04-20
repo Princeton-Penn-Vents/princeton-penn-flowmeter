@@ -622,7 +622,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
     alarms = {}
 
     if "PIP" in cumulative:
-        if "RR" in cumulative and cumulative["RR"] > rotary["RR Max"].value:
+        if (
+            "RR Max" in rotary
+            and "RR" in cumulative
+            and cumulative["RR"] > rotary["RR Max"].value
+        ):
             alarms["RR Max"] = alarm_record(
                 alarms.get("RR Max"),
                 cumulative["last breath timestamp"],
@@ -630,7 +634,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 True,
             )
 
-        if "PIP" in cumulative and cumulative["PIP"] > rotary["PIP Max"].value:
+        if (
+            "PIP Max" in rotary
+            and "PIP" in cumulative
+            and cumulative["PIP"] > rotary["PIP Max"].value
+        ):
             alarms["PIP Max"] = alarm_record(
                 alarms.get("PIP Max"),
                 cumulative["last breath timestamp"],
@@ -638,7 +646,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 True,
             )
 
-        if "PIP" in cumulative and cumulative["PIP"] < rotary["PIP Min"].value:
+        if (
+            "PIP Min" in rotary
+            and "PIP" in cumulative
+            and cumulative["PIP"] < rotary["PIP Min"].value
+        ):
             alarms["PIP Min"] = alarm_record(
                 alarms.get("PIP Min"),
                 cumulative["last breath timestamp"],
@@ -646,7 +658,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 False,
             )
 
-        if "PEEP" in cumulative and cumulative["PEEP"] > rotary["PEEP Max"].value:
+        if (
+            "PEEP Max" in rotary
+            and "PEEP" in cumulative
+            and cumulative["PEEP"] > rotary["PEEP Max"].value
+        ):
             alarms["PEEP Max"] = alarm_record(
                 alarms.get("PEEP Max"),
                 cumulative["last breath timestamp"],
@@ -654,7 +670,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 True,
             )
 
-        if "PEEP" in cumulative and cumulative["PEEP"] < rotary["PEEP Min"].value:
+        if (
+            "PEEP Min" in rotary
+            and "PEEP" in cumulative
+            and cumulative["PEEP"] < rotary["PEEP Min"].value
+        ):
             alarms["PEEP Min"] = alarm_record(
                 alarms.get("PEEP Min"),
                 cumulative["last breath timestamp"],
@@ -662,7 +682,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 False,
             )
 
-        if "TVe" in cumulative and cumulative["TVe"] > rotary["TVe Max"].value:
+        if (
+            "TVe Max" in rotary
+            and "TVe" in cumulative
+            and cumulative["TVe"] > rotary["TVe Max"].value
+        ):
             alarms["TVe Max"] = alarm_record(
                 alarms.get("TVe Max"),
                 cumulative["last breath timestamp"],
@@ -670,7 +694,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 True,
             )
 
-        if "TVe" in cumulative and cumulative["TVe"] < rotary["TVe Min"].value:
+        if (
+            "TVe Min" in rotary
+            and "TVe" in cumulative
+            and cumulative["TVe"] < rotary["TVe Min"].value
+        ):
             alarms["TVe Min"] = alarm_record(
                 alarms.get("TVe Min"),
                 cumulative["last breath timestamp"],
@@ -678,7 +706,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 False,
             )
 
-        if "TVi" in cumulative and cumulative["TVi"] > rotary["TVi Max"].value:
+        if (
+            "TVi Max" in rotary
+            and "TVi" in cumulative
+            and cumulative["TVi"] > rotary["TVi Max"].value
+        ):
             alarms["TVi Max"] = alarm_record(
                 alarms.get("TVi Max"),
                 cumulative["last breath timestamp"],
@@ -686,7 +718,11 @@ def add_alarms(rotary, updated, new_breaths, cumulative):
                 True,
             )
 
-        if "TVi" in cumulative and cumulative["TVi"] < rotary["TVi Min"].value:
+        if (
+            "TVi Min" in rotary
+            and "TVi" in cumulative
+            and cumulative["TVi"] < rotary["TVi Min"].value
+        ):
             alarms["TVi Min"] = alarm_record(
                 alarms.get("TVi Min"),
                 cumulative["last breath timestamp"],

@@ -80,6 +80,9 @@ class RotaryCollection(RotaryModeBase):
     def __getitem__(self, val):
         return self._dict[val]
 
+    def __contains__(self, key):
+        return key in self._dict
+
 
 class LocalRotary:
     def __init__(self, config: Union[RotaryCollection, Dict[str, Setting]]):
@@ -115,3 +118,6 @@ class LocalRotary:
 
     def __exit__(self, *args):
         return False
+
+    def __contains__(self, key):
+        return key in self.config
