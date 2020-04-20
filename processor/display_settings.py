@@ -46,7 +46,7 @@ class CurrentSetting(SelectionSetting):
         P = self._P[self._value]
         RR = self._RR[self._value]
 
-        return f"F:{F:.5g} P:{P:5.5g}"  # TODO: Not an error for overflow!
+        return f"F:{F:.1f} P:{P:.2f}"  # TODO: Not an error for overflow!
 
     # For the GUI
     def print_setting(self, value: int):
