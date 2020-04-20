@@ -8,16 +8,16 @@ from typing import Dict, Any, Tuple, Optional
 
 import processor.analysis
 from processor.rolling import Rolling, new_elements
-from processor.generator import Status
+from processor.generator import Status, Generator
 
 
 class GeneratorThread(threading.Thread):
     def __init__(self, address: str):
         self._address = address
 
-        self._time = Rolling(window_size=30 * 50, dtype=np.int64)
-        self._flow = Rolling(window_size=30 * 50)
-        self._pressure = Rolling(window_size=30 * 50)
+        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
+        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
+        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
 
         self._lock = threading.Lock()
         self._last_update: Optional[float] = None

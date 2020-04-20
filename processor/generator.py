@@ -29,6 +29,8 @@ COLOR = {
 
 
 class Generator(abc.ABC):
+    WINDOW_SIZE = 50 * 30  # 50 hz * 30 seconds
+
     def __init__(self) -> None:
         self._volume = np.array([], dtype=np.double)
         self._old_realtime = None
