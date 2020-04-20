@@ -88,9 +88,17 @@ class Collector(Generator):
                 if "Current Setting" in self.rotary:
                     setting = self.rotary["Current Setting"]
                     RR = self.cumulative.get("RR", 0.0)
+                    F = self.cumulative.get("window average flow", [0.0] * 7)
+                    P = self.cumulative.get("window average pressure", [0.0] * 7)
+
+                    if isinstance(F, dict):
+                        F = list(F.values())
+
+                    if isinstance(P, dict):
+                        P = list(P.values())
 
                     setting.from_processor(
-                        F=[1.5] * 9, P=[3.5] * 9, RR=[RR] * 9,
+                        F=F, P=P, RR=[RR] * 7,
                     )
                     self.rotary.external_update()
 

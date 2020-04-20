@@ -2,7 +2,9 @@ from processor.setting import IncrSetting, SelectionSetting
 from processor.display_settings import FilenameSetting, CurrentSetting
 
 REQUIRED = {
-    "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec", name="AvgWindow"),
+    "AvgWindow": SelectionSetting(
+        2, [1, 3, 5, 10, 20, 30, 60], unit="sec", name="AvgWindow"
+    ),
     "Stale Data Timeout": IncrSetting(
         8,
         min=1,

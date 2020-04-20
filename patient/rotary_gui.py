@@ -95,14 +95,14 @@ class UpdatingDisplay(QtWidgets.QTextEdit):
 class AlarmWidget(UpdatingDisplay):
     @Slot()
     def update(self):
-        cumulative = "\n".join(f"{k}: {v:g}" for k, v in self.gen.cumulative.items())
+        cumulative = "\n".join(f"{k}: {v}" for k, v in self.gen.cumulative.items())
         update_textbox(self, cumulative)
 
 
 class CumulativeWidget(UpdatingDisplay):
     @Slot()
     def update(self):
-        expand = lambda s: "".join(f"\n  {k}: {v:g}" for k, v in s.items())
+        expand = lambda s: "".join(f"\n  {k}: {v}" for k, v in s.items())
         active_alarms = "\n".join(
             f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
         )
