@@ -2,14 +2,16 @@ import numpy as np
 import scipy.integrate
 
 
-def window_averages(realtime,
-                    old_realtime,
-                    flow,
-                    pressure,
-                    time_window,
-                    flow_window,
-                    pressure_window,
-                    window_cumulative):
+def window_averages(
+    realtime,
+    old_realtime,
+    flow,
+    pressure,
+    time_window,
+    flow_window,
+    pressure_window,
+    window_cumulative,
+):
     if old_realtime is None:
         index = 0
     else:
@@ -32,13 +34,13 @@ def window_averages(realtime,
 
     for window in window_cumulative["numer"]["flow"]:
         t = realtime[-1] - window
-        section = flow_window[np.argmin(abs(time_window - t)):]
+        section = flow_window[np.argmin(abs(time_window - t)) :]
         window_cumulative["numer"]["flow"][window] = np.sum(section)
         window_cumulative["denom"]["flow"][window] = len(section)
 
     for window in window_cumulative["numer"]["pressure"]:
         t = realtime[-1] - window
-        section = pressure_window[np.argmin(abs(time_window - t)):]
+        section = pressure_window[np.argmin(abs(time_window - t)) :]
         window_cumulative["numer"]["pressure"][window] = np.sum(section)
         window_cumulative["denom"]["pressure"][window] = len(section)
 
@@ -564,11 +566,17 @@ def cumulative(cumulative, updated, new_breaths):
                 updated_fields.add("I:E time ratio")
             if "average flow" in breath:
                 cumulative["breath average flow"] = moving_average(
-                    cumulative, updated_fields, "breath average flow", breath["average flow"],
+                    cumulative,
+                    updated_fields,
+                    "breath average flow",
+                    breath["average flow"],
                 )
             if "average pressure" in breath:
                 cumulative["breath average pressure"] = moving_average(
-                    cumulative, updated_fields, "breath average pressure", breath["average pressure"],
+                    cumulative,
+                    updated_fields,
+                    "breath average pressure",
+                    breath["average pressure"],
                 )
 
     return cumulative, updated_fields

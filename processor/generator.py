@@ -39,13 +39,18 @@ class Generator(abc.ABC):
         self._pressure_window = None
         self._window_cumulative: Dict[str, Dict[str, Dict[int, float]]] = {
             "numer": {
-                "flow":     {1: 0.0, 3: 0.0, 5: 0.0, 10: 0.0, 20: 0.0, 30: 0.0, 60: 0.0},
-                "pressure": {1: 0.0, 3: 0.0, 5: 0.0, 10: 0.0, 20: 0.0, 30: 0.0, 60: 0.0},
+                "flow": {1: 0.0, 3: 0.0, 5: 0.0, 10: 0.0, 20: 0.0, 30: 0.0, 60: 0.0},
+                "pressure": {
+                    1: 0.0,
+                    3: 0.0,
+                    5: 0.0,
+                    10: 0.0,
+                    20: 0.0,
+                    30: 0.0,
+                    60: 0.0,
+                },
             },
-            "denom": {
-                "flow":     {},       # will be filled in from above
-                "pressure": {},
-            },
+            "denom": {"flow": {}, "pressure": {},},  # will be filled in from above
         }
         self._breaths: List[Any] = []
         self._cumulative: Dict[str, Any] = {}
@@ -133,10 +138,10 @@ class Generator(abc.ABC):
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
             (
-             self._time_window,
-             self._flow_window,
-             self._pressure_window,
-             self._window_cumulative,
+                self._time_window,
+                self._flow_window,
+                self._pressure_window,
+                self._window_cumulative,
             ) = processor.analysis.window_averages(
                 realtime,
                 self._old_realtime,
@@ -193,9 +198,7 @@ class Generator(abc.ABC):
                 )
 
         self._cumulative, updated_fields = processor.analysis.cumulative_by_window(
-            self._window_cumulative,
-            self._cumulative,
-            updated_fields,
+            self._window_cumulative, self._cumulative, updated_fields,
         )
 
         self._alarms = processor.analysis.add_alarms(
