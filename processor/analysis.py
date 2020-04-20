@@ -222,11 +222,13 @@ def measure_breaths(time, flow, volume, pressure):
             if i >= 4:
                 last_index = np.argmin(abs(time - breath_times[i - 4][1]))
                 if 0 <= last_index < len(flow) and last_index < index:
-                    breath["average flow"] = (flow[last_index:index].sum() /
-                                              (index - last_index))
+                    breath["average flow"] = flow[last_index:index].sum() / (
+                        index - last_index
+                    )
                 if 0 <= last_index < len(pressure) and last_index < index:
-                    breath["average pressure"] = (pressure[last_index:index].sum() /
-                                                  (index - last_index))
+                    breath["average pressure"] = pressure[last_index:index].sum() / (
+                        index - last_index
+                    )
 
             breaths.append(breath)
             breath = {}

@@ -1,29 +1,38 @@
 #!/usr/bin/env python3
 
 import threading
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict, Union, Optional
 import abc
+
+Number = Union[float, int]
 
 
 class Setting(abc.ABC):
     def __init__(self, *, name: str, unit: str = None, lcd_name: str = None):
-        self.name = name
-        self.lcd_name = lcd_name or name
+        self._name = name
+        self._lcd_name: Optional[str] = lcd_name or name
         assert (
             len(self.lcd_name) <= 16
         ), "Length of LCD names must be less than 16 chars"
         self.unit = unit
         self._lock = threading.Lock()
+        self._value: Any = None
 
-    @property  # type: ignore
-    @abc.abstractmethod
-    def value(self):
-        pass
+    @property
+    def name(self) -> str:
+        return self._name
 
-    @value.setter  # type: ignore
-    @abc.abstractmethod
-    def value(self, val):
-        pass
+    @property
+    def lcd_name(self) -> str:
+        return self._name if self._lcd_name is None else self._lcd_name
+
+    @property
+    def value(self) -> Any:
+        return self._value
+
+    @value.setter
+    def value(self, val: Any):
+        self._value = val
 
     def __str__(self) -> str:
         unit = "" if self.unit is None else f" {self.unit}"
@@ -38,15 +47,38 @@ class Setting(abc.ABC):
     def __format__(self, format_spec: str) -> str:
         return str(self).__format__(format_spec)
 
+    @abc.abstractmethod
+    def up(self) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def down(self) -> bool:
+        pass
+
+
+class DisplaySetting(Setting):
+    def __init__(
+        self, value: Any, *, name: str, unit: str = None, lcd_name: str = None
+    ):
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
+
+        self._value = value
+
+    def up(self) -> bool:
+        return False
+
+    def down(self) -> bool:
+        return False
+
 
 class IncrSetting(Setting):
     def __init__(
         self,
-        default: float,
+        default: Number,
         *,
-        min: float,
-        max: float,
-        incr: float,
+        min: Number,
+        max: Number,
+        incr: Number,
         name: str,
         unit: str = None,
         lcd_name: str = None,
