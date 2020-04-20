@@ -238,12 +238,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                     if full or first:
                         cumulative = "\n".join(
-                            f"{k}: {v:g}" for k, v in self.gen.cumulative.items()
+                            f"{k}: {v}" for k, v in self.gen.cumulative.items()
                         )
                         update_textbox(self.cumulative_text, cumulative)
 
                         expand = lambda s: "".join(
-                            f"\n  {k}: {v:g}" for k, v in s.items()
+                            f"\n  {k}: {v}" for k, v in s.items()
                         )
                         active_alarms = "\n".join(
                             f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()

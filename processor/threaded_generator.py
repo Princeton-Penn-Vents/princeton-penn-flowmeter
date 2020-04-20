@@ -57,9 +57,10 @@ class GeneratorThread(threading.Thread):
                     print("reconnecting")
                     self.status = Status.OK
                 to_add = new_elements(self._time, times)
-                self._time.inject(times[-to_add:])
-                self._flow.inject(flow[-to_add:])
-                self._pressure.inject(pressure[-to_add:])
+                if to_add > 0:
+                    self._time.inject(times[-to_add:])
+                    self._flow.inject(flow[-to_add:])
+                    self._pressure.inject(pressure[-to_add:])
                 self._rotary = root.get("rotary", {})
 
             time.sleep(0.1)
