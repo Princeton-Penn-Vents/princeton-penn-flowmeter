@@ -24,7 +24,7 @@ class FilenameSetting(DisplaySetting):
 
 class CurrentSetting(SelectionSetting):
     def __init__(self, name):
-        l = ["1b", "3b", "5s", "10s", "15s", "20s", "30s", "45s", "60s"]
+        l = ["1s", "3s", "5s", "10s", "20s", "30s", "60s"]
 
         self._F: Optional[List[float]] = None
         self._P: Optional[List[float]] = None
@@ -50,7 +50,7 @@ class CurrentSetting(SelectionSetting):
 
     # For the GUI
     def print_setting(self, value: int):
-        ave_t = self._listing[self._value]
+        ave_t = self._listing[value]
         if self._F is None or self._P is None or self._RR is None:
             return f"{ave_t} -> No average yet"
         F = self._F[value]
