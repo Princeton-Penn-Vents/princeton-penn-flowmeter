@@ -74,8 +74,12 @@ Then you need to do this once:
 Click on a terminal icon and execute these commands (copy `config.txt` to the disk from the email - could use a memory stick).
 
 ```bash
-sudo cp config.txt /boot/config.txt
+sudo cp config/config.txt /boot/config.txt
+sudo cp config/patientdevice.service /lib/systemd/system
+sudo cp config/patientloop.service /lib/systemd/system
 sudo systemctl enable pigpiod
+sudo systemctl enable patientdevice
+sudo systemctl enable patientloop
 sudo apt-get update
 sudo apt-get install python3-scipy
 sudo apt-get install python3-numpy
