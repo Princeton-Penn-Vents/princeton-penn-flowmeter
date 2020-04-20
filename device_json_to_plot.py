@@ -3,16 +3,23 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("input",
-                    help="Input single-line json file")
-parser.add_argument("--output", default=None,
-                    help="Output png/pdf file")
-parser.add_argument("--interactive", action="store_true",
-                    help="Pop up a window to show the plot interactively")
-parser.add_argument("--no-curtemp", action="store_true",
-                    help="Don't print out current temperature values found in the data stream")
-parser.add_argument("--no-dctemp", action="store_true",
-                    help="Don't print out dc temperature values found in the data stream")
+parser.add_argument("input", help="Input single-line json file")
+parser.add_argument("--output", default=None, help="Output png/pdf file")
+parser.add_argument(
+    "--interactive",
+    action="store_true",
+    help="Pop up a window to show the plot interactively",
+)
+parser.add_argument(
+    "--no-curtemp",
+    action="store_true",
+    help="Don't print out current temperature values found in the data stream",
+)
+parser.add_argument(
+    "--no-dctemp",
+    action="store_true",
+    help="Don't print out dc temperature values found in the data stream",
+)
 args = parser.parse_args()
 
 import json
@@ -37,10 +44,16 @@ with open(args.input) as fin:
             break
 
         if d.get("v", None) != 1:
-            warnings.warn("key 'v' (version) is missing or not equal to 1: {}".format(d.get("v", None)))
+            warnings.warn(
+                "key 'v' (version) is missing or not equal to 1: {}".format(
+                    d.get("v", None)
+                )
+            )
 
         if "t" not in d or not isinstance(d["t"], (int, float)):
-            warnings.warn("key 't' (time) is missing or not a number: {}".format(d.get("t", None)))
+            warnings.warn(
+                "key 't' (time) is missing or not a number: {}".format(d.get("t", None))
+            )
 
         else:
             t = datetime.datetime.fromtimestamp(d["t"] / 1000.0)
@@ -50,13 +63,21 @@ with open(args.input) as fin:
                 tmax = t
 
             if "P" not in d or not isinstance(d["P"], (int, float)):
-                warnings.warn("key 'P' (ADC avg pressure) is missing or not a number: {}".format(d.get("P", None)))
+                warnings.warn(
+                    "key 'P' (ADC avg pressure) is missing or not a number: {}".format(
+                        d.get("P", None)
+                    )
+                )
             else:
                 tP.append(t)
                 P.append(d["P"])
 
             if "F" not in d or not isinstance(d["F"], (int, float)):
-                warnings.warn("key 'F' (flow; a.k.a. delta pressure) is missing or not a number: {}".format(d.get("F", None)))
+                warnings.warn(
+                    "key 'F' (flow; a.k.a. delta pressure) is missing or not a number: {}".format(
+                        d.get("F", None)
+                    )
+                )
             else:
                 tF.append(t)
                 F.append(d["F"])
@@ -66,9 +87,17 @@ with open(args.input) as fin:
             tprev = t
 
         if "C" in d:
-            print("time: {}, cur temperature: {}".format(t.isoformat().replace("T", " "), d["C"]))
+            print(
+                "time: {}, cur temperature: {}".format(
+                    t.isoformat().replace("T", " "), d["C"]
+                )
+            )
         if "D" in d:
-            print("time: {}, dc temperature:  {}".format(t.isoformat().replace("T", " "), d["D"]))
+            print(
+                "time: {}, dc temperature:  {}".format(
+                    t.isoformat().replace("T", " "), d["D"]
+                )
+            )
 
 if tmin is None or tmax is None:
     warnings.warn("no time data in file")

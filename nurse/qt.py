@@ -15,29 +15,29 @@ except AttributeError:
     Slot = QtCore.pyqtSlot
 
 # Layout factory functions
-def HBoxLayout():
-    layout = QtWidgets.QHBoxLayout()
+def HBoxLayout(*args, **kwargs):
+    layout = QtWidgets.QHBoxLayout(*args, **kwargs)
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
 
 
-def VBoxLayout():
-    layout = QtWidgets.QVBoxLayout()
+def VBoxLayout(*args, **kwargs):
+    layout = QtWidgets.QVBoxLayout(*args, **kwargs)
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
 
 
-def FormLayout():
-    layout = QtWidgets.QFormLayout()
+def FormLayout(*args, **kwargs):
+    layout = QtWidgets.QFormLayout(*args, **kwargs)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     return layout
 
 
-def GridLayout():
-    layout = QtWidgets.QGridLayout()
+def GridLayout(*args, **kwargs):
+    layout = QtWidgets.QGridLayout(*args, **kwargs)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     return layout

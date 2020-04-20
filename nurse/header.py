@@ -47,6 +47,68 @@ class DateTimeWidget(QtWidgets.QWidget):
         layout.addStretch()
 
 
+class LimitButton(QtWidgets.QPushButton):
+    def __init__(self, key):
+        gis = GraphInfo()
+        super().__init__(key.capitalize() + "(" + gis.units[key] + ")")
+        self.key = key
+
+        self.setProperty("graph", key)
+        self.clicked.connect(self.click_graph_info)
+
+        self.limit = LimitDialog(key, parent=self)
+
+    @Slot()
+    def click_graph_info(self):
+        b = self.limit.exec_()
+        if b:
+            for graph in self.parent().parent().parent().graphs:
+                graph.graph[self.limit.key].setRange(
+                    yRange=[
+                        float(self.limit.lower.text()),
+                        float(self.limit.upper.text()),
+                    ]
+                )
+
+
+class LimitDialog(QtWidgets.QDialog):
+    def __init__(self, name, parent):
+        super().__init__()
+        self.p = parent
+        self.key = name
+        self.setWindowTitle(f"Change {name} limits")
+        self.setWindowModality(Qt.ApplicationModal)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        form_layout = QtWidgets.QFormLayout()
+        layout.addLayout(form_layout)
+
+        self.upper = QtWidgets.QLineEdit()
+        validator = QtGui.QDoubleValidator()
+        self.upper.setValidator(validator)
+        form_layout.addRow("Upper:", self.upper)
+
+        self.lower = QtWidgets.QLineEdit()
+        validator = QtGui.QDoubleValidator()
+        self.lower.setValidator(validator)
+        form_layout.addRow("Lower:", self.lower)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def exec_(self):
+        graph = self.p.parent().parent().parent().graphs[0]
+        l, u = graph.graph[self.key].viewRange()[1]
+        self.upper.setText(format(u, "g"))
+        self.lower.setText(format(l, "g"))
+        return super().exec_()
+
+
 class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,28 +129,10 @@ class GraphLabelWidget(QtWidgets.QWidget):
         text = QtWidgets.QLabel("Graph settings")
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(text, 1, Qt.AlignVCenter)
-        self.buttons = {}
 
         for key in gis.graph_labels:
-            name_btn = QtWidgets.QPushButton(
-                key.capitalize() + "(" + gis.units[key] + ")"
-            )
-            name_btn.setProperty("graph", key)
-            self.buttons[key] = name_btn
+            name_btn = LimitButton(key)
             layout.addWidget(name_btn, 1, Qt.AlignVCenter)
-            name_btn.clicked.connect(self.click_graph_info)
-
-    @Slot()
-    def click_graph_info(self):
-        # ok - this needs to get generalized and extended
-        number, ok = QtWidgets.QInputDialog.getDouble(
-            self, "Adjust plots", "Min Y axis", 10, 0, 100
-        )
-        if ok:
-            try:
-                print("Found number", number, ok)
-            except ValueError:
-                return
 
 
 class HeaderWidget(QtWidgets.QWidget):
@@ -98,8 +142,7 @@ class HeaderWidget(QtWidgets.QWidget):
 class MainHeaderWidget(HeaderWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         princeton_logo = PrincetonLogoWidget()
         layout.addWidget(princeton_logo, 6)
