@@ -227,7 +227,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                 if not first and self.parent().header.freeze_btn.checkState():
                     # Let's not retry too soon.
-                    t += 50 / 1000
+                    t += 100 / 1000
                 else:
 
                     # Fill in the data
@@ -266,4 +266,4 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             t += toc - tic
             guess_each = int(t * 1000 * 1.1) + 30
 
-            self.qTimer.start(max(guess_each, 100))
+            self.qTimer.start(max(guess_each, 150))

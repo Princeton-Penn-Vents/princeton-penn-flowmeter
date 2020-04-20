@@ -47,7 +47,7 @@ while args.repeat == 0 or i < args.repeat:
         for line in f:
             with controlled_time(1 / rate):
                 current = json.loads(line)
-                timestamp += 50
+                timestamp += 20
                 current["t"] = timestamp
                 socket.send_json(current)
 
