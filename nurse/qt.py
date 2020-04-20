@@ -11,8 +11,10 @@ Qt = QtCore.Qt
 
 try:
     Slot = QtCore.Slot
+    Signal = QtCore.Signal
 except AttributeError:
     Slot = QtCore.pyqtSlot
+    Signal = QtCore.pyqtSignal
 
 # Layout factory functions
 def HBoxLayout(*args, **kwargs):

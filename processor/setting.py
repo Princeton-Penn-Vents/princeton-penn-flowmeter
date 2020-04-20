@@ -13,7 +13,7 @@ class Setting(abc.ABC):
         self._lcd_name: Optional[str] = lcd_name or name
         assert (
             len(self.lcd_name) <= 16
-        ), "Length of LCD names must be less than 16 chars"
+        ), f"Length of LCD names must be less than 16 chars: {self.lcd_name!r}"
         self.unit = unit
         self._lock = threading.Lock()
         self._value: Any = None
@@ -159,6 +159,9 @@ class SelectionSetting(Setting):
                 return True
             else:
                 return False
+
+    def __len__(self) -> int:
+        return len(self._listing)
 
     @property
     def value(self) -> Any:

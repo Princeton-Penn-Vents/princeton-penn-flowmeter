@@ -16,7 +16,7 @@ One [JSON object](https://www.json.org/json-en.html) per line of text (delimited
    * The `"t"` field (mandatory) is time as a floating-point number of seconds relative to an unspecified constant, which does not change through the interval in which the data collection box is connected to the nurse's station (with a given port number). Nominally, it is the number of seconds since Jan 1, 1970, but the offset isn't guaranteed.
    * The `"P"` field (mandatory) is [intrapleural pressure](https://en.wikipedia.org/wiki/Intrapleural_pressure) (difference between pressure in lungs and atmospheric pressure) in cm H2O (floating point). Positive pressure is greater than atmospheric; negative is less than atmospheric.
    * The `"F"` field (mandatory) is the flow rate in mL/sec (floating point). The volume can be computed by strictly integrating this field with respect to time. Positive flow is into the lungs; negative flow is out.
-   * The `"temp"` field is optional, and in fact is only populated in about 1 out of 50 lines (1 Hz). It is the the temperature of the flow sensor in degrees C (floating point).
+   * The `"temp"` field is optional, and in fact is only populated in about 1 out of 50 lines (1 Hz). It is the temperature of the flow sensor in degrees C (floating point).
 
 ## Data format (patient -> nurse)
 

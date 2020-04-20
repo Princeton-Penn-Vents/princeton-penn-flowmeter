@@ -3,37 +3,9 @@
 import sys
 import time
 import abc
-from typing import List, Dict, Union, Any, ValuesView
+from typing import List, Dict, Union, Any, ValuesView, TypeVar
 
-from processor.setting import Setting, IncrSetting, SelectionSetting
-
-DICT = {
-    "RR Max": IncrSetting(
-        30, min=10, max=90, incr=5, unit="1/min", name="RespRate Max"
-    ),
-    "PIP Max": IncrSetting(30, min=0, max=40, incr=1, unit="cm-H2O", name="PIP Max"),
-    "PIP Min": IncrSetting(5, min=0, max=20, incr=1, unit="cm-H2O", name="PIP Min"),
-    "PEEP Max": IncrSetting(8, min=0, max=15, incr=1, unit="cm-H2O", name="PEEP Max"),
-    "PEEP Min": IncrSetting(0, min=0, max=15, incr=1, unit="cm-H2O", name="PEEP Min"),
-    "TVe Max": IncrSetting(700, min=100, max=1000, incr=50, unit="ml", name="TVe Max"),
-    "TVe Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml", name="TVe Min"),
-    "TVi Max": IncrSetting(700, min=100, max=1000, incr=50, unit="ml", name="TVi Max"),
-    "TVi Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml", name="TVi Min"),
-    "AvgWindow": SelectionSetting(2, [10, 15, 30, 60], unit="sec", name="AvgWindow"),
-    "Alarm Reset": SelectionSetting(
-        2, [10, 15, 30, 60], unit="sec", name="Alarm Reset"
-    ),
-    "Sensor ID": IncrSetting(1, min=1, max=20, incr=1, name="Sensor ID"),  # REQUIRED
-    "Stale Data Timeout": IncrSetting(
-        8,
-        min=1,
-        max=20,
-        incr=1,
-        unit="sec",
-        name="Stale Data Timeout",
-        lcd_name="StaleDataTimeout",
-    ),
-}
+from processor.setting import Setting
 
 
 class RotaryModeBase(abc.ABC):
@@ -84,21 +56,24 @@ class RotaryCollection(RotaryModeBase):
         return key in self._dict
 
 
+T = TypeVar("T", bound="LocalRotary")
+
+
 class LocalRotary:
     def __init__(self, config: Union[RotaryCollection, Dict[str, Setting]]):
         self.config = config
         self._alarms: Dict[str, Any] = {}
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         "Convert config to dict"
         return {k: v.to_dict() for k, v in self.config.items()}
 
     @property
-    def alarms(self):
+    def alarms(self) -> Dict[str, Dict[str, float]]:
         return self._alarms
 
     @alarms.setter
-    def alarms(self, item):
+    def alarms(self, item: Dict[str, Dict[str, float]]):
         self._alarms = item
 
     def __getitem__(self, item: str):
@@ -107,17 +82,21 @@ class LocalRotary:
     def values(self) -> ValuesView[Setting]:
         return self.config.values()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         out = f"{self.__class__.__name__}(\n"
         for key, value in self.config.items():
             out += f"  {key} : {value}\n"
         return out + "\n)"
 
-    def __enter__(self):
+    def __enter__(self: T) -> T:
         return self
 
-    def __exit__(self, *args):
-        return False
+    def __exit__(self, *args) -> None:
+        return None
 
-    def __contains__(self, key):
+    def __contains__(self, key: str):
         return key in self.config
+
+    def external_update(self) -> None:
+        "Update the display after a live setting (CurrentSetting) is changed externally"
+        pass

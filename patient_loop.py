@@ -9,13 +9,13 @@ args = parser.parse_args()
 import http.server
 import yaml
 
-from processor.rotary import DICT
+from processor.settings import LIVE_DICT
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.handler import make_handler
 
 # Initialize LCD
-with RotaryLCD(DICT) as rotary:
+with RotaryLCD(LIVE_DICT) as rotary:
     rotary.alarm_filter = lambda x: x in ["RR Max"]
     rotary.display()
 

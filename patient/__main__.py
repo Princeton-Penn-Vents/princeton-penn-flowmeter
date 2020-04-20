@@ -23,6 +23,8 @@ import threading
 from pathlib import Path
 from typing import Optional, TextIO
 
+DIR = Path(__file__).parent.resolve()
+(DIR.parent / "device_log").mkdir(exist_ok=True)
 # ------------------
 # output file setup
 # ------------------

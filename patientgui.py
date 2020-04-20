@@ -12,15 +12,13 @@ import sys
 import threading
 
 from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Qt
-from processor.rotary import DICT
-from patient.rotary_gui import MainWindow
+from processor.settings import LIVE_DICT
+from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
-from processor.rotary import LocalRotary
 from processor.handler import make_handler
 
 # Initialize LCD replacement
-with LocalRotary(DICT) as rotary:
-    rotary.alarm_filter = lambda x: x in ["RR Max"]
+with RotaryGUI(LIVE_DICT) as rotary:
 
     # Initialize Collector
     with open(args.config) as f:

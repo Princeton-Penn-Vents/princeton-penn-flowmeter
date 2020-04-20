@@ -251,7 +251,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         update_textbox(self.active_alarm_text, active_alarms)
 
                     rotary_text = "\n".join(
-                        f"{v.name}: {v.value:g} {v.unit}"
+                        f"{v.name}: {v.value} {v.unit}"
                         for v in self.gen.rotary.values()
                     )
                     update_textbox(self.alarm_cut_text, rotary_text)
