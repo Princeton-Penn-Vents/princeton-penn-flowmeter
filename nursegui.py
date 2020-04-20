@@ -40,8 +40,7 @@ class MainStack(QtWidgets.QWidget):
         height = math.ceil(math.sqrt(displays))
         width = math.ceil(displays / height)
 
-        layout = VBoxLayout()
-        self.setLayout(layout)
+        layout = VBoxLayout(self)
 
         self.header = MainHeaderWidget(self)
         layout.addWidget(self.header)

@@ -27,8 +27,7 @@ from processor.generator import Status
 class DrilldownHeaderWidget(HeaderWidget):
     def __init__(self):
         super().__init__()
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         layout.addWidget(PrincetonLogoWidget())
         layout.addStretch()
@@ -46,8 +45,7 @@ class DrilldownHeaderWidget(HeaderWidget):
 class PatientTitle(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         self.name_lbl = QtWidgets.QLabel("X")
         layout.addWidget(self.name_lbl)
@@ -66,8 +64,7 @@ class DrilldownWidget(QtWidgets.QWidget):
     def __init__(self, *, parent):
         super().__init__(parent=parent)
 
-        layout = VBoxLayout()
-        self.setLayout(layout)
+        layout = VBoxLayout(self)
 
         self.header = DrilldownHeaderWidget()
         self.return_btn = self.header.return_btn
@@ -145,8 +142,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         super().__init__()
         self.gen = None
 
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         left_layout = VBoxLayout()
         layout.addLayout(left_layout, 2)

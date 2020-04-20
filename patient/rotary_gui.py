@@ -84,8 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         main = QtWidgets.QWidget()
         self.setCentralWidget(main)
-        layout = QtWidgets.QHBoxLayout()
-        main.setLayout(layout)
+        layout = QtWidgets.QHBoxLayout(main)
 
         form_layout = QtWidgets.QFormLayout()
         layout.addLayout(form_layout)

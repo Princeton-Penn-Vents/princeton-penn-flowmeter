@@ -5,8 +5,7 @@ from nurse.common import GraphInfo
 class PrincetonLogoWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         logo = QtGui.QPixmap("images/PUsig2-158C-shield.png").scaledToWidth(18)
         logolabel = QtWidgets.QLabel()
@@ -23,8 +22,7 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
 class NSFLogoWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         logo = QtGui.QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
         logolabel = QtWidgets.QLabel()
@@ -36,8 +34,7 @@ class NSFLogoWidget(QtWidgets.QWidget):
 class DateTimeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         now = datetime.now()
         nowstring = now.strftime("%d %b %Y %H:%M:%S")
@@ -113,8 +110,7 @@ class GraphLabelWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         gis = GraphInfo()
 

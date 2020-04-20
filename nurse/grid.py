@@ -31,8 +31,7 @@ class NumbersWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = FormLayout()
-        self.setLayout(layout)
+        layout = FormLayout(self)
 
         self.val_widgets = {}
 
@@ -76,8 +75,7 @@ class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, i: int):
         super().__init__()
 
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         self.name_btn = QtWidgets.QPushButton(f"{i+1}:")
         layout.addWidget(self.name_btn)
@@ -124,8 +122,7 @@ class PatientSensor(QtGui.QFrame):
         self.current_alarms = {}
         self.logging = logging
 
-        layout = HBoxLayout()
-        self.setLayout(layout)
+        layout = HBoxLayout(self)
 
         layout_left = VBoxLayout()
         layout.addLayout(layout_left)
