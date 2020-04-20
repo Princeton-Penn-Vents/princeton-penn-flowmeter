@@ -70,7 +70,7 @@ class Rotary(LocalRotary):
     def key(self) -> str:
         return self.config.key()
 
-    def __enter__(self) -> Rotary:
+    def __enter__(self) -> "Rotary":
         glitchFilter = 300  # ms
 
         # Get pigio connection
