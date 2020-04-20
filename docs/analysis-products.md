@@ -51,6 +51,8 @@ A breath record may have any of the following fields. (Field names include space
    * **empty pressure (cm-H₂O):** the original, unsmoothed **pressure** at the time of **empty**, which is often but not necessarily equal to **min pressure**.
    * **empty volume (mL):** the original, unsmoothed **volume** at the time of **empty**, which is always the minimum for this breath.
    * **exhale time (sec):** the **realtime** difference between **full** and **empty**, through the exhale.
+   * **average flow (L/min):** the average of **flow** from the last **empty** to the **empty** of this breath.
+   * **average pressure (cm-H₂O):** the average of **pressure** from the last **empty** to the **empty** of this breath.
    * **time since last (sec):** the time difference between this breath (at **empty**) and the previous breath (at its **empty**).
 
 ## Recomputing breath records
@@ -83,6 +85,8 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **inhale time (sec):** the EWMA of **inhale time**.
    * **exhale time (sec):** the EWMA of **exhale time**.
    * **I:E time ratio (unitless):** the instantaneous ratio of **inhale time** over **exhale time**.
+   * **average flow (L/min):** the EWMA of **averge flow** from breath records.
+   * **average pressure (cm-H₂O):** the EWMA of **averge pressure** from breath records.
 
 ## Cumulative timestamps
 

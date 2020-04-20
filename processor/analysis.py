@@ -176,6 +176,14 @@ def measure_breaths(time, flow, volume, pressure):
                     diff = volume[full_index] - breath["empty volume"]
                     if diff > 0:
                         breath["inspiratory tidal volume"] = diff
+            if i >= 4:
+                last_index = np.argmin(abs(time - breath_times[i - 4][1]))
+                if 0 <= last_index < len(flow) and last_index < index:
+                    breath["average flow"] = (flow[last_index:index].sum() /
+                                              (index - last_index))
+                if 0 <= last_index < len(pressure) and last_index < index:
+                    breath["average pressure"] = (pressure[last_index:index].sum() /
+                                                  (index - last_index))
 
             breaths.append(breath)
             breath = {}
@@ -509,6 +517,14 @@ def cumulative(cumulative, updated, new_breaths):
                     cumulative["inhale time"] / cumulative["exhale time"]
                 )
                 updated_fields.add("I:E time ratio")
+            if "average flow" in breath:
+                cumulative["average flow"] = moving_average(
+                    cumulative, updated_fields, "average flow", breath["average flow"],
+                )
+            if "average pressure" in breath:
+                cumulative["average pressure"] = moving_average(
+                    cumulative, updated_fields, "average pressure", breath["average pressure"],
+                )
 
     return cumulative, updated_fields
 
