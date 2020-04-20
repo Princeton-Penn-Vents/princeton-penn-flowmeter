@@ -14,7 +14,7 @@ class FilenameSetting(DisplaySetting):
     @property
     def value(self) -> str:
         files = sorted(Path(DIR.parent / "device_log").glob("*"))
-        string = str(files[0].name) if files else "No file"
+        string = str(files[-1].name) if files else "No file"
         return string
 
     # Currently does not work remotely
