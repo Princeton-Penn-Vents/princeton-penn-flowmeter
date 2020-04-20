@@ -85,8 +85,10 @@ The next data tier is that of cumulative measurements. Each of the following fie
    * **inhale time (sec):** the EWMA of **inhale time**.
    * **exhale time (sec):** the EWMA of **exhale time**.
    * **I:E time ratio (unitless):** the instantaneous ratio of **inhale time** over **exhale time**.
-   * **average flow (L/min):** the EWMA of **averge flow** from breath records.
-   * **average pressure (cm-H₂O):** the EWMA of **averge pressure** from breath records.
+   * **breath average flow (L/min):** the EWMA of **averge flow** from breath records.
+   * **breath average pressure (cm-H₂O):** the EWMA of **averge pressure** from breath records.
+   * **window average flow (L/min):** a dict of window widths (in seconds) to sliding window averages of the raw **flow** time-series (not calculated from breaths).
+   * **window average pressure (cm-H₂O):** a dict of window widths (in seconds) to sliding window averages of the raw **pressure** time-series (not calculated from breaths).
 
 ## Cumulative timestamps
 

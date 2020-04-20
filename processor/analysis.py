@@ -2,6 +2,49 @@ import numpy as np
 import scipy.integrate
 
 
+def window_averages(realtime,
+                    old_realtime,
+                    flow,
+                    pressure,
+                    time_window,
+                    flow_window,
+                    pressure_window,
+                    window_cumulative):
+    if old_realtime is None:
+        index = 0
+    else:
+        index = np.argmin(abs(old_realtime - realtime[0]))
+
+    if time_window is None:
+        time_window = realtime[index:]
+    else:
+        time_window = np.concatenate([time_window, realtime[index:]])
+
+    if flow_window is None:
+        flow_window = flow[index:]
+    else:
+        flow_window = np.concatenate([flow_window, flow[index:]])
+
+    if pressure_window is None:
+        pressure_window = pressure[index:]
+    else:
+        pressure_window = np.concatenate([pressure_window, pressure[index:]])
+
+    for window in window_cumulative["numer"]["flow"]:
+        t = realtime[-1] - window
+        section = flow_window[np.argmin(abs(time_window - t)):]
+        window_cumulative["numer"]["flow"][window] = np.sum(section)
+        window_cumulative["denom"]["flow"][window] = len(section)
+
+    for window in window_cumulative["numer"]["pressure"]:
+        t = realtime[-1] - window
+        section = pressure_window[np.argmin(abs(time_window - t)):]
+        window_cumulative["numer"]["pressure"][window] = np.sum(section)
+        window_cumulative["denom"]["pressure"][window] = len(section)
+
+    return time_window, flow_window, pressure_window, window_cumulative
+
+
 def flow_to_volume(realtime, old_realtime, flow, old_volume):
     if old_realtime is None:
         shift = 0
@@ -518,13 +561,40 @@ def cumulative(cumulative, updated, new_breaths):
                 )
                 updated_fields.add("I:E time ratio")
             if "average flow" in breath:
-                cumulative["average flow"] = moving_average(
-                    cumulative, updated_fields, "average flow", breath["average flow"],
+                cumulative["breath average flow"] = moving_average(
+                    cumulative, updated_fields, "breath average flow", breath["average flow"],
                 )
             if "average pressure" in breath:
-                cumulative["average pressure"] = moving_average(
-                    cumulative, updated_fields, "average pressure", breath["average pressure"],
+                cumulative["breath average pressure"] = moving_average(
+                    cumulative, updated_fields, "breath average pressure", breath["average pressure"],
                 )
+
+    return cumulative, updated_fields
+
+
+def cumulative_by_window(window_cumulative, cumulative, updated_fields):
+    if "window average flow" not in cumulative:
+        cumulative["window average flow"] = {}
+    if "window average pressure" not in cumulative:
+        cumulative["window average pressure"] = {}
+
+    for window in window_cumulative["numer"]["flow"]:
+        numer = window_cumulative["numer"]["flow"][window]
+        denom = window_cumulative["denom"]["flow"].get(window, 0)
+        if denom == 0:
+            cumulative["window average flow"][window] = 0.0
+        else:
+            cumulative["window average flow"][window] = float(numer) / denom
+            updated_fields.add("window average flow")
+
+    for window in window_cumulative["numer"]["pressure"]:
+        numer = window_cumulative["numer"]["pressure"][window]
+        denom = window_cumulative["denom"]["pressure"].get(window, 0)
+        if denom == 0:
+            cumulative["window average pressure"][window] = 0.0
+        else:
+            cumulative["window average pressure"][window] = float(numer) / denom
+            updated_fields.add("window average pressure")
 
     return cumulative, updated_fields
 
