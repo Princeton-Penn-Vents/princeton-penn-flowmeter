@@ -14,7 +14,8 @@ class FilenameSetting(DisplaySetting):
     @property
     def value(self) -> str:
         files = sorted(Path(DIR.parent / "device_log").glob("*"))
-        return str(files[0]) if files else "No file"
+        string = str(files[0].name) if files else "No file"
+        return string
 
     # Currently does not work remotely
     @value.setter
@@ -46,7 +47,7 @@ class CurrentSetting(SelectionSetting):
         P = self._P[self._value]
         RR = self._RR[self._value]
 
-        return f"F:{F:.1f} P:{P:.2f}"  # TODO: Not an error for overflow!
+        return f"F:{F:<6.1f} P:{P:.2f}"
 
     # For the GUI
     def print_setting(self, value: int):

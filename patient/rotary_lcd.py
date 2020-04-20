@@ -66,14 +66,18 @@ class RotaryLCD(Rotary):
         ID = self["Sensor ID"].value
         ID_string = f"#{ID}"
         current_name = self.value().lcd_name
-        string = f"{current_name:<16} {ID_string:>3}"
-        assert len(string) == 20, f'Too long: "{string}" > 20 chars'
+        if len(current_name) > 17:
+            print(f"Warning: Truncating {current_name!r}")
+            current_name = current_name[:17]
+        string = f"{current_name:<17}{ID_string:>3}"
         self.lcd.upper(string)
 
     def lower_display(self) -> None:
         current_item = self.value()
         string = f"{current_item:<20}"
-        assert len(string) == 20
+        if len(string) > 20:
+            print(f"Warning: Truncating {string!r}")
+            string = string[:20]
         self.lcd.lower(string)
         if self.alarms:
             n = len(self.alarms)
