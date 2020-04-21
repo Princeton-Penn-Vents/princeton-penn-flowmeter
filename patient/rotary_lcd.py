@@ -73,6 +73,7 @@ class RotaryLCD(Rotary):
         if self.alarms and self.alarm_level == AlarmLevel.OFF:
             self.backlight.red()
             self.buzzer.buzz(200)
+            self.alarm_level = AlarmLevel.LOUD
         elif not self.alarms:
             self.backlight.white()
             self.buzzer.clear()
