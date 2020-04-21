@@ -3,21 +3,18 @@ import pyqtgraph as pg
 
 # stdlib
 import argparse
-import numpy as np
-import os
 import sys
 import math
 from string import Template
+import logging
+from pathlib import Path
 
 from nurse.qt import (
     QtCore,
     QtWidgets,
-    QtGui,
     Qt,
     Slot,
-    HBoxLayout,
     VBoxLayout,
-    FormLayout,
     GridLayout,
 )
 
@@ -26,15 +23,17 @@ from nurse.header import MainHeaderWidget
 from nurse.grid import PatientSensor
 from nurse.drilldown import DrilldownWidget
 
-from processor.generator import Status
+from processor.generator import Status, Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 
-logging_directory = None
+DIR = Path(__file__).parent.resolve()
 
 
 class MainStack(QtWidgets.QWidget):
-    def __init__(self, *, ip, port, displays, logging, offset):
+    def __init__(
+        self, *, ip: str, port: int, displays, logging: str, debug: bool, offset: int
+    ):
         super().__init__()
 
         height = math.ceil(math.sqrt(displays))
@@ -55,19 +54,17 @@ class MainStack(QtWidgets.QWidget):
         self.graphs = []
 
         for i in range(displays):
-            # A bit hacky for testing - will become a --debug flag later
-            if port is not None:
-                if i == 7:  # hack to make this one always disconnected
-                    gen = RemoteGenerator()
-                else:
-                    gen = RemoteGenerator(ip=ip, port=port + i)
+            gen: Generator
+
+            if not debug:
+                gen = RemoteGenerator(ip=ip, port=port + i)
             else:
                 status = Status.OK if i % 7 != 1 else Status.ALERT
                 if i == 7:
                     status = Status.DISCON
                 gen = LocalGenerator(status, logging=logging)
 
-            graph = PatientSensor(i + offset, gen=gen, logging=logging)
+            graph = PatientSensor(i + offset, gen=gen, logging=logging, debug=debug)
             self.graphs.append(graph)
 
             grid_layout.addWidget(graph, *reversed(divmod(i, height)))
@@ -80,7 +77,7 @@ class MainStack(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *, ip, port, displays, **kwargs):
+    def __init__(self, *, ip: str, port: int, displays, **kwargs):
         super().__init__()
         self.setObjectName("MainWindow")
 
@@ -137,15 +134,32 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(evt)
 
 
-def main(argv, *, fullscreen, **kwargs):
+def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
+    (DIR / "nurse_log").mkdir(exist_ok=True)
+
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     else:
         print("Fusion style is not available, display may be platform dependent")
 
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        file_path = Path(logfile)
+        for i in range(10_000):
+            logfile_incr = file_path.with_name(
+                f"{file_path.stem}{i:04}{file_path.suffix}"
+            )
+            if not logfile_incr.exists():
+                break
+        logging.basicConfig(
+            level=logging.INFO, filename=str(logfile_incr.resolve()), filemode="w"
+        )
+    logging.info("Starting nursegui")
+
     app = QtWidgets.QApplication(argv)
 
-    main = MainWindow(**kwargs)
+    main = MainWindow(debug=debug, **kwargs)
     if fullscreen:
         main.showFullScreen()
     else:
@@ -165,9 +179,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
-    parser.add_argument(
-        "--port", type=int, help="Select a starting port (8100 recommended)"
-    )
+    parser.add_argument("--port", type=int, default=8100, help="Select a starting port")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument(
         "--displays",
@@ -180,10 +192,21 @@ if __name__ == "__main__":
         "--offset", type=int, default=0, help="Offset the numbers by this amount"
     )
     parser.add_argument(
+        "--logfile",
+        type=str,
+        default="nurse_log/nursegui.log",
+        help="logging directory",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Start up in debug mode (local generators, fake names, log to screen, etc)",
+    )
+    parser.add_argument(
         "--logging",
         help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)",
     )
 
     args, unparsed_args = parser.parse_known_args()
 
-    main(argv=sys.argv[:1] + unparsed_args, **(args.__dict__))
+    main(argv=sys.argv[:1] + unparsed_args, **args.__dict__)

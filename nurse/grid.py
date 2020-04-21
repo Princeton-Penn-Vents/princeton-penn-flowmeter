@@ -1,12 +1,10 @@
 import pyqtgraph as pg
 
-import math
 from datetime import datetime
-from string import Template
 import time
+from typing import Dict, Any
 
 from nurse.qt import (
-    QtCore,
     QtWidgets,
     QtGui,
     Qt,
@@ -16,9 +14,9 @@ from nurse.qt import (
     FormLayout,
 )
 
-from nurse.common import guicolors, prefill, GraphInfo
+from nurse.common import prefill, GraphInfo
 
-from processor.generator import Status
+from processor.generator import Status, Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 
@@ -72,7 +70,7 @@ class NumbersWidget(QtWidgets.QWidget):
 
 
 class PatientTitleWidget(QtWidgets.QWidget):
-    def __init__(self, i: int):
+    def __init__(self, i: int, debug: bool):
         super().__init__()
 
         layout = HBoxLayout(self)
@@ -81,7 +79,7 @@ class PatientTitleWidget(QtWidgets.QWidget):
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(prefill[i] if i < 20 else f"Patient {i+1}")
+        self.name_edit.setText(prefill[i] if i < 20 and debug else f"Patient {i+1}")
         layout.addWidget(self.name_edit)
 
     def repolish(self):
@@ -114,12 +112,14 @@ class PatientSensor(QtGui.QFrame):
         self.setProperty("alert_status", value.name)
         self.title_widget.repolish()
 
-    def __init__(self, i, *args, gen, logging=None, **kwargs):
+    def __init__(
+        self, i: int, *args, gen: Generator, logging: str = None, debug: bool, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
         self.gen = gen
-        self.current_alarms = {}
+        self.current_alarms: Dict[str, Any] = {}
         self.logging = logging
 
         layout = HBoxLayout(self)
@@ -127,7 +127,7 @@ class PatientSensor(QtGui.QFrame):
         layout_left = VBoxLayout()
         layout.addLayout(layout_left)
 
-        self.title_widget = PatientTitleWidget(i)
+        self.title_widget = PatientTitleWidget(i, debug=debug)
         layout_left.addWidget(self.title_widget)
 
         self.graphview = GraphicsView(parent=self, i=i)

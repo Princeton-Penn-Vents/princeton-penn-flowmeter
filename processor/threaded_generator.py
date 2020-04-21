@@ -5,8 +5,8 @@ import threading
 import time
 from datetime import datetime
 from typing import Dict, Any, Tuple, Optional
+import logging
 
-import processor.analysis
 from processor.rolling import Rolling, new_elements
 from processor.generator import Status, Generator
 
@@ -37,7 +37,7 @@ class GeneratorThread(threading.Thread):
             try:
                 r = requests.get(self._address)
                 self._last_update = datetime.now().timestamp()
-            except:
+            except requests.ConnectionError:
                 with self._lock:
                     self.status = Status.DISCON
                 time.sleep(1)
@@ -48,13 +48,19 @@ class GeneratorThread(threading.Thread):
                 time.sleep(1)
                 continue
 
-            root = json.loads(r.text)
+            try:
+                root = json.loads(r.text)
+            except json.JSONDecodeError:
+                logging.warning(f"Failed to read json, trying again", exc_info=True)
+                time.sleep(0.01)
+                continue
+
             times = np.asarray(root["data"]["timestamps"])
             flow = np.asarray(root["data"]["flows"])
             pressure = np.asarray(root["data"]["pressures"])
             with self._lock:
                 if self.status == Status.DISCON:
-                    print("reconnecting")
+                    logging.info("(Re)Connecting successful")
                     self.status = Status.OK
                 to_add = new_elements(self._time, times)
                 if to_add > 0:

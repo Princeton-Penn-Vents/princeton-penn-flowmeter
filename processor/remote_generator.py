@@ -7,7 +7,7 @@ from processor.threaded_generator import GeneratorThread
 
 
 class RemoteGenerator(Generator):
-    def __init__(self, *, ip="127.0.0.1", port=None):
+    def __init__(self, *, ip: str = "127.0.0.1", port: int = 8100):
         super().__init__()
         self._last_update = None
         self._thread = GeneratorThread(address=f"http://{ip}:{port}")

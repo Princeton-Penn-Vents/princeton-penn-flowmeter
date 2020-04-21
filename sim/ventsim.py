@@ -3,6 +3,7 @@
 import sys
 import numpy as np
 import yaml
+import logging
 
 
 def constant_compliance(**kwargs):
@@ -31,7 +32,7 @@ class VentSim:
         self.measurement_error_flow = params.get("measurement_error_flow", 0.0)
 
     def initialize_sim(self):
-        print("running sim with these parameters")
+        logging.info("Running sim with these parameters")
         self.print_config()
         self.precompute()
 
@@ -62,12 +63,12 @@ class VentSim:
     def use_config(self, config, params={}):
         assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
-        print(new_config)
+        logging.info(str(new_config))
         for t_dict in new_config:
             for key in t_dict:
                 if key not in params:
                     setattr(self, key, self.interpret_yaml_key(t_dict[key]))
-                    print(key, getattr(self, key))
+                    logging.info(f"{key}, {getattr(self, key)}")
                 else:
                     setattr(self, key, params[key])
         if type(self.compliance_func) == str:
@@ -75,17 +76,19 @@ class VentSim:
                 "missing compliance function " + self.compliance_func
             )
             self.compliance_func = known_compliance_functions[self.compliance_func]
-        print("Changed ventsim configuration to", config)
+        logging.info("Changed ventsim configuration to {config}")
 
     def print_config(self):
-        print("Sample length (ms)", self.sample_length)
-        print("Breathing interval (ms)", self.breath_interval)
-        print("Maximum flow (mL/m)", self.max_flow)
-        print("Tidal volume (L)", self.tidal_volume)
-        print("PEEP (cm H2O)", self.peep)
-        print("Staring volume (L)", self.starting_volume)
-        print("Breath variation (sigma in ms)", self.breath_variation)
-        print("Maximum interval between breaths (ms)", self.max_breath_interval)
+        logging.info(f"Sample length (ms) {self.sample_length}")
+        logging.info(f"Breathing interval (ms) {self.breath_interval}")
+        logging.info(f"Maximum flow (mL/m) {self.max_flow}")
+        logging.info(f"Tidal volume (L) {self.tidal_volume}")
+        logging.info(f"PEEP (cm H2O) {self.peep}")
+        logging.info(f"Staring volume (L) {self.starting_volume}")
+        logging.info(f"Breath variation (sigma in ms) {self.breath_variation}")
+        logging.info(
+            f"Maximum interval between breaths (ms) {self.max_breath_interval}"
+        )
 
     def precompute(self):
         self.breath_starts = self.get_breath_starts()
