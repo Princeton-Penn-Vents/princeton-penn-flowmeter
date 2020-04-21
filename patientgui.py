@@ -15,7 +15,7 @@ from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Qt
 from processor.settings import LIVE_DICT
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
-from processor.handler import make_handler
+from processor.handler import serve
 
 # Initialize LCD replacement
 with RotaryGUI(LIVE_DICT) as rotary:
@@ -27,13 +27,11 @@ with RotaryGUI(LIVE_DICT) as rotary:
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)
-    with http.server.ThreadingHTTPServer(
-        server_address, make_handler(collector)
-    ) as httpd:
-        thread = threading.Thread(target=httpd.serve_forever)
-        thread.start()
 
-        app = QtWidgets.QApplication([])
-        main = MainWindow(rotary, collector)
-        main.showNormal()
-        sys.exit(app.exec_())
+    thread = threading.Thread(target=serve, args=(server_address, collector))
+    thread.start()
+
+    app = QtWidgets.QApplication([])
+    main = MainWindow(rotary, collector)
+    main.showNormal()
+    sys.exit(app.exec_())

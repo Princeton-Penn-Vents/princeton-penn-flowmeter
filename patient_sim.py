@@ -4,12 +4,10 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from itertools import chain
 from sim.start_sims import start_sims
-from processor.handler import make_handler
+from processor.handler import serve
 import argparse
-import http.server
 import numpy as np
 import random
-import sys
 import time
 from dataclasses import dataclass
 
@@ -26,7 +24,7 @@ class PseudoGenerator:
         if from_timestamp is None:
             values = 5000
         elif from_timestamp == 0:
-            values == 30 * 50
+            values = 30 * 50
         else:
             values = min(int(t_now - from_timestamp) // 50, 30 * 50)
 
@@ -54,13 +52,7 @@ class OurServer:
         else:
             print(f"Serving on http://{server_address[0]}:{server_address[1]}")
             gen = PseudoGenerator(self, i)
-            self.handler = make_handler(gen)
-
-            with http.server.ThreadingHTTPServer(server_address, self.handler) as httpd:
-                try:
-                    httpd.serve_forever()
-                except KeyboardInterrupt:
-                    print("\nExiting...")
+            serve(server_address, gen)
 
     def __init__(self, args):
         self.done = False

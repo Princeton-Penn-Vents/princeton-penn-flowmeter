@@ -12,7 +12,7 @@ import yaml
 from processor.settings import LIVE_DICT
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
-from processor.handler import make_handler
+from processor.handler import serve
 
 # Initialize LCD
 with RotaryLCD(LIVE_DICT) as rotary:
@@ -26,7 +26,4 @@ with RotaryLCD(LIVE_DICT) as rotary:
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)
-    with http.server.ThreadingHTTPServer(
-        server_address, make_handler(collector)
-    ) as httpd:
-        httpd.serve_forever()
+    serve(server_address, collector)

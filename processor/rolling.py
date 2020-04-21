@@ -73,7 +73,7 @@ class Rolling:
         "Gives a nice text display of the internal structure"
         mask = np.ones_like(self._values, dtype=np.bool)
         mask[: self._current_size] = False
-        mask[self._window_size : self._window__size + self._current_size] = False
+        mask[self._window_size : self._window_size + self._current_size] = False
         data = np.ma.masked_array(data=self._values, mask=mask)
         return f"{data} -> {self}"
 
