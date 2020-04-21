@@ -7,6 +7,13 @@ from patient.backlight import Backlight
 from patient.buzzer import Buzzer
 import pigpio
 from typing import Dict
+import enum
+
+
+class AlarmLevel(enum.Enum):
+    LOUD = enum.auto()
+    QUIET = enum.auto()
+    OFF = enum.auto()
 
 
 class RotaryLCD(Rotary):
@@ -16,6 +23,7 @@ class RotaryLCD(Rotary):
         self.lcd = LCD(pi=pi)
         self.backlight = Backlight(pi=pi)
         self.buzzer = Buzzer(pi=pi)
+        self.alarm_level: AlarmLevel = AlarmLevel.OFF
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
 
@@ -49,17 +57,27 @@ class RotaryLCD(Rotary):
         super().__enter__(*exc)
         return None
 
+    def push(self) -> None:
+        if self.alarm_level == AlarmLevel.LOUD and self.alarms:
+            self.buzzer.clear()
+            self.backlight.orange()
+            self.alarm_level = AlarmLevel.QUIET
+        else:
+            super().push()
+
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!
         self.lower_display()
 
     def alert_display(self) -> None:
-        if self.alarms:
+        if self.alarms and self.alarm_level == AlarmLevel.OFF:
             self.backlight.red()
             self.buzzer.buzz(200)
-        else:
+        elif not self.alarms:
             self.backlight.white()
             self.buzzer.clear()
+            self.alarm_level = AlarmLevel.OFF
+
         self.lower_display()
 
     def pushed_display(self) -> None:
