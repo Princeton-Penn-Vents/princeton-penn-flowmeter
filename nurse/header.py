@@ -1,4 +1,4 @@
-from nurse.qt import QtWidgets, QtGui, QtCore, Qt, Slot, HBoxLayout
+from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
 from nurse.common import GraphInfo
 
 

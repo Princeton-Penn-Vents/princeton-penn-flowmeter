@@ -1,23 +1,17 @@
 import pyqtgraph as pg
 
-import math
-from datetime import datetime
-from string import Template
 import time
 
 from nurse.qt import (
     QtCore,
     QtWidgets,
-    QtGui,
-    Qt,
     Slot,
     HBoxLayout,
     VBoxLayout,
-    FormLayout,
     GridLayout,
 )
 
-from nurse.common import guicolors, prefill, GraphInfo
+from nurse.common import GraphInfo
 from nurse.header import HeaderWidget, PrincetonLogoWidget
 from nurse.qt import update_textbox
 

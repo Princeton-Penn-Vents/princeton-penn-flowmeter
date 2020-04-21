@@ -102,6 +102,45 @@ class GraphicsView(pg.GraphicsView):
             self.parent().parent().parent().parent().drilldown_activate(self.i)
 
 
+class ConnectionDialog(QtWidgets.QDialog):
+    def __init__(self, parent):
+        super().__init__()
+        self.p = parent
+        self.setWindowModality(Qt.ApplicationModal)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        form_layout = QtWidgets.QFormLayout()
+        layout.addLayout(form_layout)
+
+        self.ip_address = QtWidgets.QLineEdit()
+        form_layout.addRow("IP Address:", self.ip_address)
+
+        self.port = QtWidgets.QLineEdit()
+        validator = QtGui.QIntValidator()
+        self.port.setValidator(validator)
+        form_layout.addRow("Port:", self.port)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def exec_(self):
+
+        gen = self.p.gen
+        i = self.p.label
+
+        self.setWindowTitle(f"Patient box {i+1} connection")
+
+        self.ip_address.setText(getattr(gen, "ip", "127.0.0.1"))
+        self.port.setText(str(getattr(gen, "port", 8100)))
+
+        return super().exec_()
+
+
 class PatientSensor(QtGui.QFrame):
     @property
     def status(self):
@@ -153,14 +192,14 @@ class PatientSensor(QtGui.QFrame):
 
     @Slot()
     def click_number(self):
-        number, ok = QtWidgets.QInputDialog.getText(self, "Select port", "Pick a port")
+        dialog = ConnectionDialog(self)
+        ok = dialog.exec_()
         if ok:
-            try:
-                port = int(number)
-            except ValueError:
-                self.gen = LocalGenerator(Status.DISCON, logging=self.logging)
-                return
-            self.gen = RemoteGenerator(port=port)
+            port = int(dialog.port.text())
+            ip_address = dialog.ip_address.text()
+
+            self.gen.close()
+            self.gen = RemoteGenerator(ip=ip_address, port=port)
 
     def set_plot(self):
 
