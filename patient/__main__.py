@@ -14,7 +14,6 @@ import sys
 import time
 import signal
 import pigpio
-import binascii
 import spidev
 import json
 import zmq

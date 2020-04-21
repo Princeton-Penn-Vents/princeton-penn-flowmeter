@@ -2,9 +2,8 @@ from processor.rotary import LocalRotary
 from processor.setting import Setting, SelectionSetting, IncrSetting
 from processor.display_settings import CurrentSetting
 from processor.generator import Generator
-from typing import Dict
 
-from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Signal, Qt, update_textbox
+from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
 
 class RedrawSettings(QtCore.QObject):

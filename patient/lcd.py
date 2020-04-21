@@ -2,7 +2,7 @@
 
 import pigpio
 import time
-from typing import Union, Optional
+from typing import Union
 import enum
 
 

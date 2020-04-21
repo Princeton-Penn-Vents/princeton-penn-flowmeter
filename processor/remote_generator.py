@@ -1,7 +1,6 @@
 from datetime import datetime
 import numpy as np
 
-from processor.rolling import Rolling, new_elements
 from processor.generator import Generator, Status
 from processor.threaded_generator import GeneratorThread
 
