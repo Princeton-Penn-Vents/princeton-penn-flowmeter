@@ -8,6 +8,7 @@ import math
 from string import Template
 import logging
 from pathlib import Path
+import signal
 
 from nurse.qt import (
     QtCore,
@@ -146,6 +147,7 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
     else:
         file_path = Path(logfile)
+        logfile_incr = file_path  # Only (over)written when no numbers left
         for i in range(10_000):
             logfile_incr = file_path.with_name(
                 f"{file_path.stem}{i:04}{file_path.suffix}"
@@ -171,6 +173,10 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
             main.resize(1920, 1080)
             main.showNormal()
 
+    def ctrl_c(_sig_num, _stack_frame):
+        main.close()
+
+    signal.signal(signal.SIGINT, ctrl_c)
     sys.exit(app.exec_())
 
 

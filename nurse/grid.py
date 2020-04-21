@@ -17,7 +17,6 @@ from nurse.qt import (
 from nurse.common import prefill, GraphInfo
 
 from processor.generator import Status, Generator
-from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 
 
