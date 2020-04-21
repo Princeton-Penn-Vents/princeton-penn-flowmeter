@@ -4,6 +4,7 @@ from processor.rotary import Setting
 from patient.rotary import Rotary
 from patient.lcd import LCD, Align
 from patient.backlight import Backlight
+from patient.buzzer import Buzzer
 import pigpio
 from typing import Dict
 
@@ -14,6 +15,7 @@ class RotaryLCD(Rotary):
         super().__init__(config, pi=pi)
         self.lcd = LCD(pi=pi)
         self.backlight = Backlight(pi=pi)
+        self.buzzer = Buzzer(pi=pi)
 
         assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
 
@@ -23,6 +25,7 @@ class RotaryLCD(Rotary):
     def __enter__(self) -> "RotaryLCD":
         self.lcd.__enter__()
         self.backlight.__enter__()
+        self.buzzer.__enter__()
         super().__enter__()
 
         self.backlight.white()
@@ -35,6 +38,7 @@ class RotaryLCD(Rotary):
         self.lcd.lower("Patient loop closed")
 
         super().__exit__(*exc)
+        self.buzzer.__exit__(*exc)
         self.backlight.__exit__(*exc)
         self.lcd.__exit__(*exc)
 
@@ -52,8 +56,10 @@ class RotaryLCD(Rotary):
     def alert_display(self) -> None:
         if self.alarms:
             self.backlight.red()
+            self.buzzer.buzz(200)
         else:
             self.backlight.white()
+            self.buzzer.clear()
         self.lower_display()
 
     def pushed_display(self) -> None:
