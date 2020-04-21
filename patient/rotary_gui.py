@@ -5,6 +5,8 @@ from processor.generator import Generator
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
+from typing import Optional, Callable
+
 
 class RedrawSettings(QtCore.QObject):
     changed = Signal()
@@ -109,9 +111,15 @@ class CumulativeWidget(UpdatingDisplay):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, rotary: RotaryGUI, gen: Generator):
+    def __init__(
+        self,
+        rotary: RotaryGUI,
+        gen: Generator,
+        action: Optional[Callable[[], None]] = None,
+    ):
         super().__init__()
 
+        self.action = action
         rotary.signal = RedrawSettings()
 
         main = QtWidgets.QWidget()
@@ -139,3 +147,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         alarms_layout.addWidget(CumulativeWidget(gen), 1)
         alarms_layout.addWidget(AlarmWidget(gen), 1)
+
+    def closeEvent(self, evt):
+        if self.action is not None:
+            self.action()
+        super().closeEvent(evt)

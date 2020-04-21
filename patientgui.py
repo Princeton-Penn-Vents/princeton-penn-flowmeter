@@ -10,28 +10,43 @@ import http.server
 import yaml
 import sys
 import threading
+from functools import partial
+import signal
 
-from nurse.qt import QtCore, QtWidgets, QtGui, Slot, Qt
+from nurse.qt import QtWidgets
 from processor.settings import LIVE_DICT
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
-from processor.handler import serve
+from processor.handler import Handler
 
-# Initialize LCD replacement
-with RotaryGUI(LIVE_DICT) as rotary:
+# Initialize Collector
+with open(args.config) as f:
+    config = yaml.load(f, Loader=yaml.SafeLoader)
 
-    # Initialize Collector
-    with open(args.config) as f:
-        config = yaml.load(f, Loader=yaml.SafeLoader)
-        collector = Collector(config=config)
+with RotaryGUI(LIVE_DICT) as rotary, Collector(config=config) as collector:
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)
+    with http.server.ThreadingHTTPServer(
+        server_address, partial(Handler, collector)
+    ) as httpd:
 
-    thread = threading.Thread(target=serve, args=(server_address, collector))
-    thread.start()
+        thread = threading.Thread(target=httpd.serve_forever)
+        thread.start()
 
-    app = QtWidgets.QApplication([])
-    main = MainWindow(rotary, collector)
-    main.showNormal()
-    sys.exit(app.exec_())
+        def shutdown_threaded_server():
+            print("Closing down server...")
+            httpd.shutdown()
+            thread.join()
+
+        app = QtWidgets.QApplication([])
+        main = MainWindow(rotary, collector, action=shutdown_threaded_server)
+
+        def ctrl_c(_number, _frame):
+            shutdown_threaded_server()
+            main.close()
+
+        signal.signal(signal.SIGINT, ctrl_c)
+
+        main.showNormal()
+        sys.exit(app.exec_())

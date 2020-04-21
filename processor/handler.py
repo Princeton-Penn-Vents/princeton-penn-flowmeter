@@ -5,6 +5,7 @@ from urllib.parse import urlparse, parse_qs
 from functools import partial
 from typing import Tuple, Dict, Union, Optional
 from processor.generator import Generator, Any
+import signal
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
