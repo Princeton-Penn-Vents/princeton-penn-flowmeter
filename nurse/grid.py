@@ -24,7 +24,7 @@ INFO_STRINGS = {
     "TVe": ".0f",  # (mL)
     "PIP": ".0f",  # (cm H2O)
     "PEEP": ".0f",  # (cm H2O)
-    "I:E time ratio": ".2f",
+    "I:E time ratio": ".1f",
 }
 
 

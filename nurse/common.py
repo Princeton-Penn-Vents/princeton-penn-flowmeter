@@ -39,6 +39,7 @@ class GraphInfo:
     def __init__(self):
         # the y limits ought to be configurable.
         self.graph_labels = ["flow", "pressure", "volume"]
+        self.graph_names = {key: key.capitalize() for key in self.graph_labels}
 
         self.graph_pens = {
             "flow": (120, 255, 50),

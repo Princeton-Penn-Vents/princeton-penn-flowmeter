@@ -3,10 +3,7 @@
 # This simulates a sensor.
 
 from datetime import datetime
-import sys
 import time
-
-import numpy as np
 import zmq
 
 from sim.start_sims import start_sims

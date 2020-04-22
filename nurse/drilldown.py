@@ -134,6 +134,7 @@ class AlarmBox(QtWidgets.QPushButton):
 class PatientDrilldownWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
+        self.curves = {}
         self.gen = None
 
         layout = HBoxLayout(self)
@@ -186,18 +187,20 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         gis = GraphInfo()
 
         graphs = {}
-        self.curves = {}
 
         for j, key in enumerate(gis.graph_labels):
             graphs[key] = graph_layout.addPlot(x=[], y=[], name=key.capitalize())
             graphs[key].invertX()
             graphs[key].setRange(xRange=(30, 0))
+            graphs[key].setLabel("left", gis.graph_names[key], gis.units[key])
             if j != len(gis.graph_labels):
                 graph_layout.nextRow()
 
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graphs[key].plot([], [], pen=pen)
             graphs[key].addLine(y=0)
+
+        graphs[key].setLabel("bottom", "Time", "s")
 
         graphs[gis.graph_labels[0]].setXLink(graphs[gis.graph_labels[1]])
         graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
