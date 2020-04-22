@@ -155,7 +155,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         phaseview = pg.GraphicsView(parent=self)
         phase_layout = pg.GraphicsLayout()
         phaseview.setCentralWidget(phase_layout)
-        right_layout.addWidget(phaseview)
+        right_layout.addWidget(phaseview, 2)
 
         self.set_plot(graph_layout, phase_layout)
 
@@ -167,16 +167,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         right_layout.addWidget(QtWidgets.QLabel("Values"))
         self.cumulative_text = QtWidgets.QTextEdit()
         self.cumulative_text.setReadOnly(True)
-        right_layout.addWidget(self.cumulative_text)
+        right_layout.addWidget(self.cumulative_text, 1)
 
         right_layout.addWidget(QtWidgets.QLabel("Active Alarms"))
         self.active_alarm_text = QtWidgets.QTextEdit()
         self.active_alarm_text.setReadOnly(True)
-        right_layout.addWidget(self.active_alarm_text)
+        right_layout.addWidget(self.active_alarm_text, 1)
 
         right_layout.addWidget(QtWidgets.QLabel("Nurse log"))
         self.log_edit = QtWidgets.QTextEdit()
-        right_layout.addWidget(self.log_edit)
+        right_layout.addWidget(self.log_edit, 1)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.setSingleShot(True)
@@ -199,14 +199,15 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             self.curves[key] = graphs[key].plot([], [], pen=pen)
             graphs[key].addLine(y=0)
 
+        graphs[gis.graph_labels[0]].setXLink(graphs[gis.graph_labels[1]])
+        graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
+
+        # Phase plot
         self.phase_graph = phase_layout.addPlot(x=[], y=[], name="Phase")
 
         self.phase = self.phase_graph.plot([], [], pen=pg.mkPen(color=(200, 200, 0)))
-        self.phase_graph.setLabel("left", "Pressure", units="cm H2O")
-        self.phase_graph.setLabel("bottom", "Volume", units="mL")
-
-        graphs[gis.graph_labels[0]].setXLink(graphs[gis.graph_labels[1]])
-        graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
+        self.phase_graph.setLabel("left", "Volume", units="mL")
+        self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
     @Slot()
     def update_plot(self, first=False):
@@ -228,8 +229,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     for key in gis.graph_labels:
                         self.curves[key].setData(self.gen.time, getattr(self.gen, key))
 
-                    self.phase.setData(self.gen.pressure, self.gen.flow)
+                    self.phase.setData(self.gen.flow, self.gen.pressure)
 
+                    # Only update the main (non-rotary) messages if full
+                    # analysis ran or if first run after change
                     if full or first:
                         cumulative = "\n".join(
                             f"{k}: {v}" for k, v in self.gen.cumulative.items()

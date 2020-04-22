@@ -19,6 +19,14 @@ from nurse.common import prefill, GraphInfo
 from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
 
+INFO_STRINGS = {
+    "RR": ".0f",  # (breaths/min)
+    "TVe": ".0f",  # (mL)
+    "PIP": ".0f",  # (cm H2O)
+    "PEEP": ".0f",  # (cm H2O)
+    "I:E time ratio": ".2f",
+}
+
 
 class NumberLabel(QtWidgets.QLabel):
     pass
@@ -32,15 +40,7 @@ class NumbersWidget(QtWidgets.QWidget):
 
         self.val_widgets = {}
 
-        info_strings = [
-            "RR",  # (breaths/min)
-            "TVe",  # (mL)
-            "PIP",  # (cm H2O)
-            "PEEP",  # (cm H2O)
-            "I:E time ratio",
-        ]
-
-        for info in info_strings:
+        for info in INFO_STRINGS:
             val_widget = NumberLabel("---")
             val_widget.setMinimumWidth(56)
             self.val_widgets[info] = val_widget
@@ -51,7 +51,9 @@ class NumbersWidget(QtWidgets.QWidget):
         val_widget = self.val_widgets[info_str]
         info_widget = self.layout().labelForField(val_widget)
 
-        val_widget.setText("---" if value is None else f"{value:.0f}")
+        fmt = INFO_STRINGS[info_str]
+
+        val_widget.setText("---" if value is None else f"{value:{fmt}}")
 
         prev = val_widget.property("measure")
         curr = "NONE" if value is None else ("OK" if ok else "ERR")
