@@ -121,8 +121,6 @@ dtoverlay=i2c1,pins_2_3
 dtoverlay=i2c6,pins_22_23
 ```
 
----
-
 <details><summary>Previous notes: (click to expand)</summary>
 
 #### pigpio requires:
@@ -153,6 +151,23 @@ spidev is there by default
 ```
 
 </details>
+
+---
+
+## Common test procedures:
+
+#### Replay a log file
+
+```bash
+# Terminal 1
+./device_json_to_socket.py data/20200422_helmet.out
+
+# Terminal 2
+./patientgui.py
+
+# Terminal 3
+./nursegui --debug -n 4 --port 8100
+```
 
 ---
 
