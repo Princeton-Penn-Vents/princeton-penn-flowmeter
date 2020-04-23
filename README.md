@@ -49,7 +49,7 @@ sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt-install python3-scipy
 sudo apt install vim                       # For my sanity for development
-sudo python3 -m pip install pyqtgraph pyzmq
+sudo python3 -m pip install pyqtgraph pyzmq confuse
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
@@ -74,6 +74,8 @@ Then you need to do this once:
 Click on a terminal icon and execute these commands (copy `config.txt` to the disk from the email - could use a memory stick).
 
 ```bash
+git clone https://github.com/princeton-penn-vents/princeton-penn-flowmeter
+cd princeton-penn-flowmeter
 sudo cp config/config.txt /boot/config.txt
 sudo cp config/patientdevice.service /lib/systemd/system
 sudo cp config/patientloop.service /lib/systemd/system
@@ -81,12 +83,8 @@ sudo systemctl enable pigpiod
 sudo systemctl enable patientdevice
 sudo systemctl enable patientloop
 sudo apt-get update
-sudo apt-get install python3-scipy
-sudo apt-get install python3-numpy
-python3 -m pip install pyyaml
-sudo apt-get install python3-pyqt5
-python3 -m pip install pyqtgraph
-git clone https://github.com/princeton-penn-vents/princeton-penn-flowmeter
+sudo apt-get install python3-scipy python3-numpy python3-pyqt5
+python3 -m pip install pyyaml pyqtgraph confuse
 ```
 Now, you have all the code. I would reboot the RPi4 (this will start pigpiod).
 

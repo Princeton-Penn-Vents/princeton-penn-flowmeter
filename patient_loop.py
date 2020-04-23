@@ -15,13 +15,13 @@ from processor.settings import LIVE_DICT
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.handler import Handler
+from processor.config import config
 
-# Read config file
-with open(args.config) as f:
-    config = yaml.load(f, Loader=yaml.SafeLoader)
+if args.config:
+    config.set_file(args.config)
 
 # Initialize LCD
-with RotaryLCD(LIVE_DICT) as rotary, Collector(config=config) as collector:
+with RotaryLCD(LIVE_DICT) as rotary, Collector() as collector:
     rotary.alarm_filter = lambda x: x in ["RR Max"]
     rotary.display()
 

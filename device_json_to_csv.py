@@ -11,29 +11,15 @@ args = parser.parse_args()
 import json
 import csv
 
-
-def dig(d, key, *args, default=None):
-    ret = d.get(key)
-    if ret is None:
-        return default
-    elif not args:
-        return ret
-    else:
-        return dig(ret, *args, default=default)
-
+from processor.config import config
 
 if args.config:
-    import yaml
+    config.set_file(args.config)
 
-    with open(args.config) as f:
-        config = yaml.load(f)
-else:
-    config = {}
-
-flow_scale = dig(config, "device", "flow", "scale", default=1)
-flow_offset = dig(config, "device", "flow", "offset", default=0)
-pressure_scale = dig(config, "device", "pressure", "scale", default=1)
-pressure_offset = dig(config, "device", "pressure", "offset", default=0)
+flow_scale = config["device"]["flow"]["scale"].get(float)
+flow_offset = config["device"]["flow"]["offset"].get(float)
+pressure_scale = config["device"]["pressure"]["scale"].get(float)
+pressure_offset = config["device"]["pressure"]["offset"].get(float)
 
 with open(args.input) as fin, open(args.output, "w") as fout:
     writer = csv.writer(fout, delimiter=",")

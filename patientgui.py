@@ -7,7 +7,6 @@ parser.add_argument("--config", default="pofm.yml", help="YAML configuration fil
 args = parser.parse_args()
 
 import http.server
-import yaml
 import sys
 import threading
 from functools import partial
@@ -19,11 +18,8 @@ from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
 from processor.handler import Handler
 
-# Initialize Collector
-with open(args.config) as f:
-    config = yaml.load(f, Loader=yaml.SafeLoader)
 
-with RotaryGUI(LIVE_DICT) as rotary, Collector(config=config) as collector:
+with RotaryGUI(LIVE_DICT) as rotary, Collector() as collector:
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)

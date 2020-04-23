@@ -13,3 +13,4 @@ dependencies:
   - pyzmq
   - requests
   - scipy
+  - confuse

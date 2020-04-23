@@ -1,0 +1,7 @@
+device:
+  pressure:
+    offset: 0.0
+    scale: 1.0
+  flow:
+    offset: 0.0
+    scale: 1.0

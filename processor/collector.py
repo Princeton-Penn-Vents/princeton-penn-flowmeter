@@ -2,6 +2,7 @@
 
 from processor.generator import Generator
 from processor.rolling import Rolling
+from processor.config import config
 import numpy as np
 
 import threading
@@ -10,23 +11,13 @@ import time
 from typing import Optional, Dict, Any
 
 
-def dig(d, key, *args, default=None):
-    ret = d.get(key)
-    if ret is None:
-        return default
-    elif not args:
-        return ret
-    else:
-        return dig(ret, *args, default=default)
-
-
 class CollectorThread(threading.Thread):
-    def __init__(self, config: Optional[Dict[str, Any]]):
+    def __init__(self) -> None:
 
-        self._flow_scale = dig(config, "device", "flow", "scale", default=1)
-        self._flow_offset = dig(config, "device", "flow", "offset", default=0)
-        self._pressure_scale = dig(config, "device", "pressure", "scale", default=1)
-        self._pressure_offset = dig(config, "device", "pressure", "offset", default=0)
+        self._flow_scale = config["device"]["flow"]["scale"].get(float)
+        self._flow_offset = config["device"]["flow"]["offset"].get(float)
+        self._pressure_scale = config["device"]["pressure"]["scale"].get(float)
+        self._pressure_offset = config["device"]["pressure"]["offset"].get(float)
 
         self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
         self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
@@ -65,14 +56,14 @@ class CollectorThread(threading.Thread):
 
 
 class Collector(Generator):
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self):
         super().__init__()
 
         self._time = np.array([], dtype=np.int64)
         self._flow = np.array([], dtype=np.double)
         self._pressure = np.array([], dtype=np.double)
 
-        self._thread = CollectorThread(config=config)
+        self._thread = CollectorThread()
         self._thread.start()
 
         self._analyzer_thread = threading.Thread(target=self._analyzer)
