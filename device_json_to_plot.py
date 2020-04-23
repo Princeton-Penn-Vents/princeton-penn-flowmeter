@@ -40,7 +40,7 @@ with open(args.input) as fin:
         try:
             d = json.loads(line)
         except:
-            warnings.warn("line is not valid JSON: {}".format(line))
+            warnings.warn("line is not valid JSON: {}".format(repr(line)))
             break
 
         if d.get("v", None) != 1:
