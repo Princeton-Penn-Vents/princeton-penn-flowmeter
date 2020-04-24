@@ -1,13 +1,12 @@
 import abc
 import enum
-import os
 import threading
 import time
 import warnings
 
 import numpy as np
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Sequence
 from pathlib import Path
 
 import processor.analysis
@@ -33,7 +32,7 @@ class Generator(abc.ABC):
 
     def __init__(self) -> None:
         self._volume = np.array([], dtype=np.double)
-        self._old_realtime = None
+        self._old_realtime: Optional[Sequence[int]] = None
         self._volume_unshifted_min: Optional[Any] = None
         self._volume_shift = 0.0
         self._time_window = None
@@ -59,11 +58,11 @@ class Generator(abc.ABC):
         self._cumulative_timestamps: Dict[str, Any] = {}
         self._alarms: Dict[str, Any] = {}
         self.rotary = processor.rotary.LocalRotary(get_remote_settings())
-        self.last_update = None
+        self.last_update: Optional[int] = None
         self.analyze_every = 2  # seconds
         self._last_ana = time.monotonic()
         self.status: Status
-        self._logging: Union[str, Path]
+        self._logging: Optional[Path] = None
         self.lock = threading.Lock()
 
     def analyze_as_needed(self) -> bool:
@@ -104,14 +103,13 @@ class Generator(abc.ABC):
     def analyze_timeseries(self) -> None:
         realtime = self.realtime
         if len(realtime) > 0:
-            if getattr(self, "_logging", None):
-                if os.path.exists(self._logging) and not os.path.isdir(self._logging):
-                    warnings.warn(
-                        "{} is not a directory; not logging".format(self._logging)
-                    )
+            if self._logging is not None:
+                if self._logging.exists() and not self._logging.is_dir():
+                    warnings.warn(f"{self._logging} is not a directory; not logging")
                 else:
-                    if not os.path.exists(self._logging):
-                        os.mkdir(self._logging)
+                    if not self._logging.exists():
+                        self._logging.mkdir()
+
                     if self._old_realtime is None or len(self._old_realtime) == 0:
                         start_index = 0
                     else:
@@ -119,24 +117,15 @@ class Generator(abc.ABC):
                             np.argmin(abs(realtime - self._old_realtime[-1])) + 1
                         )
 
-                    with open(
-                        os.path.join(self._logging, "time_{}.dat".format(id(self))),
-                        "ba",
-                    ) as file:
+                    with open(self._logging / f"time_{id(self)}.dat", "ba",) as file:
                         file.write(
                             (realtime[start_index:] * 1000).astype("<u8").tostring()
                         )
 
-                    with open(
-                        os.path.join(self._logging, "flow_{}.dat".format(id(self))),
-                        "ba",
-                    ) as file:
+                    with open(self._logging / f"flow_{id(self)}.dat", "ba",) as file:
                         file.write(self.flow[start_index:].astype("<f4").tostring())
 
-                    with open(
-                        os.path.join(self._logging, "pres_{}.dat".format(id(self))),
-                        "ba",
-                    ) as file:
+                    with open(self._logging / f"time_{id(self)}.dat", "ba",) as file:
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
             (
@@ -233,7 +222,7 @@ class Generator(abc.ABC):
                 self.status = Status.OK
 
     @property
-    def time(self):
+    def time(self) -> np.ndarray:
         timestamps = self.timestamps
         tardy = (
             0
@@ -246,26 +235,26 @@ class Generator(abc.ABC):
             return timestamps
 
     @property
-    def realtime(self):
+    def realtime(self) -> np.ndarray:
         return self.timestamps / 1000
 
     @property
     @abc.abstractmethod
-    def timestamps(self):
+    def timestamps(self) -> np.ndarray:
         pass
 
     @property
     @abc.abstractmethod
-    def flow(self):
+    def flow(self) -> np.ndarray:
         pass
 
     @property
     @abc.abstractmethod
-    def pressure(self):
+    def pressure(self) -> np.ndarray:
         pass
 
     @property
-    def volume(self):
+    def volume(self) -> np.ndarray:
         return self._volume
 
     @property
@@ -284,5 +273,5 @@ class Generator(abc.ABC):
     def cumulative_timestamps(self):
         return self._cumulative_timestamps
 
-    def close(self):
+    def close(self) -> None:
         pass
