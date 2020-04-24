@@ -59,6 +59,7 @@ class Generator(abc.ABC):
         self._breaths: List[Any] = []
         self._cumulative: Dict[str, Any] = {}
         self._cumulative_timestamps: Dict[str, Any] = {}
+        self._cumulative_bywindow: Dict[str, Any] = {}
         self._alarms: Dict[str, Any] = {}
         self.rotary = processor.rotary.LocalRotary(get_remote_settings())
         self.last_update: Optional[int] = None
@@ -147,6 +148,13 @@ class Generator(abc.ABC):
                 self._window_cumulative,
             )
 
+            (
+                self._cumulative_bywindow,
+                updated_fields,
+            ) = processor.analysis.cumulative_by_window(
+                self._window_cumulative, self._cumulative_bywindow, set(),
+            )
+
             self._volume = processor.analysis.flow_to_volume(
                 realtime,
                 self._old_realtime,
@@ -191,10 +199,6 @@ class Generator(abc.ABC):
                 self._cumulative, updated_fields = processor.analysis.cumulative(
                     self._cumulative, updated, new_breaths
                 )
-
-        self._cumulative, updated_fields = processor.analysis.cumulative_by_window(
-            self._window_cumulative, self._cumulative, updated_fields,
-        )
 
         self._alarms = processor.analysis.add_alarms(
             self.rotary, updated, new_breaths, self._cumulative
