@@ -166,7 +166,6 @@ class Generator(abc.ABC):
         self.analyze_timeseries()
 
         realtime = self.realtime
-        alarms = self._alarms
 
         updated = []
         new_breaths = []

@@ -123,10 +123,10 @@ def find_roots(times, values, derivative, threshold=0.02):
 
 def find_breaths(A, B, C, D):
     # ensure that each type is sorted (though it probably already is)
-    A = np.sort(A)
-    B = np.sort(B)
-    C = np.sort(C)
-    D = np.sort(D)
+    A.sort()
+    B.sort()
+    C.sort()
+    D.sort()
 
     if len(A) == 0 or len(B) == 0 or len(C) == 0 or len(D) == 0:
         return []
@@ -626,7 +626,7 @@ def alarm_record(old_record, timestamp, value, ismax):
         return record
 
 
-def add_alarms(rotary, updated, new_breaths, cumulative):
+def add_alarms(rotary, _updated, _new_breaths, cumulative):
     alarms = {}
 
     if "PIP" in cumulative:
