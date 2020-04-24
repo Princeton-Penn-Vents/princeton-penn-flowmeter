@@ -178,10 +178,12 @@ class Generator(abc.ABC):
 
             if len(breaths) > 0:
                 (
-                    self._breaths,
+                    all_breaths,
                     updated,
                     new_breaths,
                 ) = processor.analysis.combine_breaths(self._breaths, breaths)
+
+                self._breaths = all_breaths[-30:]
 
                 self._cumulative, updated_fields = processor.analysis.cumulative(
                     self._cumulative, updated, new_breaths
