@@ -33,43 +33,44 @@ class GeneratorThread(threading.Thread):
         if self._address is None:
             return
 
-        while not self.signal_end.is_set():
-            try:
-                r = requests.get(self._address)
-                self._last_update = datetime.now().timestamp()
-            except requests.ConnectionError:
+        with requests.Session() as s:
+            while not self.signal_end.is_set():
+                try:
+                    r = s.get(self._address)
+                    self._last_update = datetime.now().timestamp()
+                except requests.ConnectionError:
+                    with self._lock:
+                        self.status = Status.DISCON
+                    time.sleep(1)
+                    continue
+                if r.status_code != 200:
+                    with self._lock:
+                        self.status = Status.DISCON
+                    time.sleep(1)
+                    continue
+
+                try:
+                    root = json.loads(r.text)
+                except json.JSONDecodeError:
+                    logging.warning(f"Failed to read json, trying again", exc_info=True)
+                    time.sleep(0.01)
+                    continue
+
+                times = np.asarray(root["data"]["timestamps"])
+                flow = np.asarray(root["data"]["flows"])
+                pressure = np.asarray(root["data"]["pressures"])
                 with self._lock:
-                    self.status = Status.DISCON
-                time.sleep(1)
-                continue
-            if r.status_code != 200:
-                with self._lock:
-                    self.status = Status.DISCON
-                time.sleep(1)
-                continue
+                    if self.status == Status.DISCON:
+                        logging.info("(Re)Connecting successful")
+                        self.status = Status.OK
+                    to_add = new_elements(self._time, times)
+                    if to_add > 0:
+                        self._time.inject(times[-to_add:])
+                        self._flow.inject(flow[-to_add:])
+                        self._pressure.inject(pressure[-to_add:])
+                    self._rotary = root.get("rotary", {})
 
-            try:
-                root = json.loads(r.text)
-            except json.JSONDecodeError:
-                logging.warning(f"Failed to read json, trying again", exc_info=True)
-                time.sleep(0.01)
-                continue
-
-            times = np.asarray(root["data"]["timestamps"])
-            flow = np.asarray(root["data"]["flows"])
-            pressure = np.asarray(root["data"]["pressures"])
-            with self._lock:
-                if self.status == Status.DISCON:
-                    logging.info("(Re)Connecting successful")
-                    self.status = Status.OK
-                to_add = new_elements(self._time, times)
-                if to_add > 0:
-                    self._time.inject(times[-to_add:])
-                    self._flow.inject(flow[-to_add:])
-                    self._pressure.inject(pressure[-to_add:])
-                self._rotary = root.get("rotary", {})
-
-            time.sleep(0.1)
+                time.sleep(0.2)
 
     def get_data(self) -> Tuple[Status, Optional[float], Any, Any, Any, Dict[str, Any]]:
         with self._lock:
