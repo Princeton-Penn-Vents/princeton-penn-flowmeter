@@ -6,7 +6,7 @@ import warnings
 
 import numpy as np
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Sequence
+from typing import Dict, Any, List, Optional, Sequence, TypeVar
 from pathlib import Path
 
 import processor.analysis
@@ -25,6 +25,9 @@ COLOR = {
     Status.ALERT: (237, 67, 55),
     Status.DISCON: (50, 50, 220),
 }
+
+
+T = TypeVar("T", bound="Generator")
 
 
 class Generator(abc.ABC):
@@ -78,7 +81,7 @@ class Generator(abc.ABC):
     def get_data(self):
         pass
 
-    def prepare(self, *, from_timestamp=None) -> Dict[str, Any]:
+    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
         if from_timestamp is None:
             window = slice(min(len(self.timestamps), 50 * 5), None)
         elif from_timestamp == 0:
@@ -276,3 +279,9 @@ class Generator(abc.ABC):
 
     def close(self) -> None:
         pass
+
+    def __enter__(self: T) -> T:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()

@@ -3,6 +3,7 @@ import numpy as np
 
 from processor.generator import Generator, Status
 from processor.threaded_generator import GeneratorThread
+from typing import Optional
 
 
 class RemoteGenerator(Generator):
@@ -10,19 +11,19 @@ class RemoteGenerator(Generator):
         super().__init__()
         self.ip = ip
         self.port = port
-        self._last_update = None
+        self._last_update: Optional[float] = None
         self._thread = GeneratorThread(address=f"http://{ip}:{port}")
         self._thread.start()
         self.status = Status.DISCON
-        self._last_ts = 0
+        self._last_ts: int = 0
 
-    def prepare(self):
-        return super().prepare(self, from_timestamp=self._last_ts or 0)
+    def prepare(self, *, from_timestamp: Optional[float] = None):
+        return super().prepare(from_timestamp=from_timestamp or self._last_ts or 0)
 
-    def get_data(self):
+    def get_data(self) -> None:
         (
             status,
-            self.last_update,
+            self._last_update,
             self._time,
             self._flow,
             self._pressure,
@@ -42,16 +43,16 @@ class RemoteGenerator(Generator):
                 self.rotary[k].value = v["value"]
 
     @property
-    def flow(self):
+    def flow(self) -> np.ndarray:
         return np.asarray(self._flow)
 
     @property
-    def pressure(self):
+    def pressure(self) -> np.ndarray:
         return np.asarray(self._pressure)
 
     @property
-    def timestamps(self):
+    def timestamps(self) -> np.ndarray:
         return np.asarray(self._time)
 
-    def close(self):
+    def close(self) -> None:
         self._thread.signal_end.set()

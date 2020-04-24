@@ -112,12 +112,6 @@ class Collector(Generator):
         self._thread.join()
         self._analyzer_thread.join()
 
-    def __enter__(self) -> "Collector":
-        return self
-
-    def __exit__(self, *exc) -> None:
-        self.close()
-
 
 if __name__ == "__main__":
     coll = Collector()
