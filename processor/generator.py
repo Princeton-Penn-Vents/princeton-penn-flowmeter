@@ -57,9 +57,9 @@ class Generator(abc.ABC):
             "denom": {"flow": {}, "pressure": {},},  # will be filled in from above
         }
         self._breaths: List[Any] = []
-        self._cumulative: Dict[str, Any] = {}
+        self._cumulative: Dict[str, float] = {}
         self._cumulative_timestamps: Dict[str, Any] = {}
-        self._cumulative_bywindow: Dict[str, Any] = {}
+        self._cumulative_bywindow: Dict[str, Dict[str, float]] = {}
         self._alarms: Dict[str, Any] = {}
         self.rotary = processor.rotary.LocalRotary(get_remote_settings())
         self.last_update: Optional[int] = None
@@ -68,6 +68,10 @@ class Generator(abc.ABC):
         self.status: Status
         self._logging: Optional[Path] = None
         self.lock = threading.Lock()
+
+    @property
+    def cumulative_bywindow(self) -> Dict[str, Dict[str, float]]:
+        return self._cumulative_bywindow
 
     def analyze_as_needed(self) -> bool:
         if time.monotonic() - self._last_ana < self.analyze_every:
@@ -270,11 +274,11 @@ class Generator(abc.ABC):
         return self._breaths
 
     @property
-    def alarms(self):
+    def alarms(self) -> Dict[str, Dict[str, float]]:
         return self._alarms
 
     @property
-    def cumulative(self):
+    def cumulative(self) -> Dict[str, float]:
         return self._cumulative
 
     @property

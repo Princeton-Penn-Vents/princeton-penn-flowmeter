@@ -75,22 +75,24 @@ class Collector(Generator):
             self.get_data()
             if self.analyze_as_needed():
                 self.rotary.alarms = self.alarms
-                if "Current Setting" in self.rotary:
-                    setting = self.rotary["Current Setting"]
-                    RR = self.cumulative.get("RR", 0.0)
-                    F = self.cumulative.get("window average flow", [0.0] * 7)
-                    P = self.cumulative.get("window average pressure", [0.0] * 7)
 
-                    if isinstance(F, dict):
-                        F = list(F.values())
+            if "Current Setting" in self.rotary:
+                setting = self.rotary["Current Setting"]
 
-                    if isinstance(P, dict):
-                        P = list(P.values())
+                RR = self.cumulative_bywindow.get("RR", 0.0)
+                F = self.cumulative_bywindow.get("window average flow", [0.0] * 7)
+                P = self.cumulative_bywindow.get("window average pressure", [0.0] * 7)
 
-                    setting.from_processor(
-                        F=F, P=P, RR=[RR] * 7,
-                    )
-                    self.rotary.external_update()
+                if isinstance(F, dict):
+                    F = list(F.values())
+
+                if isinstance(P, dict):
+                    P = list(P.values())
+
+                setting.from_processor(
+                    F=F, P=P, RR=[RR] * 7,
+                )
+                self.rotary.external_update()
 
     def get_data(self) -> None:
         self._time, self._flow, self._pressure = self._thread.get_data()

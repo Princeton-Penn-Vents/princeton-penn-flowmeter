@@ -25,13 +25,13 @@ class FilenameSetting(DisplaySetting):
 
 class CurrentSetting(SelectionSetting):
     def __init__(self, name):
-        l = ["1s", "3s", "5s", "10s", "20s", "30s", "60s"]
+        listing = ["1s", "3s", "5s", "10s", "20s", "30s", "60s"]
 
         self._F: Optional[List[float]] = None
         self._P: Optional[List[float]] = None
         self._RR: Optional[List[float]] = None
 
-        super().__init__(3, l, name=name)
+        super().__init__(3, listing, name=name)
 
     def from_processor(self, F: List[float], P: List[float], RR: List[float]):
         self._F = F

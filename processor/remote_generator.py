@@ -16,6 +16,9 @@ class RemoteGenerator(Generator):
         self._thread.start()
         self.status = Status.DISCON
         self._last_ts: int = 0
+        self._time: Optional[np.array] = None
+        self._flow: Optional[np.array] = None
+        self._pressure: Optional[np.array] = None
 
     def prepare(self, *, from_timestamp: Optional[float] = None):
         return super().prepare(from_timestamp=from_timestamp or self._last_ts or 0)
