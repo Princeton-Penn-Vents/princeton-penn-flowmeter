@@ -191,6 +191,8 @@ class PatientSensor(QtGui.QFrame):
         self.values = NumbersWidget()
         layout.addWidget(self.values)
 
+        self.curves: Dict[str, Any] = {}
+
     @Slot()
     def click_number(self):
         dialog = ConnectionDialog(self)
@@ -203,20 +205,25 @@ class PatientSensor(QtGui.QFrame):
             self.gen = RemoteGenerator(ip=ip_address, port=port)
 
     def set_plot(self):
+        assert len(self.curves) == 0
 
         gis = GraphInfo()
 
-        self.curves = {}
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
 
             self.curves[key] = graph.plot([], [], pen=pen)
 
             graph.setRange(xRange=(15, 0), yRange=gis.yLims[key])
-            dy = [(value, str(value)) for value in gis.yTicks[key]]
-            graph.getAxis("left").setTicks([dy, []])
+
+            graph.getAxis("left").setStyle(
+                tickTextOffset=2,
+                textFillLimits=[(2, 1),],  ## Never have less than two ticks
+            )
+
             if i != len(gis.graph_labels) - 1:
                 graph.hideAxis("bottom")
+
             graph.addLine(y=0)
 
         self.graph[gis.graph_labels[0]].setXLink(self.graph[gis.graph_labels[1]])
