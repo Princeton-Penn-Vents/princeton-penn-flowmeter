@@ -11,7 +11,7 @@ import yaml
 from functools import partial
 import http.server
 
-from processor.settings import LIVE_DICT
+from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.handler import Handler
@@ -21,7 +21,7 @@ if args.config:
     config.set_file(args.config)
 
 # Initialize LCD
-with RotaryLCD(LIVE_DICT) as rotary, Collector() as collector:
+with RotaryLCD(get_live_settings()) as rotary, Collector() as collector:
     rotary.alarm_filter = lambda x: x in ["RR Max"]
     rotary.display()
 

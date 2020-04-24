@@ -1,41 +1,70 @@
-from processor.setting import IncrSetting, SelectionSetting
+#!/usr/bin/env python3
+
+from processor.setting import IncrSetting, SelectionSetting, Setting
 from processor.display_settings import FilenameSetting, CurrentSetting
+from processor.config import config
 
-REQUIRED = {
-    "AvgWindow": SelectionSetting(
-        2, [1, 3, 5, 10, 20, 30, 60], unit="sec", name="AvgWindow"
-    ),
-    "Stale Data Timeout": IncrSetting(
-        8,
-        min=1,
-        max=20,
-        incr=1,
-        unit="sec",
-        name="Stale Data Timeout",
-        lcd_name="StaleDataTimeout",
-    ),
-}
+from typing import Dict
+from confuse import ConfigView
+from pprint import pprint
 
-LIVE_REQUIRED = {
-    "Current Setting": CurrentSetting("FlowMeter... "),
-    "Log Filename": FilenameSetting("Log filename"),
-    "Sensor ID": IncrSetting(1, min=1, max=20, incr=1, name="Sensor ID"),  # REQUIRED
-}
 
-# This could be from YAML laster
-OPTIONAL = {
-    "RR Max": IncrSetting(
-        30, min=10, max=90, incr=5, unit="1/min", name="RespRate Max"
-    ),
-    "PIP Max": IncrSetting(30, min=0, max=40, incr=1, unit="cm-H2O", name="PIP Max"),
-    "PIP Min": IncrSetting(5, min=0, max=20, incr=1, unit="cm-H2O", name="PIP Min"),
-    "PEEP Max": IncrSetting(8, min=0, max=15, incr=1, unit="cm-H2O", name="PEEP Max"),
-    "PEEP Min": IncrSetting(0, min=0, max=15, incr=1, unit="cm-H2O", name="PEEP Min"),
-    "TVe Max": IncrSetting(700, min=100, max=1000, incr=50, unit="ml", name="TVe Max"),
-    "TVe Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml", name="TVe Min"),
-    "TVi Max": IncrSetting(700, min=100, max=1000, incr=50, unit="ml", name="TVi Max"),
-    "TVi Min": IncrSetting(300, min=100, max=1000, incr=50, unit="ml", name="TVi Min"),
-}
+def get_setting(c: ConfigView) -> Setting:
+    type_name = c["type"].get()
+    if type_name == "Incr":
+        return IncrSetting(
+            default=c["default"].as_number(),
+            min=c["min"].as_number(),
+            max=c["max"].as_number(),
+            incr=c["incr"].as_number(),
+            name=c["name"].get(),
+            unit=c["unit"].get() if "unit" in c else None,
+            lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
+        )
+    elif type_name == "Selection":
+        return SelectionSetting(
+            default=c["default"].get(int),
+            listing=[v.as_number() for v in c["items"]],
+            name=c["name"].get(),
+            lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
+        )
+    elif type_name == "Current":
+        return CurrentSetting("FlowMeter... ")
+    elif type_name == "Filename":
+        return FilenameSetting("Log filename")
+    else:
+        raise RuntimeError(
+            f"Invalid type {type_name!r}, needs to be defined in setting.py/settings.py"
+        )
 
-LIVE_DICT = {**LIVE_REQUIRED, **REQUIRED, **OPTIONAL}
-NURSE_DICT = {**REQUIRED, **OPTIONAL}
+
+def get_live_settings() -> Dict[str, Setting]:
+    "Get the live version of the configuration dictionary"
+
+    d: Dict[str, Setting] = {}
+    all_settings = [
+        config["rotary"]["live"],
+        config["rotary"]["required"],
+        config["rotary"]["current"],
+    ]
+    for settings in all_settings:
+        for setting in settings:
+            d[setting] = get_setting(settings[setting])
+    return d
+
+
+def get_remote_settings() -> Dict[str, Setting]:
+    "Get the non-live version of the configuration dictionary"
+    d: Dict[str, Setting] = {}
+    all_settings = [config["rotary"]["required"], config["rotary"]["current"]]
+    for settings in all_settings:
+        for setting in settings:
+            d[setting] = get_setting(settings[setting])
+    return d
+
+
+if __name__ == "__main__":
+    print("Live ----/n")
+    pprint(get_live_settings())
+    print("/nRemote ----/n")
+    pprint(get_remote_settings())

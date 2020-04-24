@@ -8,16 +8,15 @@ import numpy as np
 import threading
 import zmq
 import time
-from typing import Optional, Dict, Any
 
 
 class CollectorThread(threading.Thread):
     def __init__(self) -> None:
 
-        self._flow_scale = config["device"]["flow"]["scale"].get(float)
-        self._flow_offset = config["device"]["flow"]["offset"].get(float)
-        self._pressure_scale = config["device"]["pressure"]["scale"].get(float)
-        self._pressure_offset = config["device"]["pressure"]["offset"].get(float)
+        self._flow_scale = config["device"]["flow"]["scale"].as_number()
+        self._flow_offset = config["device"]["flow"]["offset"].as_number()
+        self._pressure_scale = config["device"]["pressure"]["scale"].as_number()
+        self._pressure_offset = config["device"]["pressure"]["offset"].as_number()
 
         self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
         self._flow = Rolling(window_size=Generator.WINDOW_SIZE)

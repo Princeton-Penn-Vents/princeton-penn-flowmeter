@@ -5,3 +5,113 @@ device:
   flow:
     offset: 0.0
     scale: 1.0
+
+
+rotary:
+  live:
+    Current Setting:
+      type: Current
+
+    Log Filename:
+      type: Filename
+      name: Log filename
+
+    Sensor ID:
+      type: Incr
+      name: Sensor ID
+      default: 1
+      min: 1
+      max: 20
+      incr: 1
+
+  required:
+    AvgWindow:
+      type: Selection
+      name: Average Window
+      lcd_name: AvgWindow
+      default: 2
+      items: [1, 3, 5, 10, 20, 30, 60]
+
+    Stale Data Timeout:
+      type: Incr
+      name: Stale Data Timeout
+      lcd_name: StaleDataTimeout
+      default: 8
+      min: 1
+      max: 20
+      incr: 1
+      unit: sec
+
+  current:
+    RR Max:
+      type: Incr
+      name: RespRate Max
+      default: 30
+      min: 10
+      max: 90
+      incr: 5
+      unit: 1/min
+    PIP Max:
+      type: Incr
+      name: PIP Max
+      default: 30
+      min: 0
+      max: 40
+      incr: 1
+      unit: cm-H2O
+    PIP Min:
+      type: Incr
+      default: 5
+      min: 0
+      max: 20
+      incr: 1
+      unit: cm-H2O
+      name: PIP Min
+    PEEP Max:
+      type: Incr
+      default: 8
+      min: 0
+      max: 15
+      incr: 1
+      unit: cm-H2O
+      name: PEEP Max
+    PEEP Min:
+      type: Incr
+      default: 0
+      min: 0
+      max: 15
+      incr: 1
+      unit: cm-H2O
+      name: PEEP Min
+    TVe Max:
+      type: Incr
+      default: 700
+      min: 100
+      max: 1000
+      incr: 50
+      unit: ml
+      name: TVe Max
+    TVe Min:
+      type: Incr
+      default: 300
+      min: 100
+      max: 1000
+      incr: 50
+      unit: ml
+      name: TVe Min
+    TVi Max:
+      type: Incr
+      default: 700
+      min: 100
+      max: 1000
+      incr: 50
+      unit: ml
+      name: TVi Max
+    TVi Min:
+      type: Incr
+      default: 300
+      min: 100
+      max: 1000
+      incr: 50
+      unit: ml
+      name: TVi Min

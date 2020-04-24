@@ -13,13 +13,13 @@ from functools import partial
 import signal
 
 from nurse.qt import QtWidgets
-from processor.settings import LIVE_DICT
+from processor.settings import get_live_settings
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
 from processor.handler import Handler
 
 
-with RotaryGUI(LIVE_DICT) as rotary, Collector() as collector:
+with RotaryGUI(get_live_settings()) as rotary, Collector() as collector:
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)

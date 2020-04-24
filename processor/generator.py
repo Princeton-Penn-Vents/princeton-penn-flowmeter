@@ -11,8 +11,8 @@ from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
 
 import processor.analysis
-import processor.rotary
-from processor.settings import NURSE_DICT
+from processor.rotary import LocalRotary
+from processor.settings import get_remote_settings
 
 
 class Status(enum.Enum):
@@ -58,7 +58,7 @@ class Generator(abc.ABC):
         self._cumulative: Dict[str, Any] = {}
         self._cumulative_timestamps: Dict[str, Any] = {}
         self._alarms: Dict[str, Any] = {}
-        self.rotary = processor.rotary.LocalRotary(NURSE_DICT)
+        self.rotary = processor.rotary.LocalRotary(get_remote_settings())
         self.last_update = None
         self.analyze_every = 2  # seconds
         self._last_ana = time.monotonic()

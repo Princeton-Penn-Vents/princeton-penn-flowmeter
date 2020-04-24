@@ -120,11 +120,9 @@ class Rotary(LocalRotary):
 
 if __name__ == "__main__":
     import signal
-    from processor.settings import NURSE_DICT
+    from processor.settings import get_live_settings
 
-    rotary = Rotary(NURSE_DICT)
+    with Rotary(get_live_settings()) as rotary:
 
-    while True:
-        signal.pause()
-
-    rotary.close()
+        while True:
+            signal.pause()

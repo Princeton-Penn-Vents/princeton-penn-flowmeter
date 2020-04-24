@@ -119,9 +119,9 @@ class RotaryLCD(Rotary):
 
 if __name__ == "__main__":
     import time
-    from processor.settings import NURSE_DICT
+    from processor.settings import get_live_settings
 
-    with RotaryLCD(NURSE_DICT) as rotary:
+    with RotaryLCD(get_live_settings()) as rotary:
         rotary.display()
 
         while True:
