@@ -234,37 +234,30 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             t = 0
 
             with self.gen.lock:
-                self.gen.get_data()
-                full = self.gen.analyze_as_needed()
 
                 if not first and self.parent().header.freeze_btn.checkState():
                     # Let's not retry too soon.
                     t += 100 / 1000
                 else:
-
                     # Fill in the data
                     for key in gis.graph_labels:
                         self.curves[key].setData(self.gen.time, getattr(self.gen, key))
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
-                    # Only update the main (non-rotary) messages if full
-                    # analysis ran or if first run after change
-                    if full or first:
+                    cumulative = "\n".join(
+                        rf'<p><span style="font-weight:bold;">{k}</span>: {v:.2f}</p>'
+                        for k, v in self.gen.cumulative.items()
+                    )
+                    self.cumulative_text.update_if_needed(cumulative, html=True)
 
-                        cumulative = "\n".join(
-                            rf'<p><span style="font-weight:bold;">{k}</span>: {v:.2f}</p>'
-                            for k, v in self.gen.cumulative.items()
-                        )
-                        self.cumulative_text.update_if_needed(cumulative, html=True)
-
-                        expand = lambda s: "".join(
-                            f"\n  {k}: {v}" for k, v in s.items()
-                        )
-                        active_alarms = "\n".join(
-                            f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
-                        )
-                        self.active_alarm_text.update_if_needed(active_alarms)
+                    expand = lambda s: "".join(
+                        f"\n  {k}: {v}" for k, v in s.items()
+                    )
+                    active_alarms = "\n".join(
+                        f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
+                    )
+                    self.active_alarm_text.update_if_needed(active_alarms)
 
                     rotary_text = "\n".join(
                         f"{v.name}: {v.value} {v.unit}"

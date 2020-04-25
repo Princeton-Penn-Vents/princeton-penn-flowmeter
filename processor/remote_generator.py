@@ -2,8 +2,8 @@ from datetime import datetime
 import numpy as np
 
 from processor.generator import Generator, Status
-from processor.threaded_generator import GeneratorThread
-from typing import Optional
+from processor.threaded_generator import RemoteThread
+from typing import Optional, Dict, Any
 
 
 class RemoteGenerator(Generator):
@@ -11,39 +11,31 @@ class RemoteGenerator(Generator):
         super().__init__()
         self.ip = ip
         self.port = port
+
         self._last_update: Optional[float] = None
-        self._thread = GeneratorThread(address=f"http://{ip}:{port}")
-        self._thread.start()
+
         self.status = Status.DISCON
         self._last_ts: int = 0
-        self._time: Optional[np.array] = None
-        self._flow: Optional[np.array] = None
-        self._pressure: Optional[np.array] = None
 
-    def prepare(self, *, from_timestamp: Optional[float] = None):
+        self._time = np.array([], dtype=np.int64)
+        self._flow = np.array([], dtype=np.double)
+        self._pressure = np.array([], dtype=np.double)
+
+        self._remote_thread: Optional[RemoteThread] = None
+
+    def run(self) -> None:
+        super().run()
+        self._remote_thread = RemoteThread(
+            self, address=f"http://{self.ip}:{self.port}"
+        )
+        self._remote_thread.start()
+
+    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
         return super().prepare(from_timestamp=from_timestamp or self._last_ts or 0)
 
     def get_data(self) -> None:
-        (
-            status,
-            self._last_update,
-            self._time,
-            self._flow,
-            self._pressure,
-            rotary,
-        ) = self._thread.get_data()
-
-        if status == Status.DISCON:
-            self.status = Status.DISCON
-        elif self.status == Status.DISCON:
-            self.status = Status.OK
-
-        if len(self._time) > 0:
-            self._last_ts = self._time[-1]
-
-        for k, v in rotary.items():
-            if k in self.rotary:
-                self.rotary[k].value = v["value"]
+        if self._remote_thread is not None:
+            self._remote_thread.access_collected_data()
 
     @property
     def flow(self) -> np.ndarray:
@@ -58,4 +50,6 @@ class RemoteGenerator(Generator):
         return np.asarray(self._time)
 
     def close(self) -> None:
-        self._thread.signal_end.set()
+        super().close()
+        if self._remote_thread is not None:
+            self._remote_thread.join()

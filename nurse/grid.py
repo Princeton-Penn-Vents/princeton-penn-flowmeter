@@ -236,9 +236,6 @@ class PatientSensor(QtGui.QFrame):
         gis = GraphInfo()
 
         with self.gen.lock:
-            self.gen.get_data()
-            ana = self.gen.analyze_as_needed()
-
             # Fill in the data
             for key in gis.graph_labels:
                 if self.isVisible():
@@ -249,23 +246,22 @@ class PatientSensor(QtGui.QFrame):
                 else:
                     self.curves[key].setData([], [])
 
-            if ana:
-                # Change of status requires a background color change
-                if self.property("alert_status") != self.gen.status:
-                    self.setProperty("alert_status", self.gen.status.name)
-                    self.style().unpolish(self)
-                    self.style().polish(self)
+            # Change of status requires a background color change
+            if self.property("alert_status") != self.gen.status:
+                self.setProperty("alert_status", self.gen.status.name)
+                self.style().unpolish(self)
+                self.style().polish(self)
 
-                self.status = self.gen.status
+            self.status = self.gen.status
 
-                alarming_quanities = {key.split()[0] for key in self.gen.alarms}
+            alarming_quanities = {key.split()[0] for key in self.gen.alarms}
 
-                for key in self.values:
-                    self.values.set_value(
-                        key,
-                        value=self.gen.cumulative.get(key),
-                        ok=key not in alarming_quanities,
-                    )
+            for key in self.values:
+                self.values.set_value(
+                    key,
+                    value=self.gen.cumulative.get(key),
+                    ok=key not in alarming_quanities,
+                )
 
         toc = time.monotonic()
         t = (toc - tic) * (len(self.parent().graphs) + 1)

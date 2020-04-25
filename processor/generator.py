@@ -86,14 +86,20 @@ class Generator(abc.ABC):
         # The rotary with alarm settings
         self.rotary = LocalRotary(get_remote_settings()) if rotary is None else rotary
 
+        # How often to rerun analyze (full analyze)
+        self.analyze_every = 3  # seconds
+
+        # How often to process data in automatic mode (partial analyze)
+        self.run_every = 0.5  # seconds
+
         # Last updated datetime.now()
         self.last_update: Optional[float] = None
 
-        # How often to rerun analyze
-        self.analyze_every = 2  # seconds
-
         # Last analyze run in local time - used by analyze_as_needed
         self._last_ana = time.monotonic()
+
+        # Last partial analyze for plotting
+        self._last_get: Optional[float] = None
 
         # Status of the generator alarms, set in get_data
         self.status: Status
@@ -101,17 +107,43 @@ class Generator(abc.ABC):
         # Path to write data to (needs name change)
         self._logging: Optional[Path] = None
 
-        # This lock ensures validity of the access when threading
-        self.lock = threading.Lock()
+        # This lock ensures validity of the access when threading.
+        # This may be "reentered" by analyze calling the properties; that is fine.
+        self.lock = threading.RLock()
 
-    @property
-    def cumulative_bywindow(self) -> Dict[str, Dict[str, float]]:
+        # A thread to run the analyze loop in the background
+        self._run_thread: Optional[threading.Thread] = None
+
+        # A stop signal to turn off the thread
+        self._stop = threading.Event()
+
+    def run(self) -> None:
         """
-        The cumulative running averages, something like {"flow": {"5s": 2.121}}
+        Start running an analysis loop. Calling get_data and analyze_as_needed manually are not recommended
+        while this is running in the background. Be sure to close/exit context to close and clean up the thread.
+
+        Started by the context manager
         """
-        return self._cumulative_bywindow
+
+        self._stop.clear()
+        self._run_thread = threading.Thread(target=self._run)
+        self._run_thread.start()
+
+    def _run(self) -> None:
+        """
+        Must be run in the background, by run()
+        """
+
+        while not self._stop.is_set():
+            with self.lock:
+                self.get_data()
+                self.analyze_as_needed()
+            time.sleep(self.run_every)
 
     def analyze_as_needed(self) -> bool:
+        """
+        Run basic analysis, and more complex analysis only if needed.
+        """
         if time.monotonic() - self._last_ana < self.analyze_every:
             self.analyze_timeseries()
             return False
@@ -292,13 +324,13 @@ class Generator(abc.ABC):
         The time array, with the most rececnt time as 0, with an adjustment based on `last_update`. Mostly for plotting.
         """
         timestamps = self.timestamps
+
         tardy = (
-            0
-            if self.last_update is None
-            else (datetime.now().timestamp() - self.last_update) * 1000
+            (time.monotonic() - self._last_get) if self._last_get is not None else 0.0
         )
+
         if len(timestamps) > 0:
-            return -(timestamps - timestamps[-1] - tardy) / 1000
+            return -(timestamps - timestamps[-1]) / 1000 + tardy
         else:
             return timestamps
 
@@ -369,13 +401,23 @@ class Generator(abc.ABC):
 
         return self._cumulative_timestamps
 
+    @property
+    def cumulative_bywindow(self) -> Dict[str, Dict[str, float]]:
+        """
+        The cumulative running averages, something like {"flow": {"5s": 2.121}}
+        """
+        return self._cumulative_bywindow
+
     def close(self) -> None:
         """
         Always close or use a context manager if running threads!
         """
-        pass
+        self._stop.set()
+        if self._run_thread is not None:
+            self._run_thread.join()
 
     def __enter__(self: T) -> T:
+        self.run()
         return self
 
     def __exit__(self, *exc) -> None:
