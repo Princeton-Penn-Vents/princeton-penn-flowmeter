@@ -46,26 +46,26 @@ class Generator(abc.ABC):
         # The amount to shift the volume (JP?)
         self._volume_shift = 0.0
 
-        # (JP?)
-        self._time_window = None
-        self._flow_window = None
-        self._pressure_window = None
+        # The cumulative running windows for flow
+        self._flow_cumulative = {
+            1: 0.0,
+            3: 0.0,
+            5: 0.0,
+            10: 0.0,
+            20: 0.0,
+            30: 0.0,
+            60: 0.0,
+        }
 
-        # The cumulative running windows for flow & pressure
-        self._window_cumulative: Dict[str, Dict[str, Dict[int, float]]] = {
-            "numer": {
-                "flow": {1: 0.0, 3: 0.0, 5: 0.0, 10: 0.0, 20: 0.0, 30: 0.0, 60: 0.0},
-                "pressure": {
-                    1: 0.0,
-                    3: 0.0,
-                    5: 0.0,
-                    10: 0.0,
-                    20: 0.0,
-                    30: 0.0,
-                    60: 0.0,
-                },
-            },
-            "denom": {"flow": {}, "pressure": {},},  # will be filled in from above
+        # The cumulative running windows for pressure
+        self._pressure_cumulative = {
+            1: 0.0,
+            3: 0.0,
+            5: 0.0,
+            10: 0.0,
+            20: 0.0,
+            30: 0.0,
+            60: 0.0,
         }
 
         # The list of breaths
@@ -77,8 +77,8 @@ class Generator(abc.ABC):
         # The cumulative timestamps (JP?)
         self._cumulative_timestamps: Dict[str, Any] = {}
 
-        # The cumulative values in windows
-        self._cumulative_bywindow: Dict[str, Dict[str, float]] = {}
+        # JP?
+        self._window_cumulative: Dict[str, Any] = {}
 
         # The active alarms
         self._alarms: Dict[str, Dict[str, float]] = {}
@@ -214,27 +214,12 @@ class Generator(abc.ABC):
                     with open(self._logging / f"time_{id(self)}.dat", "ba",) as file:
                         file.write(self.pressure[start_index:].astype("<f4").tostring())
 
-            (
-                self._time_window,
-                self._flow_window,
-                self._pressure_window,
-                self._window_cumulative,
-            ) = processor.analysis.window_averages(
-                realtime,
-                self._old_realtime,
-                self.flow,
-                self.pressure,
-                self._time_window,
-                self._flow_window,
-                self._pressure_window,
-                self._window_cumulative,
+            self._flow_cumulative = processor.analysis.compute_cumulative(
+                self._flow_cumulative.keys(), self.timestamps, self.flow
             )
 
-            (
-                self._cumulative_bywindow,
-                updated_fields,
-            ) = processor.analysis.cumulative_by_window(
-                self._window_cumulative, self._cumulative_bywindow, set(),
+            self._pressure_cumulative = processor.analysis.compute_cumulative(
+                self._pressure_cumulative.keys(), self.timestamps, self.pressure
             )
 
             self._volume = processor.analysis.flow_to_volume(
@@ -402,11 +387,18 @@ class Generator(abc.ABC):
         return self._cumulative_timestamps
 
     @property
-    def cumulative_bywindow(self) -> Dict[str, Dict[str, float]]:
+    def average_flow(self) -> Dict[int, float]:
         """
-        The cumulative running averages, something like {"flow": {"5s": 2.121}}
+        The cumulative running averages
         """
-        return self._cumulative_bywindow
+        return self._flow_cumulative
+
+    @property
+    def average_pressure(self) -> Dict[int, float]:
+        """
+        The cumulative running averages
+        """
+        return self._pressure_cumulative
 
     def close(self) -> None:
         """
