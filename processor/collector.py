@@ -40,7 +40,9 @@ class CollectorThread(threading.Thread):
 
             with self._lock:
                 self._time.inject(j["t"])
-                self._flow.inject(j["F"] * self._flow_scale - self._flow_offset)
+                self._flow.inject(
+                    j["F"] ** (4 / 7) * self._flow_scale - self._flow_offset
+                )
                 self._pressure.inject(
                     j["P"] * self._pressure_scale - self._pressure_offset
                 )
