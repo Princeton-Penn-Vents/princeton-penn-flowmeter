@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.integrate
+import scipy.signal
 
 
 def window_averages(
@@ -53,7 +54,9 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
     else:
         shift = old_volume[np.argmin(abs(old_realtime - realtime[0]))]
 
-    return scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
+    out = scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
+
+    return scipy.signal.sosfilt(scipy.signal.butter(1, 0.005, "highpass", output="sos"), out)
 
 
 def smooth_derivative(times, values, sig=0.2):
