@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.integrate
 import scipy.signal
+from typing import Iterable, Dict
 
 
 def pressure_deglitch_smooth(
@@ -30,49 +31,25 @@ def pressure_deglitch_smooth(
     return pressure_out
 
 
-def window_averages(
-    realtime,
-    old_realtime,
-    flow,
-    pressure,
-    time_window,
-    flow_window,
-    pressure_window,
-    window_cumulative,
-):
-    if old_realtime is None:
-        index = 0
-    else:
-        index = np.argmin(abs(old_realtime - realtime[0]))
+def _compute_cumulative_length(length: int, time: np.ndarray, window: np.ndarray):
+    if len(time) == 0:
+        return 0.0
+    try:
+        ind = np.searchsorted(time, time[-1] - length * 1000)
+    except ValueError:
+        print("Time:", time)
+        print("Value:", time[-1] - length * 1000)
+        raise
+    return np.mean(window[ind:])
 
-    if time_window is None:
-        time_window = realtime[index:]
-    else:
-        time_window = np.concatenate([time_window, realtime[index:]])
 
-    if flow_window is None:
-        flow_window = flow[index:]
-    else:
-        flow_window = np.concatenate([flow_window, flow[index:]])
+def compute_cumulative(
+    lengths: Iterable[int], time: np.ndarray, window: np.ndarray
+) -> Dict[int, float]:
 
-    if pressure_window is None:
-        pressure_window = pressure[index:]
-    else:
-        pressure_window = np.concatenate([pressure_window, pressure[index:]])
-
-    for window in window_cumulative["numer"]["flow"]:
-        t = realtime[-1] - window
-        section = flow_window[np.argmin(abs(time_window - t)) :]
-        window_cumulative["numer"]["flow"][window] = np.sum(section)
-        window_cumulative["denom"]["flow"][window] = len(section)
-
-    for window in window_cumulative["numer"]["pressure"]:
-        t = realtime[-1] - window
-        section = pressure_window[np.argmin(abs(time_window - t)) :]
-        window_cumulative["numer"]["pressure"][window] = np.sum(section)
-        window_cumulative["denom"]["pressure"][window] = len(section)
-
-    return time_window, flow_window, pressure_window, window_cumulative
+    return {
+        length: _compute_cumulative_length(length, time, window) for length in lengths
+    }
 
 
 def flow_to_volume(realtime, old_realtime, flow, old_volume):
@@ -610,33 +587,6 @@ def cumulative(cumulative, updated, new_breaths):
                     "breath average pressure",
                     breath["average pressure"],
                 )
-
-    return cumulative, updated_fields
-
-
-def cumulative_by_window(window_cumulative, cumulative, updated_fields):
-    if "window average flow" not in cumulative:
-        cumulative["window average flow"] = {}
-    if "window average pressure" not in cumulative:
-        cumulative["window average pressure"] = {}
-
-    for window in window_cumulative["numer"]["flow"]:
-        numer = window_cumulative["numer"]["flow"][window]
-        denom = window_cumulative["denom"]["flow"].get(window, 0)
-        if denom == 0:
-            cumulative["window average flow"][window] = 0.0
-        else:
-            cumulative["window average flow"][window] = float(numer) / denom
-            updated_fields.add("window average flow")
-
-    for window in window_cumulative["numer"]["pressure"]:
-        numer = window_cumulative["numer"]["pressure"][window]
-        denom = window_cumulative["denom"]["pressure"].get(window, 0)
-        if denom == 0:
-            cumulative["window average pressure"][window] = 0.0
-        else:
-            cumulative["window average pressure"][window] = float(numer) / denom
-            updated_fields.add("window average pressure")
 
     return cumulative, updated_fields
 
