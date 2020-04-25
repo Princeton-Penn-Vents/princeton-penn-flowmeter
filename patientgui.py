@@ -19,8 +19,7 @@ from processor.collector import Collector
 from processor.handler import Handler
 
 
-with RotaryGUI(get_live_settings()) as rotary, Collector() as collector:
-    collector.rotary = rotary
+with RotaryGUI(get_live_settings()) as rotary, Collector(rotary=rotary) as collector:
 
     server_address = ("0.0.0.0", 8100)
     with http.server.ThreadingHTTPServer(

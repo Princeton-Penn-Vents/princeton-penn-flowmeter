@@ -7,6 +7,8 @@ The `Collector` takes data from the single readings (run by `patient_*.py` code)
 
 The `LocalGenerator` makes simulated data. The `RemoteGenerator` collects data via HTTP from a server serving data (probably from a `Collector`). `GeneratorThread` is the tool that `RemoteGenorator` runs to collect data.
 
+The main collector has a built in thread that can be started with `.run(delay=0.2)`. Access to all properties should be protected with a `with self.lock`.
+
 Key methods and properties:
 
 * `analyze_as_needed()`: Run basic analysis, and more complex analysis only if needed.

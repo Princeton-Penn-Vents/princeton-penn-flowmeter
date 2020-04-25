@@ -39,31 +39,35 @@ class LocalGenerator(Generator):
             self._flow.inject(flow[-to_add:])
             self._pressure.inject(pressure[-to_add:])
 
-    def analize(self):
+    def analyze(self):
         if self._force_status == Status.DISCON:
             return
         else:
-            return super().analize()
+            return super().analyze()
 
     @property
     def flow(self):
         if self._force_status == Status.DISCON:
             return []
-        return np.asarray(self._flow) * (
-            0.4 if self._force_status == Status.ALERT else 1
-        )
+        with self.lock:
+            return np.asarray(self._flow) * (
+                0.4 if self._force_status == Status.ALERT else 1
+            )
 
     @property
     def pressure(self):
         if self._force_status == Status.DISCON:
             return []
-        return np.asarray(self._pressure) * (
-            0.4 if self._force_status == Status.ALERT else 1
-        )
+
+        with self.lock:
+            return np.asarray(self._pressure) * (
+                0.4 if self._force_status == Status.ALERT else 1
+            )
 
     @property
     def timestamps(self):
         if self._force_status != Status.DISCON and len(self._time) > 0:
-            return np.asarray(self._time)
-        else:
-            return np.array([], dtype=np.double)
+            with self.lock:
+                return np.asarray(self._time)
+
+        return np.array([], dtype=np.double)

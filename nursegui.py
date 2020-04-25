@@ -72,6 +72,7 @@ class MainStack(QtWidgets.QWidget):
                 if i == 7:
                     status = Status.DISCON
                 gen = LocalGenerator(status, logging=logging)
+            gen.run()  # Close must be called
 
             graph = PatientSensor(i + offset, gen=gen, logging=logging, debug=debug)
             self.graphs.append(graph)
