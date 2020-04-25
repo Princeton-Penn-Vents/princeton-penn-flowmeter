@@ -13,9 +13,26 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo
 from nurse.header import HeaderWidget, PrincetonLogoWidget
-from nurse.qt import update_textbox
 
 from processor.generator import Status
+
+
+class DisplayText(QtWidgets.QTextEdit):
+    def __init__(self):
+        super().__init__()
+
+        self.setReadOnly(True)
+        self._text = ""
+
+    def update_if_needed(self, text, html=False):
+        if self._text != text:
+            self._text = text
+            val = self.verticalScrollBar().value()
+            if html:
+                self.setHtml(text)
+            else:
+                self.setPlainText(text)
+            self.verticalScrollBar().setValue(val)
 
 
 class DrilldownHeaderWidget(HeaderWidget):
@@ -161,18 +178,15 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.set_plot(graph_layout, phase_layout)
 
         left_layout.addWidget(QtWidgets.QLabel("Alarm settings"))
-        self.alarm_cut_text = QtWidgets.QTextEdit()
-        self.alarm_cut_text.setReadOnly(True)
+        self.alarm_cut_text = DisplayText()
         left_layout.addWidget(self.alarm_cut_text, 1)
 
         right_layout.addWidget(QtWidgets.QLabel("Values"))
-        self.cumulative_text = QtWidgets.QTextEdit()
-        self.cumulative_text.setReadOnly(True)
+        self.cumulative_text = DisplayText()
         right_layout.addWidget(self.cumulative_text, 1)
 
         right_layout.addWidget(QtWidgets.QLabel("Active Alarms"))
-        self.active_alarm_text = QtWidgets.QTextEdit()
-        self.active_alarm_text.setReadOnly(True)
+        self.active_alarm_text = DisplayText()
         right_layout.addWidget(self.active_alarm_text, 1)
 
         right_layout.addWidget(QtWidgets.QLabel("Nurse log"))
@@ -232,15 +246,17 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     for key in gis.graph_labels:
                         self.curves[key].setData(self.gen.time, getattr(self.gen, key))
 
-                    self.phase.setData(self.gen.flow, self.gen.pressure)
+                    self.phase.setData(self.gen.pressure, self.gen.volume)
 
                     # Only update the main (non-rotary) messages if full
                     # analysis ran or if first run after change
                     if full or first:
+
                         cumulative = "\n".join(
-                            f"{k}: {v}" for k, v in self.gen.cumulative.items()
+                            rf'<p><span style="font-weight:bold;">{k}</span>: {v:.2f}</p>'
+                            for k, v in self.gen.cumulative.items()
                         )
-                        update_textbox(self.cumulative_text, cumulative)
+                        self.cumulative_text.update_if_needed(cumulative, html=True)
 
                         expand = lambda s: "".join(
                             f"\n  {k}: {v}" for k, v in s.items()
@@ -248,13 +264,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         active_alarms = "\n".join(
                             f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
                         )
-                        update_textbox(self.active_alarm_text, active_alarms)
+                        self.active_alarm_text.update_if_needed(active_alarms)
 
                     rotary_text = "\n".join(
                         f"{v.name}: {v.value} {v.unit}"
                         for v in self.gen.rotary.values()
                     )
-                    update_textbox(self.alarm_cut_text, rotary_text)
+                    self.alarm_cut_text.update_if_needed(rotary_text)
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack

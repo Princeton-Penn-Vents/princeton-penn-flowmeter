@@ -149,8 +149,9 @@ class PatientSensor(QtGui.QFrame):
 
     @status.setter
     def status(self, value: Status):
-        self.setProperty("alert_status", value.name)
-        self.title_widget.repolish()
+        if value.name != self.property("alert_status"):
+            self.setProperty("alert_status", value.name)
+            self.title_widget.repolish()
 
     def __init__(
         self, i: int, *args, gen: Generator, logging: str = None, debug: bool, **kwargs
