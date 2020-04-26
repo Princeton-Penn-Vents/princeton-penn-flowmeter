@@ -33,7 +33,15 @@ DIR = Path(__file__).parent.resolve()
 
 class MainStack(QtWidgets.QWidget):
     def __init__(
-        self, *, ip: str, port: int, displays, logging: str, debug: bool, offset: int
+        self,
+        *,
+        ip: str,
+        port: int,
+        displays,
+        logging: str,
+        debug: bool,
+        sim: bool,
+        offset: int,
     ):
         super().__init__()
 
@@ -57,7 +65,7 @@ class MainStack(QtWidgets.QWidget):
         for i in range(displays):
             gen: Generator
 
-            if not debug:
+            if not sim:
                 gen = RemoteGenerator(ip=ip, port=port + i)
             else:
                 status = Status.OK if i % 7 != 1 else Status.ALERT
@@ -206,7 +214,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Start up in debug mode (local generators, fake names, log to screen, etc)",
+        help="Start up in debug mode (fake names, log to screen, etc)",
+    )
+    parser.add_argument(
+        "--sim",
+        action="store_true",
+        help="Read from fake sim instead of remote generators",
     )
     parser.add_argument(
         "--logging",

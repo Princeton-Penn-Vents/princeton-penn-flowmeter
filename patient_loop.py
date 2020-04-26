@@ -10,6 +10,7 @@ import signal
 import yaml
 from functools import partial
 import http.server
+import threading
 
 from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
@@ -32,10 +33,13 @@ with RotaryLCD(get_live_settings()) as rotary, Collector() as collector:
         server_address, partial(Handler, collector)
     ) as httpd:
 
+        thread = threading.Thread(target=httpd.serve_forever)
+        thread.start()
+
         def ctrl_c(_number, _frame):
             print("Closing down server...")
             httpd.shutdown()
 
         signal.signal(signal.SIGINT, ctrl_c)
 
-        httpd.serve_forever()
+        thread.join()

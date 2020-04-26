@@ -13,7 +13,7 @@ class RedrawSettings(QtCore.QObject):
 
 
 class RotaryGUI(LocalRotary):
-    signal: RedrawSettings
+    signal = RedrawSettings()
 
     def external_update(self) -> None:
         self.signal.changed.emit()

@@ -40,7 +40,9 @@ class CollectorThread(threading.Thread):
 
             with self._lock:
                 self._time.inject(j["t"])
-                self._flow.inject(j["F"] * self._flow_scale - self._flow_offset)
+                self._flow.inject(
+                    j["F"] ** (4 / 7) * self._flow_scale - self._flow_offset
+                )
                 self._pressure.inject(
                     j["P"] * self._pressure_scale - self._pressure_offset
                 )
@@ -75,22 +77,24 @@ class Collector(Generator):
             self.get_data()
             if self.analyze_as_needed():
                 self.rotary.alarms = self.alarms
-                if "Current Setting" in self.rotary:
-                    setting = self.rotary["Current Setting"]
-                    RR = self.cumulative.get("RR", 0.0)
-                    F = self.cumulative.get("window average flow", [0.0] * 7)
-                    P = self.cumulative.get("window average pressure", [0.0] * 7)
 
-                    if isinstance(F, dict):
-                        F = list(F.values())
+            if "Current Setting" in self.rotary:
+                setting = self.rotary["Current Setting"]
 
-                    if isinstance(P, dict):
-                        P = list(P.values())
+                RR = self.cumulative_bywindow.get("RR", 0.0)
+                F = self.cumulative_bywindow.get("window average flow", [0.0] * 7)
+                P = self.cumulative_bywindow.get("window average pressure", [0.0] * 7)
 
-                    setting.from_processor(
-                        F=F, P=P, RR=[RR] * 7,
-                    )
-                    self.rotary.external_update()
+                if isinstance(F, dict):
+                    F = list(F.values())
+
+                if isinstance(P, dict):
+                    P = list(P.values())
+
+                setting.from_processor(
+                    F=F, P=P, RR=[RR] * 7,
+                )
+                self.rotary.external_update()
 
     def get_data(self) -> None:
         self._time, self._flow, self._pressure = self._thread.get_data()
@@ -111,12 +115,6 @@ class Collector(Generator):
         self._thread.signal_end.set()
         self._thread.join()
         self._analyzer_thread.join()
-
-    def __enter__(self) -> "Collector":
-        return self
-
-    def __exit__(self, *exc) -> None:
-        self.close()
 
 
 if __name__ == "__main__":

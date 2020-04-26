@@ -1,7 +1,7 @@
 device:
   pressure:
-    offset: 0.0
-    scale: 0.01
+    offset: 12.73
+    scale: 0.0126
   flow:
     offset: 0.0
-    scale: 0.0166
+    scale: 0.7198

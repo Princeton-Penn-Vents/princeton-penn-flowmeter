@@ -164,7 +164,7 @@ spidev is there by default
 ./patientgui.py
 
 # Terminal 3
-./nursegui --debug -n 4 --port 8100
+./nursegui.py --debug -n 4 --port 8100
 ```
 
 ---

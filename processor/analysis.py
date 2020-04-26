@@ -1,5 +1,32 @@
 import numpy as np
 import scipy.integrate
+import scipy.signal
+
+
+def pressure_deglitch_smooth(
+    original_pressure,
+    deglitch_cut=0.1,
+):
+    # 1/4 P[i-2] + 1/4 P[i-1] + 0 P[i] + 1/4 P[i+1] + 1/4 P[i+2] kernel
+    pressure_average = 0.25*(original_pressure[4:] +
+                             original_pressure[3:-1] +
+                             original_pressure[1:-3] +
+                             original_pressure[:-4])
+
+    # deglitching: large excusions from the average of neighbors is
+    #              replaced with an average of neighbors
+    toreplace22 = abs(pressure_average - original_pressure[2:-2]) > deglitch_cut
+    toreplace = np.zeros(len(original_pressure), np.bool_)
+    toreplace[2:-2] = toreplace22
+
+    pressure_out = original_pressure.copy()
+    pressure_out[toreplace] = pressure_average[toreplace22]
+
+    # smoothing: 2/5 P[i-2] + 1/5 P[i] + 2/5 P[i+2] kernel
+    pressure_out[1:-1] = (0.4*pressure_out[2:] +
+                          0.2*pressure_out[1:-1] +
+                          0.4*pressure_out[:-2])
+    return pressure_out
 
 
 def window_averages(
@@ -53,7 +80,9 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
     else:
         shift = old_volume[np.argmin(abs(old_realtime - realtime[0]))]
 
-    return scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
+    out = scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
+
+    return scipy.signal.sosfilt(scipy.signal.butter(1, 0.005, "highpass", output="sos"), out)
 
 
 def smooth_derivative(times, values, sig=0.2):
@@ -123,10 +152,10 @@ def find_roots(times, values, derivative, threshold=0.02):
 
 def find_breaths(A, B, C, D):
     # ensure that each type is sorted (though it probably already is)
-    A = np.sort(A)
-    B = np.sort(B)
-    C = np.sort(C)
-    D = np.sort(D)
+    A.sort()
+    B.sort()
+    C.sort()
+    D.sort()
 
     if len(A) == 0 or len(B) == 0 or len(C) == 0 or len(D) == 0:
         return []
@@ -626,7 +655,7 @@ def alarm_record(old_record, timestamp, value, ismax):
         return record
 
 
-def add_alarms(rotary, updated, new_breaths, cumulative):
+def add_alarms(rotary, _updated, _new_breaths, cumulative):
     alarms = {}
 
     if "PIP" in cumulative:
