@@ -3,6 +3,32 @@ import scipy.integrate
 import scipy.signal
 
 
+def pressure_deglitch_smooth(
+    original_pressure,
+    deglitch_cut=0.1,
+):
+    # 1/4 P[i-2] + 1/4 P[i-1] + 0 P[i] + 1/4 P[i+1] + 1/4 P[i+2] kernel
+    pressure_average = 0.25*(original_pressure[4:] +
+                             original_pressure[3:-1] +
+                             original_pressure[1:-3] +
+                             original_pressure[:-4])
+
+    # deglitching: large excusions from the average of neighbors is
+    #              replaced with an average of neighbors
+    toreplace22 = abs(pressure_average - original_pressure[2:-2]) > deglitch_cut
+    toreplace = np.zeros(len(original_pressure), np.bool_)
+    toreplace[2:-2] = toreplace22
+
+    pressure_out = original_pressure.copy()
+    pressure_out[toreplace] = pressure_average[toreplace22]
+
+    # smoothing: 2/5 P[i-2] + 1/5 P[i] + 2/5 P[i+2] kernel
+    pressure_out[1:-1] = (0.4*pressure_out[2:] +
+                          0.2*pressure_out[1:-1] +
+                          0.4*pressure_out[:-2])
+    return pressure_out
+
+
 def window_averages(
     realtime,
     old_realtime,
