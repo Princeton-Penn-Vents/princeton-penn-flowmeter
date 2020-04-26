@@ -101,6 +101,7 @@ class LCD:
 
     def clear(self) -> None:
         self.ctrl(0x01)
+        time.sleep(0.002)
 
     def __exit__(self, *exc) -> None:
         assert self.pi is not None, 'Must use "with" to use'
