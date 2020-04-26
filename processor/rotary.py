@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import abc
-from typing import List, Dict, Union, Any, ValuesView, TypeVar
+from typing import List, Dict, Union, Any, ValuesView, TypeVar, Iterable, Tuple
 
 from processor.setting import Setting
 
 
 class RotaryModeBase(abc.ABC):
     @abc.abstractmethod
-    def push(self):
+    def pushed_clockwise(self):
+        pass
+
+    @abc.abstractmethod
+    def pushed_counterclockwise(self):
         pass
 
     @abc.abstractmethod
@@ -26,13 +31,16 @@ class RotaryCollection(RotaryModeBase):
         self._current: int = 0
         self._items: List[str] = list(self._dict.keys())
 
-    def push(self):
+    def clockwise(self) -> None:
         self._current = (self._current + 1) % len(self._dict)
 
-    def clockwise(self):
+    def counterclockwise(self) -> None:
+        self._current = (self._current + 1) % len(self._dict)
+
+    def pushed_clockwise(self) -> None:
         self.value().up()
 
-    def counterclockwise(self):
+    def pushed_counterclockwise(self) -> None:
         self.value().down()
 
     def key(self) -> str:
@@ -44,13 +52,13 @@ class RotaryCollection(RotaryModeBase):
     def values(self) -> ValuesView[Setting]:
         return self._dict.values()
 
-    def items(self):
+    def items(self) -> Iterable[Tuple[str, Setting]]:
         return self._dict.items()
 
-    def __getitem__(self, val):
+    def __getitem__(self, val: str) -> Setting:
         return self._dict[val]
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
         return key in self._dict
 
 

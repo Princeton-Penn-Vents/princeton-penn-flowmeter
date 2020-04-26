@@ -31,7 +31,7 @@ context = zmq.Context()
 socket = context.socket(zmq.PUB)  # publish (broadcast)
 socket.bind("tcp://*:5556")
 ReadoutHz = 50.0
-#oversampleADC = 16
+# oversampleADC = 16
 oversampleADC = 4
 ADCsamples = []
 NReadoutTemp = 50 * oversampleADC

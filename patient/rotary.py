@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pigpio
+import math
 from processor.rotary import LocalRotary, RotaryCollection
 from processor.setting import Setting
 import enum
@@ -24,15 +25,22 @@ class Rotary(LocalRotary):
 
         self.pi: Optional[pigpio.pi] = pi
 
+        self.pushed_in = False
+        self.turns: int = 0
+
     def turned_display(self, up: bool) -> None:
         "Override in subclass to customize"
         dir = "up" if up else "down"
+        print(f"Changed to {self.key()}")
+
+    def pushed_turned_display(self, up: bool) -> None:
+        "Override in subclass to customize"
+        dir = "up" if up else "down"
         print(f"Changed {self.key()} {dir}")
-        print(rotary)
 
     def pushed_display(self) -> None:
         "Override in subclass to customize"
-        print(f"Changed to {self.key()}")
+        print(f"Pushed")
         print(rotary)
 
     def clockwise(self) -> None:
@@ -43,8 +51,15 @@ class Rotary(LocalRotary):
         self.config.counterclockwise()
         self.turned_display(up=False)
 
+    def pushed_clockwise(self) -> None:
+        self.config.pushed_clockwise()
+        self.pushed_turned_display(up=True)
+
+    def pushed_counterclockwise(self) -> None:
+        self.config.pushed_counterclockwise()
+        self.pushed_turned_display(up=False)
+
     def push(self) -> None:
-        self.config.push()
         self.pushed_display()
 
     @property
@@ -91,22 +106,48 @@ class Rotary(LocalRotary):
 
         pi = self.pi
 
-        def rotary_turned(ch: int, _level: int, _tick: int):
+        def rotary_turned(ch: int, _level: int, _tick: int) -> None:
             if ch == pinA:
                 levelB = pi.read(pinB)
-                if levelB:
-                    self.clockwise()
-                else:
-                    self.counterclockwise()
+                clockwise = 1 if levelB else -1
 
-        def rotary_switch(ch: int, _level: int, _tick: int):
-            if ch == pinSW:
+                # If this is the first turn or we change directions, just mark direction
+                if self.turns == 0 or (clockwise * self.turns < 0):
+                    self.turns = clockwise
+                    return
+
+                # Same direction - increment
+                self.turns += clockwise
+
+                # If we have ticked 3 (+1 initial) notches, trigger a turn
+                if self.turns > 3:
+
+                    # Reset to same-direction beginning point
+                    self.turns = clockwise
+
+                    if self.pushed_in:
+                        if levelB:
+                            self.pushed_clockwise()
+                        else:
+                            self.pushed_counterclockwise()
+                    else:
+                        if levelB:
+                            self.clockwise()
+                        else:
+                            self.counterclockwise()
+
+        def rotary_switch(ch: int, level: int, _tick: int) -> None:
+            # Allow rotations to tell if this is pushed in or out
+            self.pushed_in = level == 0
+
+            # Reset the rotary turns
+            self.turns = 0
+
+            if ch == pinSW and level == 0:  # falling edge
                 self.push()
 
         self._rotary_turned = self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
-        self._rotary_switch = self.pi.callback(
-            pinSW, pigpio.FALLING_EDGE, rotary_switch
-        )
+        self._rotary_switch = self.pi.callback(pinSW, pigpio.EITHER_EDGE, rotary_switch)
 
         return super().__enter__()
 

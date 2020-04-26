@@ -8,6 +8,8 @@ from patient.buzzer import Buzzer
 import pigpio
 from typing import Dict
 import enum
+import time
+import uuid
 
 
 class AlarmLevel(enum.Enum):
@@ -37,6 +39,13 @@ class RotaryLCD(Rotary):
         super().__enter__()
 
         self.backlight.white()
+        self.lcd.upper("Princeton Open Vent ")
+        mac_addr = uuid.getnode()
+        mac_str = ":".join(
+            f"{(mac_addr >> ele) & 0xff :02x}" for ele in range(40, -8, -8)
+        )
+        self.lcd.lower(mac_str)
+        time.sleep(2)
         return self
 
     def __exit__(self, *exc) -> None:
@@ -65,6 +74,11 @@ class RotaryLCD(Rotary):
         else:
             super().push()
 
+    def pushed_turned_display(self, up: bool) -> None:
+        # Top display keeps ID number!
+        self.upper_display()
+        self.lower_display()
+
     def turned_display(self, up: bool) -> None:
         # Top display keeps ID number!
         self.lower_display()
@@ -82,10 +96,7 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def pushed_display(self) -> None:
-        self.lcd.clear()
         self.alert_display()
-        self.upper_display()
-        self.lower_display()
 
     def upper_display(self) -> None:
         ID = self["Sensor ID"].value
@@ -103,13 +114,14 @@ class RotaryLCD(Rotary):
         if len(string) > 20:
             print(f"Warning: Truncating {string!r}")
             string = string[:20]
-        self.lcd.lower(string)
         if self.alarms:
             n = len(self.alarms)
             if n == 1:
-                self.lcd.lower("ALARM", Align.RIGHT)
+                string = string[:14] + " ALARM"
             else:
-                self.lcd.lower(f"{n} ALARMS", Align.RIGHT)
+                string = string[:13] + " ALARMS"
+
+        self.lcd.lower(string)
 
     def display(self) -> None:
         self.lcd.clear()

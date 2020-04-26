@@ -4,14 +4,15 @@ import scipy.signal
 
 
 def pressure_deglitch_smooth(
-    original_pressure,
-    deglitch_cut=0.1,
+    original_pressure, deglitch_cut=0.1,
 ):
     # 1/4 P[i-2] + 1/4 P[i-1] + 0 P[i] + 1/4 P[i+1] + 1/4 P[i+2] kernel
-    pressure_average = 0.25*(original_pressure[4:] +
-                             original_pressure[3:-1] +
-                             original_pressure[1:-3] +
-                             original_pressure[:-4])
+    pressure_average = 0.25 * (
+        original_pressure[4:]
+        + original_pressure[3:-1]
+        + original_pressure[1:-3]
+        + original_pressure[:-4]
+    )
 
     # deglitching: large excusions from the average of neighbors is
     #              replaced with an average of neighbors
@@ -23,9 +24,9 @@ def pressure_deglitch_smooth(
     pressure_out[toreplace] = pressure_average[toreplace22]
 
     # smoothing: 2/5 P[i-2] + 1/5 P[i] + 2/5 P[i+2] kernel
-    pressure_out[1:-1] = (0.4*pressure_out[2:] +
-                          0.2*pressure_out[1:-1] +
-                          0.4*pressure_out[:-2])
+    pressure_out[1:-1] = (
+        0.4 * pressure_out[2:] + 0.2 * pressure_out[1:-1] + 0.4 * pressure_out[:-2]
+    )
     return pressure_out
 
 
@@ -82,7 +83,9 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
 
     out = scipy.integrate.cumtrapz(flow, realtime / 60.0, initial=0) + shift
 
-    return scipy.signal.sosfilt(scipy.signal.butter(1, 0.004, "highpass", output="sos"), out)
+    return scipy.signal.sosfilt(
+        scipy.signal.butter(1, 0.004, "highpass", output="sos"), out
+    )
 
 
 def smooth_derivative(times, values, sig=0.2):
