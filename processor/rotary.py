@@ -35,7 +35,7 @@ class RotaryCollection(RotaryModeBase):
         self._current = (self._current + 1) % len(self._dict)
 
     def counterclockwise(self) -> None:
-        self._current = (self._current + 1) % len(self._dict)
+        self._current = (self._current - 1) % len(self._dict)
 
     def pushed_clockwise(self) -> None:
         self.value().up()

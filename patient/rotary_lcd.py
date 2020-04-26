@@ -46,7 +46,7 @@ class RotaryLCD(Rotary):
             f"{(mac_addr >> ele) & 0xff :02x}" for ele in range(40, -8, -8)
         )
         self.lcd.lower(mac_str)
-        time.sleep(2)
+        time.sleep(3.5)
         return self
 
     def __exit__(self, *exc) -> None:
