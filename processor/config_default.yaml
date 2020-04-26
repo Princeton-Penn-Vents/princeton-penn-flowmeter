@@ -9,9 +9,6 @@ device:
 
 rotary:
   live:
-    Current Setting:
-      type: Current
-
     Log Filename:
       type: Filename
       name: Log filename
@@ -23,6 +20,9 @@ rotary:
       min: 1
       max: 20
       incr: 1
+
+    Current Setting:
+      type: Current
 
   required:
     AvgWindow:

@@ -27,13 +27,12 @@ class RotaryLCD(Rotary):
         self.buzzer = Buzzer(pi=pi)
         self.alarm_level: AlarmLevel = AlarmLevel.OFF
 
-        assert "Sensor ID" in config, "A 'Sensor ID' key must be present"
-
     def external_update(self) -> None:
         self.upper_display()
         self.lower_display()
 
     def __enter__(self) -> "RotaryLCD":
+        self.config._current = 2  # Current Setting
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()
