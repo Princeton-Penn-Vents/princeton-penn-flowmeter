@@ -120,7 +120,7 @@ class Rotary(LocalRotary):
                 self.turns += clockwise
 
                 # If we have ticked 3 (+1 initial) notches, trigger a turn
-                if self.turns > 3:
+                if abs(self.turns) > 3:
 
                     # Reset to same-direction beginning point
                     self.turns = clockwise
