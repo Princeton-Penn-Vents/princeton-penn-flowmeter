@@ -15,7 +15,7 @@ def pressure_deglitch_smooth(
         + original_pressure[:-4]
     )
 
-    # deglitching: large excusions from the average of neighbors is
+    # deglitching: large exclusions from the average of neighbors is
     #              replaced with an average of neighbors
     toreplace22 = abs(pressure_average - original_pressure[2:-2]) > deglitch_cut
     toreplace = np.zeros(len(original_pressure), np.bool_)

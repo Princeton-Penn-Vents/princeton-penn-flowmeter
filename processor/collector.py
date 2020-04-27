@@ -10,7 +10,8 @@ import numpy as np
 import threading
 import zmq
 import time
-from typing import Optional
+from typing import Optional, Dict, Any
+from datetime import datetime
 
 
 class CollectorThread(threading.Thread):
@@ -55,6 +56,22 @@ class CollectorThread(threading.Thread):
             self.parent._flow = np.asarray(self._flow_live).copy()
             self.parent._pressure = np.asarray(self._pressure_live).copy()
 
+    def access_partial_data(self, from_timestamp: Optional[float] = None):
+        with self._collector_lock:
+            if from_timestamp is None:
+                window = slice(min(len(self._time_live), 50 * 5), None)
+            elif from_timestamp == 0:
+                window = slice(None)
+            else:
+                start = np.searchsorted(self._time_live, from_timestamp, side="right")
+                window = slice(start, None)
+
+            return {
+                "timestamps": self._time_live[window].tolist(),
+                "flows": self._flow_live[window].tolist(),
+                "pressures": self._pressure_live[window].tolist(),
+            }
+
 
 class Collector(Generator):
     def __init__(self, *, rotary: LocalRotary = None):
@@ -90,20 +107,35 @@ class Collector(Generator):
             )
             self.rotary.external_update()
 
+    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
+        """
+        Prepare a dict for transmission via json. Does *not* call `get_data()`
+        """
+        if self._collect_thread is not None:
+            data = self._collect_thread.access_partial_data(from_timestamp)
+        else:
+            data = {}
+
+        return {
+            "version": 1,
+            "time": datetime.now().timestamp(),
+            # "alarms": self.alarms,
+            # "cumulative": self.cumulative,
+            "rotary": self.rotary.to_dict(),
+            "data": data,
+        }
+
     @property
     def timestamps(self):
-        with self.lock:
-            return self._time
+        return self._time
 
     @property
     def flow(self):
-        with self.lock:
-            return self._flow
+        return self._flow
 
     @property
     def pressure(self):
-        with self.lock:
-            return self._pressure
+        return self._pressure
 
     def run(self) -> None:
         super().run()

@@ -30,9 +30,6 @@ class RemoteGenerator(Generator):
         )
         self._remote_thread.start()
 
-    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
-        return super().prepare(from_timestamp=from_timestamp or self._last_ts or 0)
-
     def get_data(self) -> None:
         if self._remote_thread is not None:
             self._remote_thread.access_collected_data()
