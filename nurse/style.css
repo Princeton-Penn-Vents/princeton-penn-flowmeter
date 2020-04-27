@@ -199,3 +199,44 @@ DrilldownHeaderWidget > QPushButton#return_btn {
   margin: 2px 10px;
   border-radius: 3px;
 }
+
+DrilldownHeaderWidget > QCheckBox {
+  color: floralwhite;
+  font-family: Times;
+  font-weight: bold;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.DisplayBox {
+  border: 2px solid grey;
+}
+
+.DrilldownCumulative {
+  font-size: 28pt;
+  font-weight: bold;
+}
+
+.DrilldownLimit {
+  font-size: 20pt;
+  color: #A0A0A0;
+}
+
+.DrilldownLabel {
+  font-size: 24pt;
+  color: #A0A0A0;
+}
+
+.BoxHeader {
+  color: #A0A0A0;
+  font-weight: bold;
+  font-size: 24pt;
+}
+
+PatientDrilldownWidget > QTextEdit {
+  background-color: #202020;
+  margin: 5px;
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid grey;
+}

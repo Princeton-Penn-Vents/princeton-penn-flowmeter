@@ -17,6 +17,107 @@ from nurse.header import HeaderWidget, PrincetonLogoWidget
 from processor.generator import Status
 
 
+class BoxHeader(QtWidgets.QLabel):
+    pass
+
+
+class DrilldownCumulative(QtWidgets.QLabel):
+    pass
+
+
+class DrilldownLimit(QtWidgets.QLabel):
+    pass
+
+
+class DrilldownLabel(QtWidgets.QLabel):
+    pass
+
+
+class DisplayBox(QtWidgets.QFrame):
+    def __init__(self, *, key, label, fmt=""):
+        super().__init__()
+        self.key = key
+        self.fmt = fmt
+        layout = QtWidgets.QVBoxLayout(self)
+
+        upper_layout = QtWidgets.QHBoxLayout()
+        layout.addLayout(upper_layout)
+
+        upper_layout.addWidget(DrilldownLabel(label))
+        upper_layout.addStretch()
+
+        self.cumulative = DrilldownCumulative()
+        upper_layout.addWidget(self.cumulative)
+
+        lower_layout = QtWidgets.QHBoxLayout()
+        layout.addLayout(lower_layout)
+
+        self.lower_limit = DrilldownLimit()
+        lower_layout.addWidget(self.lower_limit)
+
+        lower_layout.addStretch()
+
+        self.upper_limit = DrilldownLimit()
+        lower_layout.addWidget(self.upper_limit)
+
+        self.update_cumulative()
+        self.update_limits()
+
+    def update_cumulative(self):
+        gen = (
+            self.parent().parent().gen
+            if (self.parent() and self.parent().parent())
+            else None
+        )
+        if gen is not None and self.key in gen.cumulative:
+            self.cumulative.setText(format(gen.cumulative[self.key], self.fmt))
+        else:
+            self.cumulative.setText("---")
+
+    def update_limits(self):
+        min_key = f"{self.key} Min"
+        max_key = f"{self.key} Max"
+
+        gen = (
+            self.parent().parent().gen
+            if (self.parent() and self.parent().parent())
+            else None
+        )
+
+        if gen is not None:
+            if min_key in gen.rotary:
+                self.lower_limit.setText(format(gen.rotary[min_key].value, self.fmt))
+
+            if max_key in gen.rotary:
+                self.upper_limit.setText(format(gen.rotary[max_key].value, self.fmt))
+
+
+class AllDisplays(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.boxes = [
+            DisplayBox(key="RR", label="RR", fmt=".0f"),
+            DisplayBox(key="I:E time ratio", label="I:E", fmt=".2f"),
+            DisplayBox(key="PIP", label="PIP", fmt=".0f"),
+            DisplayBox(key="PEEP", label="PEEP", fmt=".0f"),
+            DisplayBox(key="TVe", label="TVe", fmt=".0f"),
+            DisplayBox(key="TVi", label="TVi", fmt=".0f"),
+        ]
+
+        layout = GridLayout(self)
+        for n, box in enumerate(self.boxes):
+            layout.addWidget(box, *divmod(n, 2))
+
+    def update_cumulative(self):
+        for box in self.boxes:
+            box.update_cumulative()
+
+    def update_limits(self):
+        for box in self.boxes:
+            box.update_limits()
+
+
 class DisplayText(QtWidgets.QTextEdit):
     def __init__(self):
         super().__init__()
@@ -177,21 +278,25 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         self.set_plot(graph_layout, phase_layout)
 
-        left_layout.addWidget(QtWidgets.QLabel("Alarm settings"))
-        self.alarm_cut_text = DisplayText()
-        left_layout.addWidget(self.alarm_cut_text, 1)
+        side_by_side_layout = HBoxLayout()
+        right_layout.addLayout(side_by_side_layout, 3)
 
-        right_layout.addWidget(QtWidgets.QLabel("Values"))
-        self.cumulative_text = DisplayText()
-        right_layout.addWidget(self.cumulative_text, 1)
+        nurse_layout = VBoxLayout()
+        side_by_side_layout.addLayout(nurse_layout)
 
-        right_layout.addWidget(QtWidgets.QLabel("Active Alarms"))
-        self.active_alarm_text = DisplayText()
-        right_layout.addWidget(self.active_alarm_text, 1)
+        displays_layout = VBoxLayout()
+        side_by_side_layout.addLayout(displays_layout)
 
-        right_layout.addWidget(QtWidgets.QLabel("Nurse log"))
+        self.displays = AllDisplays()
+        displays_layout.addWidget(self.displays)
+        displays_layout.addWidget(BoxHeader("Alarm log"))
+
+        alarm_log = DisplayText()
+        displays_layout.addWidget(alarm_log)
+
+        nurse_layout.addWidget(BoxHeader("Nurse log"))
         self.log_edit = QtWidgets.QTextEdit()
-        right_layout.addWidget(self.log_edit, 1)
+        nurse_layout.addWidget(self.log_edit, 1)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.setSingleShot(True)
@@ -245,23 +350,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
-                    cumulative = "\n".join(
-                        rf'<p><span style="font-weight:bold;">{k}</span>: {v:.2f}</p>'
-                        for k, v in self.gen.cumulative.items()
-                    )
-                    self.cumulative_text.update_if_needed(cumulative, html=True)
+                    self.displays.update_cumulative()
 
-                    expand = lambda s: "".join(f"\n  {k}: {v}" for k, v in s.items())
-                    active_alarms = "\n".join(
-                        f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
-                    )
-                    self.active_alarm_text.update_if_needed(active_alarms)
-
-                    rotary_text = "\n".join(
-                        f"{v.name}: {v.value} {v.unit}"
-                        for v in self.gen.rotary.values()
-                    )
-                    self.alarm_cut_text.update_if_needed(rotary_text)
+                    self.displays.update_limits()
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
