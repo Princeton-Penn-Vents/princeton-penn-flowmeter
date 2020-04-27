@@ -12,7 +12,7 @@ from nurse.qt import (
 )
 
 from nurse.common import GraphInfo
-from nurse.header import HeaderWidget, PrincetonLogoWidget
+from nurse.header import DrilldownHeaderWidget
 
 from processor.generator import Status
 
@@ -136,24 +136,6 @@ class DisplayText(QtWidgets.QTextEdit):
             self.verticalScrollBar().setValue(val)
 
 
-class DrilldownHeaderWidget(HeaderWidget):
-    def __init__(self):
-        super().__init__()
-        layout = HBoxLayout(self)
-
-        layout.addWidget(PrincetonLogoWidget())
-        layout.addStretch()
-        layout.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
-
-        layout.addStretch()
-        self.freeze_btn = QtWidgets.QCheckBox("Freeze")
-        layout.addWidget(self.freeze_btn)
-        layout.addStretch()
-        self.return_btn = QtWidgets.QPushButton("Return to main view")
-        self.return_btn.setObjectName("return_btn")
-        layout.addWidget(self.return_btn)
-
-
 class PatientTitle(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -196,8 +178,7 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout.addStretch()
 
         self.alarm_boxes = [
-            AlarmBox(i, gen=gen)
-            for i, gen in enumerate(self.parent().main_stack.graphs)
+            AlarmBox(i) for i in range(len(self.parent().main_stack.graphs))
         ]
         for alarm_box in self.alarm_boxes:
             grid_layout.addWidget(alarm_box, *divmod(alarm_box.i, 2))
@@ -231,7 +212,7 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 
 class AlarmBox(QtWidgets.QPushButton):
-    def __init__(self, i, *, gen):
+    def __init__(self, i):
         super().__init__(str(i + 1))
         self.i = i
         self.active = False
