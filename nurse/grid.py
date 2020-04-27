@@ -233,9 +233,7 @@ class PatientSensor(QtGui.QFrame):
         self.graph[gis.graph_labels[0]].setXLink(self.graph[gis.graph_labels[1]])
         self.graph[gis.graph_labels[1]].setXLink(self.graph[gis.graph_labels[2]])
 
-    @Slot()
     def update_plot(self):
-        tic = time.monotonic()
         gis = GraphInfo()
 
         with self.gen.lock:
@@ -260,12 +258,3 @@ class PatientSensor(QtGui.QFrame):
                     value=self.gen.cumulative.get(key),
                     ok=key not in alarming_quanities,
                 )
-
-        toc = time.monotonic()
-        t = (toc - tic) * (len(self.parent().graphs) + 1)
-        guess_each = int(t * 1000 * 1.1) + 20
-
-        if not self.isVisible():
-            guess_each += 1000
-
-        self.qTimer.start(max(guess_each, 100))

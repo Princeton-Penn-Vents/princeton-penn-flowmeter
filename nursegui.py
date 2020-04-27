@@ -80,10 +80,19 @@ class MainStack(QtWidgets.QWidget):
             grid_layout.addWidget(graph, *reversed(divmod(i, height)))
             graph.set_plot()
 
-            graph.qTimer = QtCore.QTimer()
-            graph.qTimer.timeout.connect(graph.update_plot)
-            graph.qTimer.setSingleShot(True)
-            graph.qTimer.start()
+        self.qTimer = QtCore.QTimer()
+        self.qTimer.timeout.connect(self.update_plots)
+        self.qTimer.setSingleShot(True)
+        self.qTimer.start()
+
+    @Slot()
+    def update_plots(self):
+        if self.isVisible():
+            for graph in self.graphs:
+                graph.update_plot()
+            self.qTimer.start(50)
+        else:
+            self.qTimer.start(500)
 
 
 class MainWindow(QtWidgets.QMainWindow):

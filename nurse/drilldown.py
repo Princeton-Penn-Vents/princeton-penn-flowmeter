@@ -230,10 +230,10 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         self.patient.gen = main_stack.graphs[i].gen
         self.patient.update_plot(True)
-        self.patient.qTimer.start(50)
 
     def deactivate(self):
         self.patient.gen = None
+        self.patient.qTimer.stop()
 
 
 class AlarmBox(QtWidgets.QPushButton):
@@ -385,7 +385,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graphs[key].plot([], [], pen=pen)
-            graphs[key].addLine(y=0)
+            # graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
 
         graphs[key].setLabel("bottom", "Time", "s")
 
@@ -400,18 +400,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
     @Slot()
-    def update_plot(self, first=False):
+    def update_plot(self, first: bool = False):
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
-            tic = time.monotonic()
-            t = 0
 
             with self.gen.lock:
-
-                if not first and self.parent().header.freeze_btn.checkState():
-                    # Let's not retry too soon.
-                    t += 100 / 1000
-                else:
+                if first or not self.parent().header.freeze_btn.checkState():
                     # Fill in the data
                     for key in gis.graph_labels:
                         self.curves[key].setData(self.gen.time, getattr(self.gen, key))
@@ -428,8 +422,4 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             for alarm_box in patient.alarm_boxes:
                 alarm_box.status = main_stack.graphs[alarm_box.i].gen.status
 
-            toc = time.monotonic()
-            t += toc - tic
-            guess_each = int(t * 1000 * 1.1) + 30
-
-            self.qTimer.start(max(guess_each, 150))
+        self.qTimer.start(50)
