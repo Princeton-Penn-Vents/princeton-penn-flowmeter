@@ -5,23 +5,73 @@
   color: white;
 }
 
+/* General rules */
+
+QPushButton, QCheckBox {
+  border: none;
+}
+
 .MainWindow  {
   background-color: #32373C;
 }
+
+
+/* Header design */
 
 HeaderWidget QLabel {
   margin-left: 4px;
 }
 
-HeaderWidget QPushButton {
-  padding-left: 2px;
-  padding-left: 2px;
+HeaderWidget QLabel, HeaderWidget QPushButton, HeaderWidget QCheckBox {
+  color: floralwhite;
+  font-weight: bold;
+  margin: 2px;
+  padding: 4px;
+  font-size: 18px;
+  background-color: transparent;
+  border-radius: 6px;
 }
 
-QPushButton {
-  border: none;
-  color: white;
+HeaderWidget QPushButton:hover, HeaderWidget QCheckBox:hover {
+  background-color: #606060;
 }
+
+HeaderWidget > PrincetonLogoWidget > QLabel {
+  color: #F58025;
+  font-family: Times;
+}
+
+HeaderWidget > QPushButton#exit_btn {
+  background-color: red;
+  min-width: 26px;
+}
+
+DrilldownHeaderWidget QPushButton, DrilldownHeaderWidget QCheckBox {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+DrilldownHeaderWidget > QPushButton#return_btn {
+  background-color: red;
+}
+
+DrilldownHeaderWidget > QPushButton#return_btn:hover {
+  background-color: darkred;
+}
+
+GraphLabelWidget > QPushButton[graph="flow"] {
+  color: rgb${flow};
+}
+
+GraphLabelWidget > QPushButton[graph="pressure"]{
+  color: rgb${pressure};
+}
+
+GraphLabelWidget > QPushButton[graph="volume"]{
+  color: rgb${volume};
+}
+
+/* Grid header */
 
 PatientSensor > PatientTitleWidget > QPushButton {
   color: white;
@@ -42,6 +92,8 @@ PatientSensor > PatientTitleWidget > QLineEdit {
   font-weight: bold;
   font-size: 14pt;
 }
+
+/* Alert colors */
 
 PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton {
   background-color: 'transparent';
@@ -88,18 +140,22 @@ PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QLineEdit {
 }
 
 
+/* Grid tile */
+
 PatientSensor {
   background-color: black;
   border: 0.5px solid #202020;
 }
 
 PatientSensor[alert_status="ALERT"] {
-  background-color: #000050;
+  background-color: #050000;
 }
 
 PatientSensor[alert_status="DISCON"] {
   background-color: #000050;
 }
+
+/* Grid numbers on the side */
 
 NumbersWidget > QLabel {
   font-size: 16px;
@@ -123,47 +179,7 @@ NumbersWidget > NumberLabel {
   padding: 2px 0px 0px 0px;
 }
 
-HeaderWidget QLabel, HeaderWidget QPushButton {
-  color: floralwhite;
-  font-family: Times;
-  font-weight: bold;
-  margin-top: 4px;
-  font-size: 18px;
-  background-color: transparent;
-}
-
-PrincetonLogoWidget > QLabel {
-  color: #F58025;
-}
-
-HeaderWidget > QPushButton#exit_btn {
-  background-color: red;
-  min-width: 26px;
-  border-radius: 6px;
-  font-family: sans-serif;
-  margin-right: 4px;
-  margin-left: 8px;
-}
-
-GraphLabelWidget > QPushButton {
-  border-radius: 3px;
-}
-
-GraphLabelWidget > QPushButton:hover {
-  background-color: #202020;
-}
-
-GraphLabelWidget > QPushButton[graph="flow"] {
-  color: rgb${flow};
-}
-
-GraphLabelWidget > QPushButton[graph="pressure"]{
-  color: rgb${pressure};
-}
-
-GraphLabelWidget > QPushButton[graph="volume"]{
-  color: rgb${volume};
-}
+/* Drilldown screen */
 
 PatientDrilldownWidget {
   background-color: black;
@@ -176,6 +192,8 @@ PatientDrilldownWidget > PatientTitle > QLineEdit {
   font-weight: bold;
   font-size: 36px;
 }
+
+/* Drilldown alarm grid */
 
 AlarmBox {
   background-color: #606060;
@@ -191,21 +209,6 @@ AlarmBox {
 AlarmBox[alert_status="OK"]:hover,
 AlarmBox[alert_status="OK_ACTIVE"] {
   background-color: #404040;
-}
-
-DrilldownHeaderWidget > QPushButton#return_btn {
-  background-color: red;
-  padding: 1px 5px;
-  margin: 2px 10px;
-  border-radius: 3px;
-}
-
-DrilldownHeaderWidget > QCheckBox {
-  color: floralwhite;
-  font-family: Times;
-  font-weight: bold;
-  margin-top: 4px;
-  font-size: 18px;
 }
 
 .DisplayBox {
@@ -226,6 +229,8 @@ DrilldownHeaderWidget > QCheckBox {
   font-size: 24pt;
   color: #A0A0A0;
 }
+
+/* Logging box */
 
 .BoxHeader {
   color: #A0A0A0;
