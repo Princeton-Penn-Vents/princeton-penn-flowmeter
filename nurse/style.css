@@ -148,7 +148,7 @@ PatientSensor {
 }
 
 PatientSensor[alert_status="ALERT"] {
-  background-color: #050000;
+  background-color: #400000;
 }
 
 PatientSensor[alert_status="DISCON"] {
@@ -193,7 +193,7 @@ PatientDrilldownWidget > PatientTitle > QLineEdit {
   font-size: 36px;
 }
 
-/* Drilldown alarm grid */
+/* Drilldown alarm grid (also see above in general colors) */
 
 AlarmBox {
   background-color: #606060;
@@ -211,28 +211,30 @@ AlarmBox[alert_status="OK_ACTIVE"] {
   background-color: #404040;
 }
 
-.DisplayBox {
+/* Drilldown display grid */
+
+DisplayBox {
   border: 2px solid grey;
 }
 
-.DrilldownCumulative {
+DisplayBox > DrilldownCumulative {
   font-size: 28pt;
   font-weight: bold;
 }
 
-.DrilldownLimit {
+DisplayBox > DrilldownLimit {
   font-size: 20pt;
   color: #A0A0A0;
 }
 
-.DrilldownLabel {
+DisplayBox > DrilldownLabel {
   font-size: 24pt;
   color: #A0A0A0;
 }
 
 /* Logging box */
 
-.BoxHeader {
+BoxHeader {
   color: #A0A0A0;
   font-weight: bold;
   font-size: 24pt;
