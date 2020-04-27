@@ -12,6 +12,7 @@ import zmq
 import time
 from typing import Optional, Dict, Any
 from datetime import datetime
+import math
 
 
 class CollectorThread(threading.Thread):
@@ -44,7 +45,8 @@ class CollectorThread(threading.Thread):
             with self._collector_lock:
                 self._time_live.inject(j["t"])
                 self._flow_live.inject(
-                    j["F"] ** (4 / 7) * self._flow_scale - self._flow_offset
+                    math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+                    - self._flow_offset
                 )
                 self._pressure_live.inject(
                     j["P"] * self._pressure_scale - self._pressure_offset
