@@ -153,6 +153,9 @@ class PatientSensor(QtGui.QFrame):
             self.setProperty("alert_status", value.name)
             self.title_widget.repolish()
 
+            self.style().unpolish(self)
+            self.style().polish(self)
+
     def __init__(
         self, i: int, *args, gen: Generator, logging: str = None, debug: bool, **kwargs
     ):
@@ -247,11 +250,6 @@ class PatientSensor(QtGui.QFrame):
                     self.curves[key].setData([], [])
 
             # Change of status requires a background color change
-            if self.property("alert_status") != self.gen.status:
-                self.setProperty("alert_status", self.gen.status.name)
-                self.style().unpolish(self)
-                self.style().polish(self)
-
             self.status = self.gen.status
 
             alarming_quanities = {key.split()[0] for key in self.gen.alarms}
