@@ -38,47 +38,46 @@ class RemoteThread(threading.Thread):
         if self._address is None:
             return
 
-        with requests.Session() as s:
-            while not self.parent._stop.is_set():
-                try:
-                    r = s.get(self._address)
-                    self._last_update = datetime.now().timestamp()
-                except requests.ConnectionError:
-                    with self._remote_lock:
-                        self.status = Status.DISCON
-                    time.sleep(1)
-                    continue
-                if r.status_code != 200:
-                    with self._remote_lock:
-                        self.status = Status.DISCON
-                    time.sleep(1)
-                    continue
-
-                try:
-                    root = json.loads(r.text)
-                except json.JSONDecodeError:
-                    logging.warning(f"Failed to read json, trying again", exc_info=True)
-                    time.sleep(0.01)
-                    continue
-
-                times = np.asarray(root["data"]["timestamps"])
-                flow = np.asarray(root["data"]["flows"])
-                pressure = np.asarray(root["data"]["pressures"])
-
+        while not self.parent._stop.is_set():
+            try:
+                r = requests.get(self._address)
+                self._last_update = datetime.now().timestamp()
+            except requests.ConnectionError:
                 with self._remote_lock:
-                    if self.status == Status.DISCON:
-                        logging.info("(Re)Connecting successful")
-                        self.status = Status.OK
-                    to_add = new_elements(self._time, times)
+                    self.status = Status.DISCON
+                time.sleep(1)
+                continue
+            if r.status_code != 200:
+                with self._remote_lock:
+                    self.status = Status.DISCON
+                time.sleep(1)
+                continue
 
-                    if to_add > 0:
-                        self._time.inject(times[-to_add:])
-                        self._flow.inject(flow[-to_add:])
-                        self._pressure.inject(pressure[-to_add:])
-                        self._last_get = time.monotonic()
-                    self.rotary_dict = root.get("rotary", {})
+            try:
+                root = json.loads(r.text)
+            except json.JSONDecodeError:
+                logging.warning(f"Failed to read json, trying again", exc_info=True)
+                time.sleep(0.01)
+                continue
 
-                time.sleep(0.2)
+            times = np.asarray(root["data"]["timestamps"])
+            flow = np.asarray(root["data"]["flows"])
+            pressure = np.asarray(root["data"]["pressures"])
+
+            with self._remote_lock:
+                if self.status == Status.DISCON:
+                    logging.info("(Re)Connecting successful")
+                    self.status = Status.OK
+                to_add = new_elements(self._time, times)
+
+                if to_add > 0:
+                    self._time.inject(times[-to_add:])
+                    self._flow.inject(flow[-to_add:])
+                    self._pressure.inject(pressure[-to_add:])
+                    self._last_get = time.monotonic()
+                self.rotary_dict = root.get("rotary", {})
+
+            time.sleep(0.2)
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:

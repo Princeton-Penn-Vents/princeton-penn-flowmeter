@@ -251,9 +251,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     )
                     self.cumulative_text.update_if_needed(cumulative, html=True)
 
-                    expand = lambda s: "".join(
-                        f"\n  {k}: {v}" for k, v in s.items()
-                    )
+                    expand = lambda s: "".join(f"\n  {k}: {v}" for k, v in s.items())
                     active_alarms = "\n".join(
                         f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
                     )

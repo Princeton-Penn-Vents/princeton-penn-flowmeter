@@ -3,13 +3,12 @@ import http.server
 import json
 from urllib.parse import urlparse, parse_qs
 from functools import partial
-from typing import Tuple, Dict, Union, Optional
-from processor.generator import Generator, Any
-import signal
+from typing import Tuple, Dict, Union, Optional, Any
+from processor.collector import Collector
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
-    def __init__(self, generator: Generator, *args, **kwargs):
+    def __init__(self, generator: Collector, *args, **kwargs):
         self.generator = generator
         super().__init__(*args, **kwargs)
 
@@ -46,7 +45,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 # The Any is for the PsuedoGenerator
-def serve(server_address: Tuple[str, int], generator: Union[Generator, Any]):
+def serve(server_address: Tuple[str, int], generator: Union[Collector, Any]):
     """
     Run with server_address = ("0.0.0.0", 8100)
     """

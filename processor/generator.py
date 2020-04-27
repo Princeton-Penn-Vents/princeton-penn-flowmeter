@@ -5,8 +5,7 @@ import time
 import warnings
 
 import numpy as np
-from datetime import datetime
-from typing import Dict, Any, List, Optional, Sequence, TypeVar
+from typing import Dict, Any, List, Optional, TypeVar
 from pathlib import Path
 
 import processor.analysis
@@ -157,31 +156,6 @@ class Generator(abc.ABC):
         """
         Copy in the remote/local datastream to internal cache.
         """
-
-    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
-        """
-        Prepare a dict for transmission via json. Does *not* call `get_data()`
-        """
-        if from_timestamp is None:
-            window = slice(min(len(self.timestamps), 50 * 5), None)
-        elif from_timestamp == 0:
-            window = slice(None)
-        else:
-            start = np.searchsorted(self.timestamps, from_timestamp, side="right")
-            window = slice(start, None)
-
-        return {
-            "version": 1,
-            "time": datetime.now().timestamp(),
-            # "alarms": self.alarms,
-            # "cumulative": self.cumulative,
-            "rotary": self.rotary.to_dict(),
-            "data": {
-                "timestamps": self.timestamps[window].tolist(),
-                "flows": self.flow[window].tolist(),
-                "pressures": self.pressure[window].tolist(),
-            },
-        }
 
     def analyze_timeseries(self) -> None:
         """
