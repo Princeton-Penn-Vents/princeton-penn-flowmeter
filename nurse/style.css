@@ -22,7 +22,7 @@ HeaderWidget QLabel {
   margin-left: 4px;
 }
 
-HeaderWidget QLabel, HeaderWidget QPushButton, HeaderWidget QCheckBox {
+HeaderWidget QLabel, HeaderWidget QPushButton, HeaderWidget QCheckBox, QPushButton {
   color: floralwhite;
   font-weight: bold;
   margin: 2px;
@@ -248,12 +248,26 @@ DisplayBox[alert_status="ALERT"] > DrilldownCumulative {
   text-decoration: underline;
 }
 
+/* Button box */
+
+QWidget#DrilldownExtras > QPushButton {
+  color: floralwhite;
+  background-color: #303030;
+}
+
+QWidget#DrilldownExtras > QPushButton:hover {
+  background-color: #808080;
+}
+
+
 /* Logging box */
+
 
 BoxHeader {
   color: #A0A0A0;
   font-weight: bold;
   font-size: 24pt;
+  margin-left: 6px;
 }
 
 PatientDrilldownWidget > QTextEdit {

@@ -5,6 +5,7 @@ import time
 from nurse.qt import (
     QtCore,
     QtWidgets,
+    Qt,
     Slot,
     HBoxLayout,
     VBoxLayout,
@@ -296,18 +297,33 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         side_by_side_layout = HBoxLayout()
         right_layout.addLayout(side_by_side_layout, 3)
 
-        nurse_layout = VBoxLayout()
-        side_by_side_layout.addLayout(nurse_layout)
-
         displays_layout = VBoxLayout()
         side_by_side_layout.addLayout(displays_layout)
 
+        nurse_layout = VBoxLayout()
+        side_by_side_layout.addLayout(nurse_layout)
+
         self.displays = AllDisplays()
         displays_layout.addWidget(self.displays)
-        displays_layout.addWidget(BoxHeader("Alarm log"))
 
-        alarm_log = DisplayText()
-        displays_layout.addWidget(alarm_log)
+        button_box = QtWidgets.QWidget()
+        button_box.setObjectName("DrilldownExtras")
+        buttons_layout = QtWidgets.QHBoxLayout(button_box)
+        displays_layout.addWidget(button_box)
+
+        all_alarms = QtWidgets.QPushButton("Alarms")
+        all_cumulative = QtWidgets.QPushButton("Quantities")
+        all_rotary = QtWidgets.QPushButton("Settings")
+
+        all_alarms.clicked.connect(self.display_alarms)
+        all_cumulative.clicked.connect(self.display_cumulative)
+        all_rotary.clicked.connect(self.display_rotary)
+
+        buttons_layout.addWidget(all_alarms, 1)
+        buttons_layout.addWidget(all_cumulative, 1)
+        buttons_layout.addWidget(all_rotary, 1)
+
+        displays_layout.addStretch()
 
         nurse_layout.addWidget(BoxHeader("Nurse log"))
         self.log_edit = QtWidgets.QTextEdit()
@@ -316,6 +332,43 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.qTimer = QtCore.QTimer()
         self.qTimer.setSingleShot(True)
         self.qTimer.timeout.connect(self.update_plot)
+
+    @Slot()
+    def display_cumulative(self):
+        cumulative = "\n".join(
+            rf"<p>{k}: {v:.2f}</p>" for k, v in self.gen.cumulative.items()
+        )
+
+        box = QtWidgets.QMessageBox()
+        box.setTextFormat(Qt.RichText)
+        box.setText(cumulative)
+        box.exec()
+
+    @Slot()
+    def display_alarms(self):
+        expand = lambda s: "".join(f"<br>  {k}: {v}" for k, v in s.items())
+        active_alarms = "\n".join(
+            rf"<p>{k}: {expand(v)}</p>" for k, v in self.gen.alarms.items()
+        )
+
+        if not active_alarms:
+            active_alarms = "No alarms currently."
+
+        box = QtWidgets.QMessageBox()
+        box.setTextFormat(Qt.RichText)
+        box.setText(active_alarms)
+        box.exec()
+
+    @Slot()
+    def display_rotary(self):
+        rotary_text = "\n".join(
+            rf"<p>{v.name}: {v.value} {v.unit}</p>" for v in self.gen.rotary.values()
+        )
+
+        box = QtWidgets.QMessageBox()
+        box.setTextFormat(Qt.RichText)
+        box.setText(rotary_text)
+        box.exec()
 
     def set_plot(self, graph_layout, phase_layout):
         gis = GraphInfo()
