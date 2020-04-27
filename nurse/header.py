@@ -1,5 +1,6 @@
 from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
 from nurse.common import GraphInfo
+from datetime import datetime
 
 
 class PrincetonLogoWidget(QtWidgets.QWidget):
@@ -27,7 +28,7 @@ class NSFLogoWidget(QtWidgets.QWidget):
         logo = QtGui.QPixmap("images/nsf-logo-100.png").scaledToWidth(25)
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
-        layout.addWidget(logolabel, 0, Qt.AlignVCenter)
+        layout.addWidget(logolabel)
         layout.setAlignment(Qt.AlignRight)
 
 
@@ -124,11 +125,11 @@ class GraphLabelWidget(QtWidgets.QWidget):
 
         text = QtWidgets.QLabel("Graph settings")
         text.setAlignment(Qt.AlignLeft)
-        layout.addWidget(text, 1, Qt.AlignVCenter)
+        layout.addWidget(text, 0, Qt.AlignVCenter)
 
         for key in gis.graph_labels:
             name_btn = LimitButton(key)
-            layout.addWidget(name_btn, 1, Qt.AlignVCenter)
+            layout.addWidget(name_btn, 0, Qt.AlignVCenter)
 
 
 class HeaderWidget(QtWidgets.QWidget):
@@ -141,14 +142,15 @@ class MainHeaderWidget(HeaderWidget):
         layout = HBoxLayout(self)
 
         princeton_logo = PrincetonLogoWidget()
-        layout.addWidget(princeton_logo, 6)
+        layout.addWidget(princeton_logo)
+
         layout.addStretch()
 
         graph_info = GraphLabelWidget()
-        layout.addWidget(graph_info, 6)
+        layout.addWidget(graph_info)
 
         nsf_logo = NSFLogoWidget()
-        layout.addWidget(nsf_logo, 2)
+        layout.addWidget(nsf_logo)
 
         self.fs_exit = QtWidgets.QPushButton("X")
         self.fs_exit.setObjectName("exit_btn")
@@ -157,3 +159,24 @@ class MainHeaderWidget(HeaderWidget):
 
         # dt_info = DateTimeWidget()
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically
+
+
+class DrilldownHeaderWidget(HeaderWidget):
+    def __init__(self):
+        super().__init__()
+        layout = HBoxLayout(self)
+
+        layout.addWidget(PrincetonLogoWidget())
+        layout.addStretch()
+
+        layout.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
+
+        self.freeze_btn = QtWidgets.QCheckBox("Freeze")
+        layout.addWidget(self.freeze_btn)
+
+        self.return_btn = QtWidgets.QPushButton("Return to main view")
+        self.return_btn.setObjectName("return_btn")
+        layout.addWidget(self.return_btn, 0, Qt.AlignVCenter)
+
+        nsf_logo = NSFLogoWidget()
+        layout.addWidget(nsf_logo)
