@@ -152,8 +152,16 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
     else:
         print("Fusion style is not available, display may be platform dependent")
 
+    logger = logging.getLogger("pofm")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
     if debug:
-        logging.basicConfig(level=logging.DEBUG)
+        ch = logging.StreamHandler()
+        logger.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
     else:
         file_path = Path(logfile)
         logfile_incr = file_path  # Only (over)written when no numbers left
@@ -163,10 +171,13 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
             )
             if not logfile_incr.exists():
                 break
-        logging.basicConfig(
-            level=logging.INFO, filename=str(logfile_incr.resolve()), filemode="w"
-        )
-    logging.info("Starting nursegui")
+
+        fh = logging.FileHandler(logfile_incr.resolve())
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    logger.info("Starting nursegui")
 
     app = QtWidgets.QApplication(argv)
 

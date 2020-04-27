@@ -15,6 +15,8 @@ from processor.generator import Status, Generator
 if TYPE_CHECKING:
     from processor.remote_generator import RemoteGenerator
 
+logger = logging.getLogger("pofm")
+
 
 class RemoteThread(threading.Thread):
     def __init__(self, parent: RemoteGenerator, *, address: str):
@@ -56,7 +58,7 @@ class RemoteThread(threading.Thread):
             try:
                 root = json.loads(r.text)
             except json.JSONDecodeError:
-                logging.warning(f"Failed to read json, trying again", exc_info=True)
+                logger.warning(f"Failed to read json, trying again", exc_info=True)
                 time.sleep(0.01)
                 continue
 
@@ -66,7 +68,7 @@ class RemoteThread(threading.Thread):
 
             with self._remote_lock:
                 if self.status == Status.DISCON:
-                    logging.info("(Re)Connecting successful")
+                    logger.info("(Re)Connecting successful")
                     self.status = Status.OK
                 to_add = new_elements(self._time, times)
 
