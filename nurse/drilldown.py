@@ -34,6 +34,21 @@ class DrilldownLabel(QtWidgets.QLabel):
 
 
 class DisplayBox(QtWidgets.QFrame):
+    @property
+    def status(self) -> Status:
+        return Status[self.property("alert_status")]
+
+    @status.setter
+    def status(self, value: Status):
+        if value.name != self.property("alert_status"):
+            self.setProperty("alert_status", value.name)
+
+            self.style().unpolish(self)
+            self.style().polish(self)
+
+            self.cumulative.style().unpolish(self.cumulative)
+            self.cumulative.style().polish(self.cumulative)
+
     def __init__(self, *, key, label, fmt=""):
         super().__init__()
         self.key = key
@@ -71,8 +86,13 @@ class DisplayBox(QtWidgets.QFrame):
         )
         if gen is not None and self.key in gen.cumulative:
             self.cumulative.setText(format(gen.cumulative[self.key], self.fmt))
+            if f"{self.key} Max" in gen.alarms or f"{self.key} Min" in gen.alarms:
+                self.status = Status.ALERT
+            else:
+                self.status = Status.OK
         else:
             self.cumulative.setText("---")
+            self.status = Status.DISCON
 
     def update_limits(self):
         min_key = f"{self.key} Min"
@@ -146,6 +166,10 @@ class PatientTitle(QtWidgets.QWidget):
 
         self.name_edit = QtWidgets.QLineEdit()
         layout.addWidget(self.name_edit)
+
+    def repolish(self):
+        self.name_lbl.style().unpolish(self.name_lbl)
+        self.name_edit.style().polish(self.name_edit)
 
     def activate(self, number: str, mirror: QtWidgets.QLineEdit):
         self.name_edit.disconnect()
@@ -231,6 +255,16 @@ class AlarmBox(QtWidgets.QPushButton):
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
+    @property
+    def status(self):
+        return Status[self.property("alert_status")]
+
+    @status.setter
+    def status(self, value: Status):
+        if value.name != self.property("alert_status"):
+            self.setProperty("alert_status", value.name)
+            self.title.repolish()
+
     def __init__(self):
         super().__init__()
         self.curves = {}
@@ -331,8 +365,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
+                    self.status = self.gen.status
                     self.displays.update_cumulative()
-
                     self.displays.update_limits()
 
             patient = self.parent()

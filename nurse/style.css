@@ -103,12 +103,13 @@ PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton:hover {
   background-color: #303030;
 }
 
-PatientSensor[alert_status="OK"] > PatientTitleWidget > QLineEdit {
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QLineEdit,
+PatientDrilldownWidget[alert_status="OK"] > PatientTitle > QLineEdit {
   background-color: #32373C;
 }
 
-
 PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton,
+PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QLabel,
 AlarmBox[alert_status="ALERT"] {
   background-color: #ED4337;
 }
@@ -119,12 +120,14 @@ AlarmBox[alert_status="ALERT_ACTIVE"] {
   background-color: #AD2337;
 }
 
-PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QLineEdit {
+PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QLineEdit,
+PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QLineEdit {
   background-color: #602020;
 }
 
 
 PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton,
+PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QLabel,
 AlarmBox[alert_status="DISCON"] {
   background-color: #4CB3EF;
 }
@@ -135,7 +138,8 @@ AlarmBox[alert_status="DISCON_ACTIVE"] {
   background-color: #2C93AF;
 }
 
-PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QLineEdit {
+PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QLineEdit,
+PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QLineEdit {
   background-color: #204080;
 }
 
@@ -230,6 +234,18 @@ DisplayBox > DrilldownLimit {
 DisplayBox > DrilldownLabel {
   font-size: 24pt;
   color: #A0A0A0;
+}
+
+DisplayBox[alert_status="DISCON"] {
+  background-color: #000050;
+}
+
+DisplayBox[alert_status="ALERT"] {
+  background-color: darkred;
+}
+
+DisplayBox[alert_status="ALERT"] > DrilldownCumulative {
+  text-decoration: underline;
 }
 
 /* Logging box */
