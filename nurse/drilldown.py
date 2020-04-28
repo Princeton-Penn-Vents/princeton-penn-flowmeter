@@ -291,6 +291,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
         self.curves = {}
+        self.upper = {}
+        self.lower = {}
+        self.current = {}
         self.gen: Optional[Generator] = None
 
         layout = HBoxLayout(self)
@@ -400,6 +403,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         graphs = {}
 
+        limit_pen = pg.mkPen(color=(170, 30, 30), width=3, style=QtCore.Qt.DashLine)
+        current_pen = pg.mkPen(color=(50, 50, 180), width=3, style=QtCore.Qt.DotLine)
+
         for j, key in enumerate(gis.graph_labels):
             graphs[key] = graph_layout.addPlot(x=[], y=[], name=key.capitalize())
             graphs[key].invertX()
@@ -408,9 +414,17 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             if j != len(gis.graph_labels):
                 graph_layout.nextRow()
 
+            graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
+
+            self.upper[key] = pg.PlotDataItem([], [], pen=limit_pen)
+            graphs[key].addItem(self.upper[key])
+            self.lower[key] = pg.PlotDataItem([], [], pen=limit_pen)
+            graphs[key].addItem(self.lower[key])
+            self.current[key] = pg.PlotDataItem([], [], pen=current_pen)
+            graphs[key].addItem(self.current[key])
+
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graphs[key].plot([], [], pen=pen)
-            graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
 
         graphs[key].setLabel("bottom", "Time", "s")
 
@@ -419,7 +433,6 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         # Phase plot
         self.phase_graph = phase_layout.addPlot(x=[], y=[], name="Phase")
-
         self.phase = self.phase_graph.plot([], [], pen=pg.mkPen(color=(200, 200, 0)))
         self.phase_graph.setLabel("left", "Volume", units="mL")
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
@@ -431,9 +444,29 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
-                    # Fill in the data
+                    time_avg = self.gen.rotary["AvgWindow"].value
                     for key in gis.graph_labels:
                         self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+                        val_key = f"Avg {key.capitalize()}"
+                        min_key = f"{val_key} Min"
+                        max_key = f"{val_key} Max"
+                        if min_key in self.gen.rotary:
+                            self.lower[key].setData(
+                                [0, 30], [self.gen.rotary[min_key].value] * 2
+                            )
+                        if max_key in self.gen.rotary:
+                            self.upper[key].setData(
+                                [0, 30], [self.gen.rotary[max_key].value] * 2
+                            )
+
+                        if val_key == "Avg Flow":
+                            self.current[key].setData(
+                                [0, time_avg], [self.gen.average_flow[time_avg]] * 2
+                            )
+                        elif val_key == "Avg Pressure":
+                            self.current[key].setData(
+                                [0, time_avg], [self.gen.average_pressure[time_avg]] * 2
+                            )
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
