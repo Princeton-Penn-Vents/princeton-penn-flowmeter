@@ -20,6 +20,8 @@ from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
 
 INFO_STRINGS = {
+    "Avg Flow": ".0f",
+    "Avg Pressure": ".0f",
     "RR": ".0f",  # (breaths/min)
     "TVe": ".0f",  # (mL)
     "PIP": ".0f",  # (cm H2O)
@@ -44,7 +46,10 @@ class NumbersWidget(QtWidgets.QWidget):
             val_widget = NumberLabel("---")
             val_widget.setMinimumWidth(56)
             self.val_widgets[info] = val_widget
-            layout.addRow(info.split()[0], self.val_widgets[info])
+            layout.addRow(
+                info.split()[-1][0] if info.startswith("Avg") else info.split()[0],
+                self.val_widgets[info],
+            )
             self.set_value(info, None)
 
     def set_value(self, info_str: str, value: float = None, ok: bool = True) -> None:
@@ -250,11 +255,18 @@ class PatientSensor(QtGui.QFrame):
             # Change of status requires a background color change
             self.status = self.gen.status
 
-            alarming_quanities = {key.split()[0] for key in self.gen.alarms}
+            alarming_quanities = {key.rsplit(maxsplit=1)[0] for key in self.gen.alarms}
 
             for key in self.values:
+                if key == "Avg Flow":
+                    value = self.gen.average_flow[self.gen.rotary["AvgWindow"].value]
+                elif key == "Avg Pressure":
+                    value = self.gen.average_pressure[
+                        self.gen.rotary["AvgWindow"].value
+                    ]
+                else:
+                    value = self.gen.cumulative.get(key)
+
                 self.values.set_value(
-                    key,
-                    value=self.gen.cumulative.get(key),
-                    ok=key not in alarming_quanities,
+                    key, value=value, ok=key not in alarming_quanities,
                 )
