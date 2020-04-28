@@ -49,5 +49,5 @@ class GraphInfo:
 
         self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
 
-        self.yLims = {"flow": (-40, 30), "pressure": (0, 20), "volume": (0, 800)}
+        self.yLims = {"flow": (-20, 140), "pressure": (-1, 20), "volume": (0, 800)}
         self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL"}

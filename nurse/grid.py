@@ -221,7 +221,7 @@ class PatientSensor(QtGui.QFrame):
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
 
-            self.curves[key] = graph.plot([], [], pen=pen)
+            self.curves[key] = graph.plot([], [], pen=pen, autoDownsample=True)
 
             graph.setRange(xRange=(15, 0), yRange=gis.yLims[key])
 

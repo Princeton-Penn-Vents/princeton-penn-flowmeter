@@ -411,7 +411,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         current_pen = pg.mkPen(color=(50, 50, 180), width=3, style=QtCore.Qt.DotLine)
 
         for j, key in enumerate(gis.graph_labels):
-            graphs[key] = graph_layout.addPlot(x=[], y=[], name=key.capitalize())
+            graphs[key] = graph_layout.addPlot(
+                x=[], y=[], name=key.capitalize(), autoDownsample=True, clipToView=True
+            )
             graphs[key].invertX()
             graphs[key].setRange(xRange=(30, 0))
             graphs[key].setLabel("left", gis.graph_names[key], gis.units[key])
