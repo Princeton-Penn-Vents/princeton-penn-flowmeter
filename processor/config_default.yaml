@@ -6,6 +6,8 @@ device:
     offset: 0.0
     scale: 0.7198
 
+global:
+  debug: false
 
 rotary-live:
   Log Filename:

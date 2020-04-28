@@ -2,7 +2,6 @@
 import pyqtgraph as pg
 
 # stdlib
-import argparse
 import sys
 import math
 from string import Template
@@ -27,7 +26,7 @@ from nurse.drilldown import DrilldownWidget
 from processor.generator import Status, Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
-from processor.config import config as config_
+from processor.config import config as config_, ArgumentParser
 
 DIR = Path(__file__).parent.resolve()
 
@@ -214,13 +213,10 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kw
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = ArgumentParser()
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
     parser.add_argument("--port", type=int, default=8100, help="Select a starting port")
     parser.add_argument("--fullscreen", action="store_true")
-    parser.add_argument("--config", default="pofm.yml", help="YAML configuration file")
     parser.add_argument(
         "--displays",
         "-n",
@@ -236,11 +232,6 @@ if __name__ == "__main__":
         type=str,
         default="nurse_log/nursegui.log",
         help="logging directory",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Start up in debug mode (fake names, log to screen, etc)",
     )
     parser.add_argument(
         "--sim",

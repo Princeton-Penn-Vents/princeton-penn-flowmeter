@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse
+from processor.config import ArgumentParser
 
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 parser.add_argument("-n", default=2.0, type=float, help="Timeout between reporting")
 parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
 parser.add_argument(
@@ -29,16 +29,14 @@ else:
 
 print(f"Reporting every {arg.n} seconds, use Ctrl-C to exit.")
 
-while True:
-    time.sleep(arg.n)
+with gen:
+    while True:
+        time.sleep(arg.n)
 
-    gen._get_data()
-    gen._analyze_full()
-
-    with np.printoptions(threshold=6, precision=4, floatmode="fixed", linewidth=95):
-        print(f"--- Current status ---")
-        print(f"gen.timestamps:    {gen.timestamps} ({len(gen.timestamps)} length)")
-        print(f"gen.flow:          {gen.flow} ({len(gen.flow)} length)")
-        print(f"gen.pressure:      {gen.pressure} ({len(gen.pressure)} length)")
-        print(f"gen.volume (calc): {gen.volume} ({len(gen.volume)} length)")
-        print()
+        with np.printoptions(threshold=6, precision=4, floatmode="fixed", linewidth=95):
+            print(f"--- Current status ---")
+            print(f"gen.timestamps:    {gen.timestamps} ({len(gen.timestamps)} length)")
+            print(f"gen.flow:          {gen.flow} ({len(gen.flow)} length)")
+            print(f"gen.pressure:      {gen.pressure} ({len(gen.pressure)} length)")
+            print(f"gen.volume (calc): {gen.volume} ({len(gen.volume)} length)")
+            print()

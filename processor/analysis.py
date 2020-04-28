@@ -3,6 +3,8 @@ import scipy.integrate
 import scipy.signal
 from typing import Iterable, Dict
 
+from processor.config import config
+
 
 def pressure_deglitch_smooth(
     original_pressure, deglitch_cut=0.1,
@@ -212,6 +214,8 @@ def measure_breaths(time, flow, volume, pressure):
         breath_times = find_breaths(*turning_points)
 
     except:
+        if config["global"]["debug"].get(bool):
+            raise
         return []
 
     if len(time) == 0 or len(breath_times) == 0:

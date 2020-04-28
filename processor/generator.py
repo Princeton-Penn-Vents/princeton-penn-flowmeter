@@ -11,6 +11,7 @@ from pathlib import Path
 import processor.analysis
 from processor.rotary import LocalRotary
 from processor.settings import get_remote_settings
+from processor.config import config
 
 
 class Status(enum.Enum):
@@ -109,6 +110,9 @@ class Generator(abc.ABC):
 
         # A stop signal to turn off the thread
         self._stop = threading.Event()
+
+        # A quick way to get the debug status
+        self._debug = config["global"]["debug"].get(bool)
 
     def run(self) -> None:
         """
@@ -273,21 +277,23 @@ class Generator(abc.ABC):
             cumulative_timestamps[field] = timestamp
         self._cumulative_timestamps = cumulative_timestamps
 
-        if "Stale Data Timeout" in self.rotary:
-            stale_threshold = self.rotary["Stale Data Timeout"].value
-        else:
-            stale_threshold = 10
+        stale_threshold = (
+            self.rotary["Stale Data Timeout"].value
+            if "Stale Data Timeout" in self.rotary
+            else (10 if self._debug else None)
+        )
 
-        default = timestamp - stale_threshold
-        stale = {}
-        for field in self._cumulative:
-            last_update_timediff = timestamp - self._cumulative_timestamps.get(
-                field, default
-            )
-            if last_update_timediff >= stale_threshold:
-                stale[field] = last_update_timediff
-        if len(stale) > 0:
-            self._alarms["Stale Data"] = stale
+        if stale_threshold is not None:
+            default = timestamp - stale_threshold
+            stale = {}
+            for field in self._cumulative:
+                last_update_timediff = timestamp - self._cumulative_timestamps.get(
+                    field, default
+                )
+                if last_update_timediff >= stale_threshold:
+                    stale[field] = last_update_timediff
+            if len(stale) > 0:
+                self._alarms["Stale Data"] = stale
 
     @property
     def tardy(self) -> float:

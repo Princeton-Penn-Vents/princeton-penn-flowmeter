@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse
+from processor.config import ArgumentParser
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--config", default="pofm.yml", help="YAML configuration file")
+parser = ArgumentParser()
 args = parser.parse_args()
 
 import signal
@@ -15,10 +14,6 @@ from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.handler import Handler
-from processor.config import config
-
-if args.config:
-    config.set_file(args.config)
 
 # Initialize LCD
 with RotaryLCD(get_live_settings()) as rotary, Collector() as collector:

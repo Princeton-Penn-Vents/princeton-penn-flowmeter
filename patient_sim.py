@@ -5,11 +5,12 @@ from datetime import datetime
 from itertools import chain
 from sim.start_sims import start_sims
 from processor.handler import serve
-import argparse
 import numpy as np
 import random
 import time
 from dataclasses import dataclass
+
+from processor.config import ArgumentParser
 
 
 @dataclass
@@ -84,7 +85,7 @@ class OurServer:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Serve values on network as JSON")
+    parser = ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
     parser.add_argument(
         "--bind", default="0.0.0.0", help="Binding address (default: all)"

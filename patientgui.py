@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse
+from processor.config import ArgumentParser
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--config", default="pofm.yml", help="YAML configuration file")
+parser = ArgumentParser()
 args = parser.parse_args()
 
 import http.server
@@ -17,10 +16,6 @@ from processor.settings import get_live_settings
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
 from processor.handler import Handler
-from processor.config import config
-
-if args.config:
-    config.set_file(args.config)
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(rotary=rotary) as collector:
 
