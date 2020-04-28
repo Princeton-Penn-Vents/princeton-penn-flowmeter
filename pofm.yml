@@ -10,7 +10,7 @@ rotary:
   Avg Flow Min:
     type: Incr
     name: Avg Flow Min
-    default: 30
+    default: 50
     min: 0
     max: 150
     incr: 2
@@ -19,7 +19,7 @@ rotary:
   Avg Flow Max:
     type: Incr
     name: Avg Flow Max
-    default: 70
+    default: 100
     min: 2
     max: 150
     incr: 2
@@ -37,7 +37,7 @@ rotary:
   Avg Pressure Max:
     type: Incr
     name: Avg Pressure Max
-    default: 25
+    default: 12
     min: 1
     max: 100
     incr: 1
