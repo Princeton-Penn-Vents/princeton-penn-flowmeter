@@ -47,19 +47,19 @@ class RemoteThread(threading.Thread):
             except requests.ConnectionError:
                 with self._remote_lock:
                     self.status = Status.DISCON
-                time.sleep(1)
+                self.parent._stop.wait(1)
                 continue
             if r.status_code != 200:
                 with self._remote_lock:
                     self.status = Status.DISCON
-                time.sleep(1)
+                self.parent._stop.wait(1)
                 continue
 
             try:
                 root = json.loads(r.text)
             except json.JSONDecodeError:
                 logger.warning(f"Failed to read json, trying again", exc_info=True)
-                time.sleep(0.01)
+                self.parent._stop.wait(0.01)
                 continue
 
             times = np.asarray(root["data"]["timestamps"])
@@ -79,7 +79,7 @@ class RemoteThread(threading.Thread):
                     self._last_get = time.monotonic()
                 self.rotary_dict = root.get("rotary", {})
 
-            time.sleep(0.2)
+            self.parent._stop.wait(0.2)
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:

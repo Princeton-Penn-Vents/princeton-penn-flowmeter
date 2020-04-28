@@ -134,7 +134,7 @@ class Generator(abc.ABC):
             with self.lock:
                 self._get_data()
                 self.analyze_as_needed()
-            time.sleep(self.run_every)
+            self._stop.wait(self.run_every)
 
     def analyze_as_needed(self) -> None:
         """

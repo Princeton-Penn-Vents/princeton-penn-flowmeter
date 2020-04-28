@@ -37,9 +37,9 @@ class Buzzer:
 
         while not self._done.is_set():
             self.buzz(volume)
-            time.sleep(time_on)
+            self._done.wait(time_on)
             self.buzz(0)
-            time.sleep(time_off)
+            self._done.wait(time_off)
             if timer is not None and timer + start_time > time.monotonic():
                 break
         self._done.clear()
