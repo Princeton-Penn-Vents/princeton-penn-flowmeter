@@ -3,6 +3,7 @@ import numpy as np
 
 from processor.generator import Generator, Status
 from processor.threaded_generator import RemoteThread
+from processor.analysis import pressure_deglitch_smooth
 from typing import Optional, Dict, Any
 
 
@@ -40,7 +41,7 @@ class RemoteGenerator(Generator):
 
     @property
     def pressure(self) -> np.ndarray:
-        return np.asarray(self._pressure)
+        return pressure_deglitch_smooth(np.asarray(self._pressure))
 
     @property
     def timestamps(self) -> np.ndarray:
