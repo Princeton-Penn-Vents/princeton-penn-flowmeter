@@ -68,6 +68,8 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
 
 
 def smooth_derivative(times, values, sig=0.2):
+    values = values - values.mean()
+
     window_width = int(np.ceil(4 * sig / np.min(times[1:] - times[:-1])))
     windowed_times = np.lib.stride_tricks.as_strided(
         times,
