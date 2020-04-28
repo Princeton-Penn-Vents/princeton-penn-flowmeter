@@ -216,12 +216,18 @@ class Generator(abc.ABC):
             )
             self._old_realtime = realtime
 
-            if self._volume_unshifted_min is None:
-                self._volume_unshifted_min = np.min(self._volume)
-            else:
-                self._volume_unshifted_min = min(
-                    self._volume_unshifted_min, np.min(self._volume)
-                )
+            ### Removed "volume minimum is minimum ever"
+            ### Added "volume minimum is minimum on screen"
+            #
+            # if self._volume_unshifted_min is None:
+            #     self._volume_unshifted_min = np.min(self._volume)
+            # else:
+            #     self._volume_unshifted_min = min(
+            #         self._volume_unshifted_min, np.min(self._volume)
+            #     )
+            self._volume_unshifted_min = np.min(self._volume)
+            #
+            ### END
 
             self._volume_shift = (
                 -self._volume_unshifted_min
