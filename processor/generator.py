@@ -32,10 +32,10 @@ class Generator(abc.ABC):
         # The previous collection of realtime values, as floats
         self._old_realtime: Optional[np.ndarray] = None
 
-        # The minimum volume (JP?)
+        # Defines the "zero" of volume
         self._volume_unshifted_min: Optional[float] = None
 
-        # The amount to shift the volume (JP?)
+        # The difference between the volume we show and volume with a mean of 0
         self._volume_shift = 0.0
 
         # The cumulative running windows for flow
@@ -64,11 +64,8 @@ class Generator(abc.ABC):
         # The list of cumulative values from the analysis
         self._cumulative: Dict[str, float] = {}
 
-        # The cumulative timestamps (JP?)
+        # Timestamps on all cumulative keys for calculating staleness
         self._cumulative_timestamps: Dict[str, Any] = {}
-
-        # JP?
-        self._window_cumulative: Dict[str, Any] = {}
 
         # The active alarms
         self._alarms: Dict[str, Dict[str, float]] = {}
@@ -375,7 +372,7 @@ class Generator(abc.ABC):
     @property
     def cumulative_timestamps(self):
         """
-        JP?
+        Timestamps on all cumulative keys for calculating staleness
         """
 
         return self._cumulative_timestamps

@@ -27,7 +27,7 @@ Key methods and properties:
 * `breaths`: The last 30 computed breaths.
 * `alarms`: A dictionary of alarms, each with first and last time, and extreme value.
 * `cumulative`: A dictionary of resulting values, like RR, from the analysis.
-* `cumulative_timestamps`: JP?
+* `cumulative_timestamps`: Timestamps on all cumulative keys for calculating staleness
 * `cumulative_bywindow`: Dict of running averages for flow and pressure
 
 You should close/leave context manger on any threaded collectors.
