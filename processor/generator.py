@@ -19,13 +19,6 @@ class Status(enum.Enum):
     DISCON = enum.auto()
 
 
-COLOR = {
-    Status.OK: (151, 222, 121),
-    Status.ALERT: (237, 67, 55),
-    Status.DISCON: (50, 50, 220),
-}
-
-
 T = TypeVar("T", bound="Generator")
 
 
@@ -53,7 +46,6 @@ class Generator(abc.ABC):
             10: 0.0,
             20: 0.0,
             30: 0.0,
-            60: 0.0,
         }
 
         # The cumulative running windows for pressure
@@ -64,7 +56,6 @@ class Generator(abc.ABC):
             10: 0.0,
             20: 0.0,
             30: 0.0,
-            60: 0.0,
         }
 
         # The list of breaths
@@ -82,6 +73,9 @@ class Generator(abc.ABC):
         # The active alarms
         self._alarms: Dict[str, Dict[str, float]] = {}
 
+        # The active average alarms
+        self._avg_alarms: Dict[str, Dict[str, float]] = {}
+
         # The rotary with alarm settings
         self.rotary = LocalRotary(get_remote_settings()) if rotary is None else rotary
 
@@ -96,6 +90,9 @@ class Generator(abc.ABC):
 
         # Last analyze run in local time - used by analyze_as_needed
         self._last_ana = time.monotonic()
+
+        # Turn off the full analyze (for on-device flow/pressure only)
+        self.disable_full_analyze = False
 
         # Last partial analyze for plotting
         self._last_get: Optional[float] = None
@@ -135,29 +132,35 @@ class Generator(abc.ABC):
 
         while not self._stop.is_set():
             with self.lock:
-                self.get_data()
+                self._get_data()
                 self.analyze_as_needed()
             time.sleep(self.run_every)
 
-    def analyze_as_needed(self) -> bool:
+    def analyze_as_needed(self) -> None:
         """
         Run basic analysis, and more complex analysis only if needed.
         """
-        if time.monotonic() - self._last_ana < self.analyze_every:
-            self.analyze_timeseries()
-            return False
-        else:
-            self.analyze()
+        self._analyze_timeseries()
+
+        if time.monotonic() - self._last_ana > self.analyze_every:
+            if not self.disable_full_analyze:
+                self._analyze_full()
+
             self._last_ana = time.monotonic()
-            return True
+
+            if hasattr(self, "status"):
+                if self.alarms and self.status == Status.OK:
+                    self.status = Status.ALERT
+                elif not self.alarms and self.status == Status.ALERT:
+                    self.status = Status.OK
 
     @abc.abstractmethod
-    def get_data(self):
+    def _get_data(self):
         """
         Copy in the remote/local datastream to internal cache.
         """
 
-    def analyze_timeseries(self) -> None:
+    def _analyze_timeseries(self) -> None:
         """
         Quick analysis that's easier to run often, makes volume (run by `analyze` too)
         """
@@ -196,6 +199,15 @@ class Generator(abc.ABC):
                 self._pressure_cumulative.keys(), self.timestamps, self.pressure
             )
 
+            self._avg_alarms = {
+                **processor.analysis.avg_alarms(
+                    self.rotary, "flow", self._flow_cumulative
+                ),
+                **processor.analysis.avg_alarms(
+                    self.rotary, "pressure", self._pressure_cumulative
+                ),
+            }
+
             self._volume = processor.analysis.flow_to_volume(
                 realtime,
                 self._old_realtime,
@@ -218,11 +230,10 @@ class Generator(abc.ABC):
             )
             self._volume = self._volume + self._volume_shift
 
-    def analyze(self) -> None:
+    def _analyze_full(self) -> None:
         """
         Full analysis of breaths.
         """
-        self.analyze_timeseries()
 
         realtime = self.realtime
 
@@ -259,7 +270,11 @@ class Generator(abc.ABC):
             cumulative_timestamps[field] = timestamp
         self._cumulative_timestamps = cumulative_timestamps
 
-        stale_threshold = self.rotary["Stale Data Timeout"].value
+        if "Stale Data Timeout" in self.rotary:
+            stale_threshold = self.rotary["Stale Data Timeout"].value
+        else:
+            stale_threshold = 10
+
         default = timestamp - stale_threshold
         stale = {}
         for field in self._cumulative:
@@ -270,12 +285,6 @@ class Generator(abc.ABC):
                 stale[field] = last_update_timediff
         if len(stale) > 0:
             self._alarms["Stale Data"] = stale
-
-        if hasattr(self, "status"):
-            if self.alarms and self.status == Status.OK:
-                self.status = Status.ALERT
-            elif not self.alarms and self.status == Status.ALERT:
-                self.status = Status.OK
 
     @property
     def time(self) -> np.ndarray:
@@ -343,7 +352,7 @@ class Generator(abc.ABC):
         """
         A dictionary of alarms, each with first and last time, and extreme value.
         """
-        return self._alarms
+        return {**self._alarms, **self._avg_alarms}
 
     @property
     def cumulative(self) -> Dict[str, float]:

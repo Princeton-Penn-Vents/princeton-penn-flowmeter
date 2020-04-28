@@ -27,6 +27,7 @@ from nurse.drilldown import DrilldownWidget
 from processor.generator import Status, Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
+from processor.config import config as config_
 
 DIR = Path(__file__).parent.resolve()
 
@@ -153,8 +154,11 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(evt)
 
 
-def main(argv, *, fullscreen: bool, logfile: str, debug: bool, **kwargs):
+def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kwargs):
     (DIR / "nurse_log").mkdir(exist_ok=True)
+
+    if args.config:
+        config_.set_file(config)
 
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
@@ -216,6 +220,7 @@ if __name__ == "__main__":
     parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
     parser.add_argument("--port", type=int, default=8100, help="Select a starting port")
     parser.add_argument("--fullscreen", action="store_true")
+    parser.add_argument("--config", default="pofm.yml", help="YAML configuration file")
     parser.add_argument(
         "--displays",
         "-n",

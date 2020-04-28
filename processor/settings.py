@@ -29,7 +29,11 @@ def get_setting(c: ConfigView) -> Setting:
             lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
         )
     elif type_name == "Current":
-        return CurrentSetting("FlowMeter... ")
+        return CurrentSetting(
+            "Current:",
+            listing=[v.as_number() for v in c["items"]],
+            default=c["default"].get(int),
+        )
     elif type_name == "Filename":
         return FilenameSetting("Log filename")
     else:
@@ -42,11 +46,7 @@ def get_live_settings() -> Dict[str, Setting]:
     "Get the live version of the configuration dictionary"
 
     d: Dict[str, Setting] = {}
-    all_settings = [
-        config["rotary"]["live"],
-        config["rotary"]["required"],
-        config["rotary"]["current"],
-    ]
+    all_settings = [config["rotary-live"], config["rotary"]]
     for settings in all_settings:
         for setting in settings:
             d[setting] = get_setting(settings[setting])
@@ -56,7 +56,7 @@ def get_live_settings() -> Dict[str, Setting]:
 def get_remote_settings() -> Dict[str, Setting]:
     "Get the non-live version of the configuration dictionary"
     d: Dict[str, Setting] = {}
-    all_settings = [config["rotary"]["required"], config["rotary"]["current"]]
+    all_settings = [config["rotary"]]
     for settings in all_settings:
         for setting in settings:
             d[setting] = get_setting(settings[setting])

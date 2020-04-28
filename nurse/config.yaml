@@ -1,0 +1,51 @@
+rotary:
+  RR Max:
+    type: Incr
+    name: RespRate Max
+    default: 30
+    min: 5
+    max: 180
+    incr: 5
+    unit: 1/min
+
+  PIP Max:
+    type: Incr
+    name: PIP Max
+    default: 30
+    min: 0
+    max: 50
+    incr: 1
+    unit: cm-H2O
+
+  PIP Min:
+    type: Incr
+    default: 5
+    min: 1
+    max: 25
+    incr: 1
+    unit: cm-H2O
+    name: PIP Min
+
+  PEEP Max:
+    type: Incr
+    default: 8
+    min: 1
+    max: 25
+    incr: 1
+    unit: cm-H2O
+    name: PEEP Max
+
+  PEEP Min:
+    type: Incr
+    default: 0
+    min: 0
+    max: 25
+    incr: 1
+    unit: cm-H2O
+    name: PEEP Min
+
+  TVe Max:
+    type: Incr
+    default: 700
+    min: 50
+    max: 2000

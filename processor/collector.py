@@ -85,29 +85,33 @@ class Collector(Generator):
 
         self._collect_thread: Optional[CollectorThread] = None
 
-    def get_data(self) -> None:
+        # The collector does not need the full breath analysis
+        self.disable_full_analyze = True
+
+    def _get_data(self) -> None:
         if self._collect_thread is not None:
             self._collect_thread.access_collected_data()
 
-    def analyze(self) -> None:
-        super().analyze()
+    def _analyze_full(self) -> None:
+        super()._analyze_full()
 
         self.rotary.alarms = self.alarms
 
-    def analyze_timeseries(self) -> None:
-        super().analyze_timeseries()
+    def _analyze_timeseries(self) -> None:
+        super()._analyze_timeseries()
 
         if "Current Setting" in self.rotary:
             setting = self.rotary["Current Setting"]
 
-            RR = self.cumulative.get("RR", 0.0)
             F = self.average_flow
             P = self.average_pressure
 
             setting.from_processor(
-                F=list(F.values()), P=list(P.values()), RR=[RR] * 7,
+                F=list(F.values()), P=list(P.values()),
             )
             self.rotary.external_update()
+
+        self.rotary.alarms = self.alarms
 
     def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
         """

@@ -30,7 +30,7 @@ class RemoteGenerator(Generator):
         )
         self._remote_thread.start()
 
-    def get_data(self) -> None:
+    def _get_data(self) -> None:
         if self._remote_thread is not None:
             self._remote_thread.access_collected_data()
 

@@ -17,7 +17,10 @@ from processor.settings import get_live_settings
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
 from processor.handler import Handler
+from processor.config import config
 
+if args.config:
+    config.set_file(args.config)
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(rotary=rotary) as collector:
 

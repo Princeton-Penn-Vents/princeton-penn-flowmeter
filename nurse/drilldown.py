@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 
-import time
+from typing import Optional
 
 from nurse.qt import (
     QtCore,
@@ -15,7 +15,7 @@ from nurse.qt import (
 from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
 
-from processor.generator import Status
+from processor.generator import Status, Generator
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -50,7 +50,7 @@ class DisplayBox(QtWidgets.QFrame):
             self.cumulative.style().unpolish(self.cumulative)
             self.cumulative.style().polish(self.cumulative)
 
-    def __init__(self, *, key, label, fmt=""):
+    def __init__(self, *, key: str, label: str, fmt: str = ""):
         super().__init__()
         self.key = key
         self.fmt = fmt
@@ -73,6 +73,11 @@ class DisplayBox(QtWidgets.QFrame):
 
         lower_layout.addStretch()
 
+        if self.key.startswith("Avg "):
+            self.avg_time = DrilldownLimit()
+            lower_layout.addWidget(self.avg_time)
+            lower_layout.addStretch()
+
         self.upper_limit = DrilldownLimit()
         lower_layout.addWidget(self.upper_limit)
 
@@ -80,13 +85,25 @@ class DisplayBox(QtWidgets.QFrame):
         self.update_limits()
 
     def update_cumulative(self):
-        gen = (
+        gen: Optional[Generator] = (
             self.parent().parent().gen
             if (self.parent() and self.parent().parent())
             else None
         )
-        if gen is not None and self.key in gen.cumulative:
-            self.cumulative.setText(format(gen.cumulative[self.key], self.fmt))
+
+        if gen is None:
+            value = None
+        elif self.key == "Avg Flow":
+            avg_window = gen.rotary["AvgWindow"].value
+            value = gen.average_flow[avg_window]
+        elif self.key == "Avg Pressure":
+            avg_window = gen.rotary["AvgWindow"].value
+            value = gen.average_pressure[avg_window]
+        else:
+            value = gen.cumulative.get(self.key)
+
+        if value is not None:
+            self.cumulative.setText(format(value, self.fmt))
             if f"{self.key} Max" in gen.alarms or f"{self.key} Min" in gen.alarms:
                 self.status = Status.ALERT
             else:
@@ -112,12 +129,17 @@ class DisplayBox(QtWidgets.QFrame):
             if max_key in gen.rotary:
                 self.upper_limit.setText(format(gen.rotary[max_key].value, self.fmt))
 
+            if hasattr(self, "avg_time"):
+                self.avg_time.setText(f"({gen.rotary['AvgWindow']}s)")
+
 
 class AllDisplays(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
         self.boxes = [
+            DisplayBox(key="Avg Flow", label="avF", fmt=".0f"),
+            DisplayBox(key="Avg Pressure", label="avP", fmt=".0f"),
             DisplayBox(key="RR", label="RR", fmt=".0f"),
             DisplayBox(key="I:E time ratio", label="I:E", fmt=".2f"),
             DisplayBox(key="PIP", label="PIP", fmt=".0f"),
@@ -269,7 +291,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
         self.curves = {}
-        self.gen = None
+        self.gen: Optional[Generator] = None
 
         layout = HBoxLayout(self)
 
@@ -335,9 +357,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def display_cumulative(self):
-        cumulative = "\n".join(
-            rf"<p>{k}: {v:.2f}</p>" for k, v in self.gen.cumulative.items()
-        )
+        if self.gen is not None:
+            cumulative = "\n".join(
+                rf"<p>{k}: {v:.2f}</p>" for k, v in self.gen.cumulative.items()
+            )
+        else:
+            cumulative = "Disconnected"
 
         box = QtWidgets.QMessageBox()
         box.setTextFormat(Qt.RichText)
@@ -385,7 +410,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graphs[key].plot([], [], pen=pen)
-            # graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
+            graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
 
         graphs[key].setLabel("bottom", "Time", "s")
 

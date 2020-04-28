@@ -32,8 +32,8 @@ print(f"Reporting every {arg.n} seconds, use Ctrl-C to exit.")
 while True:
     time.sleep(arg.n)
 
-    gen.get_data()
-    gen.analyze()
+    gen._get_data()
+    gen._analyze_full()
 
     with np.printoptions(threshold=6, precision=4, floatmode="fixed", linewidth=95):
         print(f"--- Current status ---")

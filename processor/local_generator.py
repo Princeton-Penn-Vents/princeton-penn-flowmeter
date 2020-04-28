@@ -24,7 +24,7 @@ class LocalGenerator(Generator):
 
         self._logging = logging
 
-    def get_data(self):
+    def _get_data(self):
         if self._force_status == Status.DISCON:
             return
         t = int(datetime.now().timestamp() * 1000)
@@ -39,11 +39,11 @@ class LocalGenerator(Generator):
             self._flow.inject(flow[-to_add:])
             self._pressure.inject(pressure[-to_add:])
 
-    def analyze(self):
+    def _analyze_full(self):
         if self._force_status == Status.DISCON:
             return
         else:
-            return super().analyze()
+            return super()._analyze_full()
 
     @property
     def flow(self):

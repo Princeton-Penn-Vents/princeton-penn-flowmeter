@@ -11,8 +11,3 @@ config.clear()
 # Defaults stored here
 config_default = DIR / "config_default.yaml"
 config.set_file(config_default)
-
-# Device specifics here
-config_custom = DIR.parent / "pofm.yml"
-if config_custom.exists():
-    config.set_file(config_custom)

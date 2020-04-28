@@ -31,7 +31,9 @@ def pressure_deglitch_smooth(
     return pressure_out
 
 
-def _compute_cumulative_length(length: int, time: np.ndarray, window: np.ndarray):
+def _compute_cumulative_length(
+    length: int, time: np.ndarray, window: np.ndarray
+) -> float:
     if len(time) == 0:
         return 0.0
     try:
@@ -606,6 +608,24 @@ def alarm_record(old_record, timestamp, value, ismax):
         elif not ismax and value < record["extreme"]:
             record["extreme"] = value
         return record
+
+
+def avg_alarms(
+    rotary, key: str, values: Dict[int, float]
+) -> Dict[str, Dict[str, float]]:
+    """
+    Return a dict with an alarm if alarm present and out of bounds.
+    """
+    timescale = rotary["AvgWindow"].value
+    max_key = f"Avg {key.capitalize()} Max"
+    min_key = f"Avg {key.capitalize()} Min"
+    if max_key in rotary:
+        if values[timescale] > rotary[max_key].value:
+            return {max_key: {"extreme": values[timescale]}}
+    if min_key in rotary:
+        if values[timescale] < rotary[min_key].value:
+            return {min_key: {"extreme": values[timescale]}}
+    return {}
 
 
 def add_alarms(rotary, _updated, _new_breaths, cumulative):

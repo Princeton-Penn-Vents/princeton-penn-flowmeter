@@ -7,7 +7,6 @@ parser.add_argument("--config", default="pofm.yml", help="YAML configuration fil
 args = parser.parse_args()
 
 import signal
-import yaml
 from functools import partial
 import http.server
 import threading
@@ -23,9 +22,6 @@ if args.config:
 
 # Initialize LCD
 with RotaryLCD(get_live_settings()) as rotary, Collector() as collector:
-    rotary.alarm_filter = lambda x: x in ["RR Max"]
-    rotary.display()
-
     collector.rotary = rotary
 
     server_address = ("0.0.0.0", 8100)

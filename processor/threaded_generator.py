@@ -91,7 +91,7 @@ class RemoteThread(threading.Thread):
 
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON
-            elif self.status == Status.DISCON:
+            elif self.parent.status == Status.DISCON:
                 self.parent.status = Status.OK
 
             if len(self._time) > 0:
