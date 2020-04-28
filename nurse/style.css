@@ -259,6 +259,11 @@ QWidget#DrilldownExtras > QPushButton:hover {
   background-color: #808080;
 }
 
+QLabel#LastTS {
+  margin: 4px 6px 2px 6px;
+  color: floralwhite;
+}
+
 
 /* Logging box */
 

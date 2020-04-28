@@ -287,18 +287,23 @@ class Generator(abc.ABC):
             self._alarms["Stale Data"] = stale
 
     @property
-    def time(self) -> np.ndarray:
+    def tardy(self) -> float:
         """
-        The time array, with the most rececnt time as 0, with an adjustment based on `last_update`. Mostly for plotting.
+        The amount of time since last update.
         """
-        timestamps = self.timestamps
-
-        tardy = (
+        return (
             (time.monotonic() - self._last_get) if self._last_get is not None else 0.0
         )
 
+    @property
+    def time(self) -> np.ndarray:
+        """
+        The time array, with the most recent time as 0, with an adjustment based on `last_update`. Mostly for plotting.
+        """
+        timestamps = self.timestamps
+
         if len(timestamps) > 0:
-            return -(timestamps - timestamps[-1]) / 1000 + tardy
+            return -(timestamps - timestamps[-1]) / 1000 + self.tardy
         else:
             return timestamps
 

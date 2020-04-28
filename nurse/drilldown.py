@@ -331,6 +331,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.displays = AllDisplays()
         displays_layout.addWidget(self.displays)
 
+        self.last_ts = QtWidgets.QLabel("Last updated: ---")
+        self.last_ts.setObjectName("LastTS")
+        displays_layout.addWidget(self.last_ts)
+
         button_box = QtWidgets.QWidget()
         button_box.setObjectName("DrilldownExtras")
         buttons_layout = QtWidgets.QHBoxLayout(button_box)
@@ -473,6 +477,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     self.status = self.gen.status
                     self.displays.update_cumulative()
                     self.displays.update_limits()
+
+                    time_str = (
+                        "now" if self.gen.tardy < 1 else f"{self.gen.tardy:.0f}s ago"
+                    )
+                    self.last_ts.setText(f"Last updated: {time_str}")
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
