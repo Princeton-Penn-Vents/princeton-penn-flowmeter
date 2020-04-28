@@ -188,7 +188,7 @@ class PatientSensor(QtGui.QFrame):
         gis = GraphInfo()
         self.graph = {}
         for j, key in enumerate(gis.graph_labels):
-            self.graph[key] = graphlayout.addPlot(x=[], y=[], name=key.capitalize())
+            self.graph[key] = graphlayout.addPlot(x=None, y=None, name=key.capitalize())
             self.graph[key].setMouseEnabled(False, False)
             self.graph[key].invertX()
             if j != len(gis.graph_labels):
@@ -221,7 +221,7 @@ class PatientSensor(QtGui.QFrame):
         for i, (key, graph) in enumerate(self.graph.items()):
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
 
-            self.curves[key] = graph.plot([], [], pen=pen, autoDownsample=True)
+            self.curves[key] = graph.plot(x=None, y=None, pen=pen, autoDownsample=True)
 
             graph.setRange(xRange=(15, 0), yRange=gis.yLims[key])
 
@@ -250,7 +250,7 @@ class PatientSensor(QtGui.QFrame):
                         self.gen.time[select], getattr(self.gen, key)[select]
                     )
                 else:
-                    self.curves[key].setData([], [])
+                    self.curves[key].setData(None, None)
 
             # Change of status requires a background color change
             self.status = self.gen.status

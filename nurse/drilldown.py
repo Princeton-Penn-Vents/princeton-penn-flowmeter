@@ -414,7 +414,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         for j, key in enumerate(gis.graph_labels):
             graphs[key] = graph_layout.addPlot(
-                x=[], y=[], name=key.capitalize(), autoDownsample=True, clipToView=True
+                x=None,
+                y=None,
+                name=key.capitalize(),
+                autoDownsample=True,
+                clipToView=True,
             )
             graphs[key].invertX()
             graphs[key].setRange(xRange=(30, 0))
@@ -424,16 +428,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
 
-            self.upper[key] = pg.PlotDataItem([], [], pen=limit_pen)
+            self.upper[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
             graphs[key].addItem(self.upper[key])
-            self.lower[key] = pg.PlotDataItem([], [], pen=limit_pen)
+            self.lower[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
             graphs[key].addItem(self.lower[key])
-            self.current[key] = pg.PlotDataItem([], [], pen=current_pen)
+            self.current[key] = pg.PlotDataItem(x=None, y=None, pen=current_pen)
             graphs[key].addItem(self.current[key])
 
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
-            self.curves[key] = graphs[key].plot([], [], pen=pen)
-            self.curves2[key] = graphs[key].plot([], [], pen=pen)
+            self.curves[key] = graphs[key].plot(x=None, y=None, pen=pen)
+            self.curves2[key] = graphs[key].plot(x=None, y=None, pen=pen)
 
         graphs[key].setLabel("bottom", "Time", "s")
 
@@ -441,8 +445,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
 
         # Phase plot
-        self.phase_graph = phase_layout.addPlot(x=[], y=[], name="Phase")
-        self.phase = self.phase_graph.plot([], [], pen=pg.mkPen(color=(200, 200, 0)))
+        self.phase_graph = phase_layout.addPlot(x=None, y=None, name="Phase")
+        self.phase = self.phase_graph.plot(
+            x=None, y=None, pen=pg.mkPen(color=(200, 200, 0))
+        )
         self.phase_graph.setLabel("left", "Volume", units="mL")
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
@@ -460,7 +466,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             self.curves[key].setData(
                                 self.gen.time, getattr(self.gen, key)
                             )
-                            self.curves2[key].setData([], [])
+                            self.curves2[key].setData(x=None, y=None)
 
                         else:
                             last = self.gen.realtime[-1]
