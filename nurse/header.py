@@ -48,7 +48,7 @@ class DateTimeWidget(QtWidgets.QWidget):
 class LimitButton(QtWidgets.QPushButton):
     def __init__(self, key):
         gis = GraphInfo()
-        super().__init__(key.capitalize() + "(" + gis.units[key] + ")")
+        super().__init__(f"{key.capitalize()}({gis.units[key]})")
         self.key = key
 
         self.setProperty("graph", key)
@@ -169,7 +169,10 @@ class DrilldownHeaderWidget(HeaderWidget):
         layout.addWidget(PrincetonLogoWidget())
         layout.addStretch()
 
-        layout.addWidget(QtWidgets.QPushButton("Mode: Scroll"))
+        self.mode_btn = QtWidgets.QPushButton("Mode: Scroll")
+        self.mode_btn.setObjectName("mode_btn")
+        self.mode_btn.clicked.connect(self.mode_btn_callback)
+        layout.addWidget(self.mode_btn)
 
         self.freeze_btn = QtWidgets.QCheckBox("Freeze")
         layout.addWidget(self.freeze_btn)
@@ -180,3 +183,14 @@ class DrilldownHeaderWidget(HeaderWidget):
 
         nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo)
+
+    @property
+    def mode_scroll(self):
+        return self.mode_btn.text() == "Mode: Scroll"
+
+    @Slot()
+    def mode_btn_callback(self):
+        if self.mode_scroll:
+            self.mode_btn.setText("Mode: Overwrite")
+        else:
+            self.mode_btn.setText("Mode: Scroll")

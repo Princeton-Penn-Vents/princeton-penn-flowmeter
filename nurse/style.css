@@ -51,6 +51,10 @@ DrilldownHeaderWidget QPushButton, DrilldownHeaderWidget QCheckBox {
   margin-right: 5px;
 }
 
+DrilldownHeaderWidget QPushButton#mode_btn {
+  min-width: 160px;
+}
+
 DrilldownHeaderWidget > QPushButton#return_btn {
   background-color: red;
 }

@@ -2,6 +2,8 @@ import pyqtgraph as pg
 
 from typing import Optional
 
+import numpy as np
+
 from nurse.qt import (
     QtCore,
     QtWidgets,
@@ -14,7 +16,6 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
-
 from processor.generator import Status, Generator
 
 
@@ -291,6 +292,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
         self.curves = {}
+        self.curves2 = {}
         self.upper = {}
         self.lower = {}
         self.current = {}
@@ -431,6 +433,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             pen = pg.mkPen(color=gis.graph_pens[key], width=2)
             self.curves[key] = graphs[key].plot([], [], pen=pen)
+            self.curves2[key] = graphs[key].plot([], [], pen=pen)
 
         graphs[key].setLabel("bottom", "Time", "s")
 
@@ -447,12 +450,34 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def update_plot(self, first: bool = False):
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
+            scroll = self.parent().header.mode_scroll
 
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
                     time_avg = self.gen.rotary["AvgWindow"].value
                     for key in gis.graph_labels:
-                        self.curves[key].setData(self.gen.time, getattr(self.gen, key))
+                        if scroll:
+                            self.curves[key].setData(
+                                self.gen.time, getattr(self.gen, key)
+                            )
+                            self.curves2[key].setData([], [])
+
+                        else:
+                            last = self.gen.realtime[-1]
+                            breakpt = np.searchsorted(
+                                self.gen.realtime, last - last % 30
+                            )
+                            gap = 25
+
+                            self.curves[key].setData(
+                                30 - (self.gen.realtime[breakpt:] % 30),
+                                getattr(self.gen, key)[breakpt:],
+                            )
+                            self.curves2[key].setData(
+                                30 - (self.gen.realtime[gap:breakpt] % 30),
+                                getattr(self.gen, key)[gap:breakpt],
+                            )
+
                         val_key = f"Avg {key.capitalize()}"
                         min_key = f"{val_key} Min"
                         max_key = f"{val_key} Max"
