@@ -5,7 +5,7 @@ After=pigpiod.service
 [Service]
 Type=simple
 User=pi
-ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/patient/__main__.py --file /home/pi/princeton-penn-flowmeter/device_log/data.out
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/device_loop.py --file /home/pi/princeton-penn-flowmeter/device_log/data.out
 WorkingDirectory=/home/pi/princeton-penn-flowmeter
 Restart=always
 

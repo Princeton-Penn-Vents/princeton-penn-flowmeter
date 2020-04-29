@@ -45,10 +45,14 @@ minTEMP = 37.0
 operTEMP = 40.0
 maxTEMP = 43.0
 dcSTEP = 1
-dcTEMP = 1800
-dcMAX = 7000
+dcTEMP = 3000
+dcMAX = 9000
 dcRANGE = 10000
 dcSTROBE = 1 * NReadoutTemp
+sgn = lambda a: (a>0) - (a<0)
+first_crossTEMP = True
+dcTEMP_at_cross = 0
+last_errorTEMP = 0
 pinPWM = 13
 
 
@@ -238,6 +242,16 @@ with pi_cleanup(), ExitStack() as stack:
                 tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
                 print(ts, tmptemp, dcTEMP)
                 if (NReadout % dcSTROBE) == 0:
+# take-back-half algorithm
+                    errorTEMP = operTEMP - curTEMP
+                    if (sgn(errorTEMP)!=sgn(last_errorTEMP)):
+                       if ( first_crossTEMP ):
+                           first_crossTEMP = False
+                       else:
+                           dcTEMP = (dcTEMP + dcTEMP_at_cross) // 2
+                       dcTEMP_at_cross = dcTEMP
+                    last_errorTEMP = errorTEMP
+# standard servo (loop gain response)
                     deltatemp = tmptemp - curTEMP
                     if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
                         dcTEMP += dcSTEP
