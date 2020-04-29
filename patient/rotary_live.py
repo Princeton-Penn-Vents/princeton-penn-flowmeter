@@ -66,6 +66,9 @@ class LiveRotary(LocalRotary):
         except KeyError:
             logger.warning(f"Malformed keys in {filename}")
             return
+        except TypeError:
+            logger.warning(f"Empty {filename}")
+            return
 
         if keys == set(self.config):
             for group in ("rotary-live", "rotary"):
