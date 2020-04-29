@@ -11,7 +11,7 @@ rotary:
     type: Incr
     name: Avg Flow Min
     default: 50
-    min: 0
+    min: -150
     max: 150
     incr: 2
     unit: L/min
@@ -20,7 +20,7 @@ rotary:
     type: Incr
     name: Avg Flow Max
     default: 100
-    min: 2
+    min: -150
     max: 150
     incr: 2
     unit: L/min
@@ -31,7 +31,7 @@ rotary:
     default: 5
     min: 0
     max: 100
-    incr: 2
+    incr: 1
     unit: cm H20
 
   Avg Pressure Max:
