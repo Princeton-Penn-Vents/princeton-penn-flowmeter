@@ -4,7 +4,6 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
 from sim.start_sims import start_sims
-from processor.handler import serve
 import numpy as np
 import random
 import time
@@ -19,31 +18,6 @@ class PseudoGenerator:
     version_num: int
     last_ts: int = 0
 
-    def prepare(self, *, from_timestamp=None):
-
-        t_now = int(1_000 * time.monotonic())
-        if from_timestamp is None:
-            ts = 5_000
-        elif from_timestamp == 0:
-            ts = 30 * 1_000
-        else:
-            ts = min(int(t_now - from_timestamp), 10_000)
-
-        if self.parent.isDisconnected[self.version_num] > t_now:
-            return {}
-
-        sim = self.parent.sims[self.version_num]
-
-        d = sim.get_from_timestamp(t_now, ts)
-
-        # enrich with stuff that comes from the analysis
-        d["alarms"] = {}
-
-        # enrich with stuff that comes from the overall patient server
-        d["time"] = t_now
-
-        return d
-
 
 class OurServer:
     def serve_on_port(self, server_address, i):
@@ -53,7 +27,6 @@ class OurServer:
         else:
             print(f"Serving on http://{server_address[0]}:{server_address[1]}")
             gen = PseudoGenerator(self, i)
-            serve(server_address, gen)
 
     def __init__(self, args):
         self.done = False
@@ -85,6 +58,8 @@ class OurServer:
 
 
 if __name__ == "__main__":
+    print("Currently needs to be refactored for ZMQ")
+    exit(1)
     parser = ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
     parser.add_argument(
