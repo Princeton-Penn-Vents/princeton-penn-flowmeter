@@ -1,4 +1,3 @@
-from datetime import datetime
 import http.server
 import json
 from urllib.parse import urlparse, parse_qs

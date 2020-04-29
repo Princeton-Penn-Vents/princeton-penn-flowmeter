@@ -1,4 +1,4 @@
-from datetime import datetime
+import time
 import numpy as np
 
 from sim.start_sims import start_sims
@@ -19,7 +19,7 @@ class LocalGenerator(Generator):
         self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
         self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
 
-        self._start_time = int(1000 * datetime.now().timestamp())
+        self._start_time = int(1000 * time.monotonic())
         (self._sim,) = start_sims(1, self._start_time, 12000000)
 
         self._logging = logging
@@ -27,15 +27,15 @@ class LocalGenerator(Generator):
     def _get_data(self):
         if self._force_status == Status.DISCON:
             return
-        t = int(datetime.now().timestamp() * 1000)
+        t = int(time.monotonic() * 1000)
         root = self._sim.get_from_timestamp(t, 5000)
-        time = root["data"]["timestamps"]
+        times = root["data"]["timestamps"]
         flow = root["data"]["flows"]
         pressure = root["data"]["pressures"]
 
-        to_add = new_elements(self._time, time)
+        to_add = new_elements(self._time, times)
         if to_add:
-            self._time.inject(time[-to_add:])
+            self._time.inject(times[-to_add:])
             self._flow.inject(flow[-to_add:])
             self._pressure.inject(pressure[-to_add:])
 

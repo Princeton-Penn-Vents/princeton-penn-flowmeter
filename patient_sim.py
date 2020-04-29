@@ -21,7 +21,7 @@ class PseudoGenerator:
 
     def prepare(self, *, from_timestamp=None):
 
-        t_now = int(1_000 * datetime.now().timestamp())
+        t_now = int(1_000 * time.monotonic())
         if from_timestamp is None:
             ts = 5_000
         elif from_timestamp == 0:
@@ -57,7 +57,7 @@ class OurServer:
 
     def __init__(self, args):
         self.done = False
-        self.start_time = int(1000 * datetime.now().timestamp())  # milliseconds
+        self.start_time = int(1000 * time.monotonic())  # milliseconds
         self.sims = start_sims(args.n, self.start_time, 12000000)  # milliseconds
         self.disconnect_prob = args.discon_prob
         self.isDisconnected = np.zeros(args.n)
@@ -77,7 +77,7 @@ class OurServer:
         while True:
             rand = random.random()
             if rand < self.disconnect_prob:
-                t_now = int(1000 * datetime.now().timestamp())
+                t_now = int(1000 * time.monotonic())
                 sensor_num = random.randint(0, len(self.sims) - 1)
                 self.isDisconnected[sensor_num] = t_now + 30 * 1000  # 30 seconds
                 print("Disconnecting ", sensor_num, t_now)

@@ -289,11 +289,9 @@ class VentSim:
 if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
-    from matplotlib import animation
     import time
-    from datetime import datetime
 
-    now_time = 1000 * datetime.now().timestamp()
+    now_time = 1000 * time.monotonic()
     print(now_time)
 
     simulator = VentSim(now_time, 1200000)
@@ -307,7 +305,7 @@ if __name__ == "__main__":
     print("testing get from timestamp features")
 
     time.sleep(5)
-    d = simulator.get_from_timestamp(1000 * datetime.now().timestamp(), 10000)
+    d = simulator.get_from_timestamp(1000 * time.monotonic(), 10000)
     print(len(d["data"]["timestamps"]))
     time, flow, volume, pressure = simulator.get_all()
 
