@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import json
 import numpy as np
-import requests
+import zmq
 import threading
 import time
 from datetime import datetime
@@ -36,56 +35,31 @@ class RemoteThread(threading.Thread):
         super().__init__()
 
     def run(self) -> None:
-        # If no valid port, don't try (disconnected)
-        if self._address is None:
-            return
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
+
+        socket.connect(self._address)
+        socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
         while not self.parent._stop.is_set():
-            try:
-                if len(self._time) > 0:
-                    last_ts = self._time[-1]
-                else:
-                    last_ts = 0
-
-                r = requests.get(f"{self._address}?ts={last_ts}")
-
+            socks, *_ = zmq.select([socket], [], [], 0.1)
+            for sock in socks:
                 self._last_update = datetime.now().timestamp()
-            except requests.ConnectionError:
-                with self._remote_lock:
-                    self.status = Status.DISCON
-                self.parent._stop.wait(1)
-                continue
-            if r.status_code != 200:
-                with self._remote_lock:
-                    self.status = Status.DISCON
-                self.parent._stop.wait(1)
-                continue
+                root = sock.recv_json()
+                if "rotary" in root:
+                    with self._remote_lock:
+                        self.rotary_dict = root["rotary"]
 
-            try:
-                root = json.loads(r.text)
-            except json.JSONDecodeError:
-                logger.warning(f"Failed to read json, trying again", exc_info=True)
-                self.parent._stop.wait(0.01)
-                continue
+                if "t" in root:
+                    with self._remote_lock:
+                        self._time.inject(root["t"])
+                        self._flow.inject(root["f"])
+                        self._pressure.inject(root["p"])
+                        self._last_get = time.monotonic()
 
-            times = np.asarray(root["data"]["timestamps"])
-            flow = np.asarray(root["data"]["flows"])
-            pressure = np.asarray(root["data"]["pressures"])
-
-            with self._remote_lock:
-                if self.status == Status.DISCON:
-                    logger.info("(Re)Connecting successful")
-                    self.status = Status.OK
-                to_add = new_elements(self._time, times)
-
-                if to_add > 0:
-                    self._time.inject(times[-to_add:])
-                    self._flow.inject(flow[-to_add:])
-                    self._pressure.inject(pressure[-to_add:])
-                    self._last_get = time.monotonic()
-                self.rotary_dict = root.get("rotary", {})
-
-            self.parent._stop.wait(0.2)
+                        if self.status == Status.DISCON:
+                            logger.info("(Re)Connecting successful")
+                            self.status = Status.OK
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:

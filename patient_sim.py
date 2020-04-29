@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from itertools import chain
 from sim.start_sims import start_sims
 from processor.handler import serve
@@ -15,7 +15,7 @@ from processor.config import ArgumentParser
 
 @dataclass
 class PseudoGenerator:
-    parent: "OurServer"
+    parent: OurServer
     version_num: int
     last_ts: int = 0
 
