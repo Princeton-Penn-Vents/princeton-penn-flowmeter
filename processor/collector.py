@@ -39,20 +39,32 @@ class CollectorThread(threading.Thread):
         socket.connect("tcp://localhost:5556")
         socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
+        pub_socket = context.socket(zmq.PUB)  # publish (broadcast)
+        pub_socket.bind(f"tcp://*:{self.parent._port}")
+
+        every = 0
         while not self.parent._stop.is_set():
             socks, *_ = zmq.select([socket], [], [], 0.1)
             for sock in socks:
                 j = sock.recv_json()
+                t = j["t"]
+                f = (
+                    math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+                    - self._flow_offset
+                )
+                p = j["P"] * self._pressure_scale - self._pressure_offset
+
+                pub_socket.send_json({"t": t, "f": f, "p": p})
+                every += 1
+                every %= 50
+                if every == 0:
+                    with self.parent.lock:
+                        pub_socket.send_json(self.parent.rotary.to_dict())
 
                 with self._collector_lock:
-                    self._time_live.inject(j["t"])
-                    self._flow_live.inject(
-                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-                        - self._flow_offset
-                    )
-                    self._pressure_live.inject(
-                        j["P"] * self._pressure_scale - self._pressure_offset
-                    )
+                    self._time_live.inject(t)
+                    self._flow_live.inject(f)
+                    self._pressure_live.inject(p)
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._collector_lock:
@@ -78,7 +90,7 @@ class CollectorThread(threading.Thread):
 
 
 class Collector(Generator):
-    def __init__(self, *, rotary: LocalRotary = None):
+    def __init__(self, *, rotary: Optional[LocalRotary] = None, port: int = 8100):
         super().__init__(rotary=rotary)
 
         self._time = np.array([], dtype=np.int64)
@@ -86,6 +98,7 @@ class Collector(Generator):
         self._pressure = np.array([], dtype=np.double)
 
         self._collect_thread: Optional[CollectorThread] = None
+        self._port = port
 
         # The collector does not need the full breath analysis
         self.disable_full_analyze = True

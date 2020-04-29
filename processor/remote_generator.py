@@ -26,9 +26,7 @@ class RemoteGenerator(Generator):
 
     def run(self) -> None:
         super().run()
-        self._remote_thread = RemoteThread(
-            self, address=f"http://{self.ip}:{self.port}"
-        )
+        self._remote_thread = RemoteThread(self, address=f"tcp://{self.ip}:{self.port}")
         self._remote_thread.start()
 
     def _get_data(self) -> None:
