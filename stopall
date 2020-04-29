@@ -1,0 +1,3 @@
+sudo service patientloop stop
+sudo service patientdevice stop
+sudo service pigpiod stop
