@@ -10,31 +10,30 @@ arg = parser.parse_args()
 # hardware interfaces:
 # SDP3 diff pressure sensor - I2C handled by pigpio.pi()
 # MCP3008 ADC readings - SPI handled by spidev.SpiDev()
-import sys
+
 import time
 import signal
 import pigpio
 import spidev
 import json
 import zmq
-import atexit
 import threading
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Iterator
+from contextlib import contextmanager, ExitStack
 
 DIR = Path(__file__).parent.resolve()
 (DIR.parent / "device_log").mkdir(exist_ok=True)
-# ------------------
-# output file setup
-# ------------------
+
+# No cleanup needed
 context = zmq.Context()
 socket = context.socket(zmq.PUB)  # publish (broadcast)
 socket.bind("tcp://*:5556")
 
 ReadoutHz = 50.0
-# oversampleADC = 16
 oversampleADC = 4
 ADCsamples = []
+
 NReadoutTemp = 50 * oversampleADC
 NReadout = 0
 nbytesPN = 18
@@ -51,12 +50,6 @@ dcMAX = 7000
 dcRANGE = 10000
 dcSTROBE = 1 * NReadoutTemp
 pinPWM = 13
-# outputFileName = "patient.dat"
-# f = open(outputFileName, "w")
-# sys.stdout = f
-# ------------------
-# output file end of setup
-# ------------------
 
 
 # ------------------
@@ -87,6 +80,7 @@ def getADC(channel: int) -> int:
 # SDP3 diff pressure sensor setup
 # ------------------
 DEVICE_SDP3 = 0x21  # grounded ADDR pin
+
 # Get pigio connection
 pi = pigpio.pi()
 if not pi.connected:
@@ -97,11 +91,12 @@ hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
 pi.i2c_write_device(hSDP3, [0x3F, 0xF9])
 # read product number and serial number
 print("handle {}".format(hSDP3))
+
 time.sleep(0.5)
+
 pi.i2c_write_device(hSDP3, [0x36, 0x7C])
 pi.i2c_write_device(hSDP3, [0xE1, 0x02])
-nbytes = nbytesPN
-dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+dataSDP3 = pi.i2c_read_device(hSDP3, nbytesPN)
 # print(dataSDP3)
 bdataSDP3 = dataSDP3[1]
 # print(binascii.hexlify(bdataSDP3[0:2]))
@@ -123,10 +118,11 @@ print(hex(pn), hex(sn))
 # start continuous readout with averaging with differential pressure temperature compensation
 pi.i2c_write_device(hSDP3, [0x36, 0x15])
 
-# get initial values of differential pressure, temperature and the differential pressure scale factor
+
 time.sleep(0.020)
-nbytes = nbytesSF
-dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+
+# get initial values of differential pressure, temperature and the differential pressure scale factor
+dataSDP3 = pi.i2c_read_device(hSDP3, nbytesSF)
 # print(dataSDP3)
 bdataSDP3 = dataSDP3[1]
 dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
@@ -134,104 +130,131 @@ dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
 # print(int.from_bytes(bdataSDP3[6:8], byteorder='big', signed=False))
 # dp = (bdataSDP3[0] << 8) | bdataSDP3[1]
 temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
-dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
+dpsf = float((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
+
 curTEMP = temp / 200.0
 pi.set_PWM_range(pinPWM, dcRANGE)
 pi.set_PWM_dutycycle(pinPWM, dcTEMP)
 dcFREQ = pi.get_PWM_frequency(pinPWM)
-print("{} {:.4f} {:.4f}".format(time.time() * 1000, dp / dpsf, temp / 200))
+print("{} {:.4f} {:.4f}".format(time.time() * 1000, dp / dpsf, temp / 200.0))
 print(
     "PWM settings: Range = {} Freq = {} Step = {} Strobe = {}".format(
         dcRANGE, dcFREQ, dcSTEP, dcSTROBE
     )
 )
 
-myfile = None  # type: Optional[TextIO]
 
-if arg.file:
-    file_path = Path(arg.file)
+@contextmanager
+def pi_cleanup() -> Iterator[None]:
+    """
+    This ensures that the π is closed, with the heater turned off, even if an error happens.
+    """
+    try:
+        yield
+    finally:
+        pi.i2c_close(hSDP3)
+        pi.set_PWM_dutycycle(pinPWM, 0)
+        pi.stop()
+
+
+@contextmanager
+def wait_frequency(length: float, event: threading.Event) -> Iterator[None]:
+    """
+    This pauses as long as needed after running
+    """
+    start_time = time.monotonic()
+    yield
+    diff = time.monotonic() - start_time
+    left = length - diff
+    if left > 0:
+        event.wait(left)
+
+
+def open_next(mypath: Path) -> TextIO:
+    """
+    Open the next available file
+    """
     i = 0
     while True:
         try:
-            name = "{n}{i:04}{s}".format(n=file_path.stem, i=i, s=file_path.suffix)
-            new_file_path = file_path.with_name(name)
-            myfile = open(new_file_path, "x")
-            print("Logging:", new_file_path)
-            atexit.register(myfile.close)
-            break
+            name = "{n}{i:04}{s}".format(n=mypath.stem, i=i, s=mypath.suffix)
+            new_file_path = mypath.with_name(name)
+            return open(new_file_path, "x")
         except FileExistsError:
             i += 1
 
 
-# sdp3 interrupt file handler
-def sdp3_handler(_signum, _frame) -> None:
-    global NReadout, ADCsamples
-    global curTEMP, hystTEMP, minTEMP, operTEMP, maxTEMP, dcTEMP, pinPWM, dcSTEP, dcMAX, dcSTROBE
-    NReadout += 1
-    tmpADC = getADC(chanMP3V5004)
-    ADCsamples.append(tmpADC)
-    if (NReadout % oversampleADC) == 0:
-        ADCavg = 0.0
-        if len(ADCsamples):
-            ADCavg = sum(ADCsamples) / len(ADCsamples)
+with pi_cleanup(), ExitStack() as stack:
 
-        ADCsamples = []
-        ts = int(1000 * time.time())
-        if (NReadout % NReadoutTemp) == 0:
-            nbytes = nbytesTEMP
-        else:
-            nbytes = nbytesDP
-        tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
-        btmpdataSDP3 = tmpdataSDP3[1]
-        tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
-        if len(btmpdataSDP3) == nbytesTEMP:
-            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
-            print(ts, tmptemp, dcTEMP)
-            if (NReadout % dcSTROBE) == 0:
-                deltatemp = tmptemp - curTEMP
-                if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
-                    dcTEMP += dcSTEP
-                    dcTEMP = min(dcMAX, dcTEMP)
-                if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
-                    curTEMP > maxTEMP
-                ):
-                    dcTEMP -= dcSTEP
-                    dcTEMP = max(0, dcTEMP)
-                pi.set_PWM_dutycycle(pinPWM, dcTEMP)
-            curTEMP = tmptemp
-            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp, "C": curTEMP, "D": dcTEMP}
-        else:
+    myfile = None  # type: Optional[TextIO]
+
+    if arg.file:
+        file_path = Path(arg.file)
+        myfile = stack.enter_context(open_next(file_path))
+        print("Logging:", myfile.name)
+
+    running = threading.Event()
+
+    def signal_handler(_signal, _frame):
+        print("You pressed Ctrl+C!")
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        running.set()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    while not running.is_set():
+        with wait_frequency(
+            1.0 / (ReadoutHz * oversampleADC), running
+        ):  # Readout in Hz
+
+            NReadout += 1
+            tmpADC = getADC(chanMP3V5004)
+            ADCsamples.append(tmpADC)
+
+            # Continue if we are currently in oversampling
+            if (NReadout % oversampleADC) != 0:
+                continue
+
+            ADCavg = 0.0
+            if len(ADCsamples):
+                ADCavg = sum(ADCsamples) / len(ADCsamples)
+            ADCsamples = []
+
+            ts = int(1000 * time.monotonic())
+
+            if (NReadout % NReadoutTemp) == 0:
+                nbytes = nbytesTEMP
+            else:
+                nbytes = nbytesDP
+
+            tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+            btmpdataSDP3 = tmpdataSDP3[1]
+            tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
+
             d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
-        ds = json.dumps(d)
-        socket.send_string(ds)
-        if myfile is not None:
-            print(ds, file=myfile)
 
+            if len(btmpdataSDP3) == nbytesTEMP:
+                tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
+                print(ts, tmptemp, dcTEMP)
+                if (NReadout % dcSTROBE) == 0:
+                    deltatemp = tmptemp - curTEMP
+                    if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
+                        dcTEMP += dcSTEP
+                        dcTEMP = min(dcMAX, dcTEMP)
+                    if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
+                        curTEMP > maxTEMP
+                    ):
+                        dcTEMP -= dcSTEP
+                        dcTEMP = max(0, dcTEMP)
+                    pi.set_PWM_dutycycle(pinPWM, dcTEMP)
 
-signal.signal(signal.SIGALRM, sdp3_handler)
+                curTEMP = tmptemp
 
-signal.setitimer(
-    signal.ITIMER_REAL, 1, 1.0 / (ReadoutHz * oversampleADC)
-)  # Readout in Hz
+                d.update({"C": curTEMP, "D": dcTEMP})
 
-# ------------------
-# SDP3 diff pressure sensor end of setup
-# ------------------
+            ds = json.dumps(d)
+            socket.send_string(ds)
 
-forever = threading.Event()
-
-
-def signal_handler(_signal, _frame) -> None:
-    print("You pressed Ctrl+C!")
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    pi.set_PWM_dutycycle(pinPWM, 0)
-    pi.i2c_close(hSDP3)
-    pi.stop()
-    forever.set()
-
-
-signal.signal(signal.SIGINT, signal_handler)
-
-# Read until quit
-forever.wait()
+            if myfile is not None:
+                print(ds, file=myfile)
