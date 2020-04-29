@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterable, Tuple, List
 
 SUB: int
 SUBSCRIBE: int
@@ -14,3 +14,10 @@ class Socket:
 
 class Context:
     def socket(self, _: int) -> Socket: ...
+
+def select(
+    rlist: Iterable[Socket],
+    wlist: Iterable[Socket],
+    xlist: Iterable[Socket],
+    timeout=None,
+) -> Tuple[List[Socket], List[Socket], List[Socket]]: ...

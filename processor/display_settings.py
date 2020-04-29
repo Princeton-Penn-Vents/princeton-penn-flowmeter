@@ -22,6 +22,14 @@ class FilenameSetting(DisplaySetting):
     def value(self, value: str):
         self._value = value
 
+    @property
+    def default(self) -> float:
+        return 0.0
+
+    @default.setter
+    def default(self, val: float):
+        pass
+
 
 class CurrentSetting(SelectionSetting):
     def __init__(self, name, *, listing: Sequence[int], default: int):

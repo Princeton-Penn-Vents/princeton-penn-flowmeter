@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-
 import pigpio
-import math
-from processor.rotary import LocalRotary, RotaryCollection
+from patient.rotary_live import LiveRotary
 from processor.setting import Setting
 import enum
-from typing import Callable, Dict, Any, Optional
+from typing import Callable, Dict, Any, Optional, TypeVar
+
+import logging
+
+logger = logging.getLogger("pofm")
 
 pinA = 17  # terminal A
 pinB = 27  # terminal B
@@ -17,16 +19,45 @@ class Mode(enum.Enum):
     ALARM = enum.auto()
 
 
-class Rotary(LocalRotary):
-    def __init__(self, config: dict, *, pi: pigpio.pi = None):
-        super().__init__(RotaryCollection(config))
-        self.config: RotaryCollection
+T = TypeVar("T", bound="Rotary")
+
+
+class Rotary(LiveRotary):
+    def __init__(self, config: Dict[str, Setting], *, pi: pigpio.pi = None):
+        super().__init__(config)
         self.alarm_filter: Callable[[str], bool] = lambda x: True
 
         self.pi: Optional[pigpio.pi] = pi
 
         self.pushed_in = False
         self.turns: int = 0
+
+        self._current: int = 0
+
+    def clockwise(self) -> None:
+        self._current = (self._current + 1) % len(self.config)
+        self.turned_display(up=True)
+
+    def counterclockwise(self) -> None:
+        self._current = (self._current - 1) % len(self.config)
+        self.turned_display(up=False)
+
+    def pushed_clockwise(self) -> None:
+        self.value().up()
+        self.pushed_turned_display(up=True)
+
+    def pushed_counterclockwise(self) -> None:
+        self.value().down()
+        self.pushed_turned_display(up=False)
+
+    def push(self) -> None:
+        self.pushed_display()
+
+    def key(self) -> str:
+        return self._items[self._current]
+
+    def value(self) -> Setting:
+        return self.config[self._items[self._current]]
 
     def turned_display(self, up: bool) -> None:
         "Override in subclass to customize"
@@ -42,25 +73,6 @@ class Rotary(LocalRotary):
         "Override in subclass to customize"
         print(f"Pushed")
         print(rotary)
-
-    def clockwise(self) -> None:
-        self.config.clockwise()
-        self.turned_display(up=True)
-
-    def counterclockwise(self) -> None:
-        self.config.counterclockwise()
-        self.turned_display(up=False)
-
-    def pushed_clockwise(self) -> None:
-        self.config.pushed_clockwise()
-        self.pushed_turned_display(up=True)
-
-    def pushed_counterclockwise(self) -> None:
-        self.config.pushed_counterclockwise()
-        self.pushed_turned_display(up=False)
-
-    def push(self) -> None:
-        self.pushed_display()
 
     @property
     def alarms(self) -> Dict[str, Any]:
@@ -79,13 +91,7 @@ class Rotary(LocalRotary):
         "Override in subclass to customize"
         print(f"Displaying alert status")
 
-    def value(self) -> Setting:
-        return self.config.value()
-
-    def key(self) -> str:
-        return self.config.key()
-
-    def __enter__(self) -> "Rotary":
+    def __enter__(self: T) -> T:
         glitchFilter = 300  # ms
 
         # Get pigio connection
@@ -156,7 +162,7 @@ class Rotary(LocalRotary):
         self._rotary_turned.cancel()
         self._rotary_switch.cancel()
 
-        return super().__exit__(exc)
+        return super().__exit__(*exc)
 
 
 if __name__ == "__main__":

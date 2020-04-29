@@ -1,4 +1,4 @@
-from processor.rotary import LocalRotary
+from patient.rotary_live import LiveRotary
 from processor.setting import Setting, SelectionSetting, IncrSetting
 from processor.display_settings import CurrentSetting
 from processor.generator import Generator
@@ -12,7 +12,7 @@ class RedrawSettings(QtCore.QObject):
     changed = Signal()
 
 
-class RotaryGUI(LocalRotary):
+class RotaryGUI(LiveRotary):
     signal = RedrawSettings()
 
     def external_update(self) -> None:
@@ -71,7 +71,6 @@ class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
     @Slot(float)
     def change_rotary(self, value: float):
         self.setting._value = value
-        print(self.setting)
 
 
 class DisplaySettingGUI(QtWidgets.QLabel):

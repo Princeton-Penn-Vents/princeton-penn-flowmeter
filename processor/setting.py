@@ -28,11 +28,27 @@ class Setting(abc.ABC):
 
     @property
     def value(self) -> Any:
-        return self._value
+        with self._lock:
+            return self._value
 
-    @value.setter
+    @value.setter  # type: ignore
     def value(self, val: Any):
-        self._value = val
+        # Only used to set values remotely
+        with self._lock:
+            self._value = val
+
+    @property
+    def default(self) -> Any:
+        """
+        Override in subclass if there's a special way to save this setting
+        """
+        with self._lock:
+            return self._value
+
+    @default.setter
+    def default(self, value: Any):
+        with self._lock:
+            self._value = value
 
     def __str__(self) -> str:
         unit = "" if self.unit is None else f" {self.unit}"
@@ -109,17 +125,6 @@ class IncrSetting(Setting):
                 return True
             else:
                 return False
-
-    @property
-    def value(self) -> float:
-        with self._lock:
-            return self._value
-
-    @value.setter  # type: ignore
-    def value(self, val: float):
-        # Only used to set values remotely
-        with self._lock:
-            self._value = val
 
 
 class SelectionSetting(Setting):

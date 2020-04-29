@@ -32,7 +32,7 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def __enter__(self) -> "RotaryLCD":
-        self.config._current = 2  # Current Setting
+        self._current = 2  # Current Setting
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()

@@ -40,17 +40,19 @@ class CollectorThread(threading.Thread):
         socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
         while not self.parent._stop.is_set():
-            j = socket.recv_json()
+            socks, *_ = zmq.select([socket], [], [], 0.1)
+            for sock in socks:
+                j = sock.recv_json()
 
-            with self._collector_lock:
-                self._time_live.inject(j["t"])
-                self._flow_live.inject(
-                    math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-                    - self._flow_offset
-                )
-                self._pressure_live.inject(
-                    j["P"] * self._pressure_scale - self._pressure_offset
-                )
+                with self._collector_lock:
+                    self._time_live.inject(j["t"])
+                    self._flow_live.inject(
+                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+                        - self._flow_offset
+                    )
+                    self._pressure_live.inject(
+                        j["P"] * self._pressure_scale - self._pressure_offset
+                    )
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._collector_lock:

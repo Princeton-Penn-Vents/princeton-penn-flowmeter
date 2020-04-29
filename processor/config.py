@@ -1,7 +1,8 @@
 import confuse
 from pathlib import Path
 import argparse
-from typing import Tuple, List, Optional, Sequence, Text
+from typing import Tuple, List
+import logging
 
 DIR = Path(__file__).parent.resolve()
 
@@ -38,7 +39,7 @@ class ArgumentParser(argparse.ArgumentParser):
             config.set_file(args.config)
 
         if "debug" in args:
-            config["global"]["debug"] = args.debug
+            config.set_args({"global": {"debug": args.debug}})
 
     def parse_known_args(
         self, *pargs, **kwargs
@@ -51,3 +52,33 @@ class ArgumentParser(argparse.ArgumentParser):
         args = super().parse_args(*pargs, **kwargs)
         self._prepare(args)
         return args
+
+
+def init_logger(logstr: str = None) -> None:
+    """
+    logstr should be nurse_log/nursegui.log or similar (or None for screen only, even non-debug)
+    """
+
+    logger = logging.getLogger("pofm")
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+    if logstr is None or config["global"]["debug"].get(bool):
+        ch = logging.StreamHandler()
+        logger.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+    else:
+        file_path = DIR.parent / logstr
+        file_path.parent.mkdir(exist_ok=True)
+        logfile_incr = file_path  # Only (over)written when no numbers left
+        for i in range(100_000):
+            logfile_incr = file_path.with_name(
+                f"{file_path.stem}{i:05}{file_path.suffix}"
+            )
+            if not logfile_incr.exists():
+                break
+
+        fh = logging.FileHandler(logfile_incr.resolve())
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)

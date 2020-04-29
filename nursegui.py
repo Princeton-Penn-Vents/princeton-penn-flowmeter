@@ -5,9 +5,9 @@ import pyqtgraph as pg
 import sys
 import math
 from string import Template
-import logging
 from pathlib import Path
 import signal
+import logging
 
 from nurse.qt import (
     QtCore,
@@ -26,9 +26,11 @@ from nurse.drilldown import DrilldownWidget
 from processor.generator import Status, Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
-from processor.config import config as config_, ArgumentParser
+from processor.config import init_logger, ArgumentParser
 
 DIR = Path(__file__).parent.resolve()
+
+logger = logging.getLogger("pofm")
 
 
 class MainStack(QtWidgets.QWidget):
@@ -154,40 +156,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kwargs):
-    (DIR / "nurse_log").mkdir(exist_ok=True)
-
-    if args.config:
-        config_.set_file(config)
 
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     else:
         print("Fusion style is not available, display may be platform dependent")
 
-    logger = logging.getLogger("pofm")
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-
-    if debug:
-        ch = logging.StreamHandler()
-        logger.setLevel(logging.DEBUG)
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-    else:
-        file_path = Path(logfile)
-        logfile_incr = file_path  # Only (over)written when no numbers left
-        for i in range(10_000):
-            logfile_incr = file_path.with_name(
-                f"{file_path.stem}{i:04}{file_path.suffix}"
-            )
-            if not logfile_incr.exists():
-                break
-
-        fh = logging.FileHandler(logfile_incr.resolve())
-        fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    init_logger("nurse_log/nursegui.log")
 
     logger.info("Starting nursegui")
 
@@ -206,6 +181,7 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kw
             main.showNormal()
 
     def ctrl_c(_sig_num, _stack_frame):
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
         main.close()
 
     signal.signal(signal.SIGINT, ctrl_c)
