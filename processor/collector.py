@@ -60,8 +60,8 @@ class CollectorThread(threading.Thread):
             self.parent._flow = np.asarray(self._flow_live).copy()
             self.parent._pressure = np.asarray(self._pressure_live).copy()
 
-    def access_partial_data(self, from_timestamp: Optional[float] = None):
-        with self._collector_lock:
+    def access_partial_data(self, from_timestamp: Optional[int] = None):
+        with self.parent.lock, self._collector_lock:
             if from_timestamp is None:
                 window = slice(min(len(self._time_live), 50 * 5), None)
             elif from_timestamp == 0:
@@ -115,7 +115,7 @@ class Collector(Generator):
 
         self.rotary.alarms = self.alarms
 
-    def prepare(self, *, from_timestamp: Optional[float] = None) -> Dict[str, Any]:
+    def prepare(self, *, from_timestamp: Optional[int] = None) -> Dict[str, Any]:
         """
         Prepare a dict for transmission via json. Does *not* call `get_data()`
         """

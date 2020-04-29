@@ -30,12 +30,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         return True
 
     def do_GET(self) -> None:
-        parsed_path = urlparse(self.path)
+        query = self.parse_url()
+        if query is None:
+            self.send_error(404)
+            return
 
-        t_now = int(1000 * datetime.now().timestamp())
-        d = self.generator.prepare()
+        d = self.generator.prepare(from_timestamp=query.get("ts"))
 
-        # For the simulation, returning and empty dict simulates disconnection.
+        # For the simulation, returning an empty dict simulates disconnection.
         # Probably best to remove.
         if d:
             if self.do_HEAD():

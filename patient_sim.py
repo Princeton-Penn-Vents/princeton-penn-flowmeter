@@ -21,20 +21,20 @@ class PseudoGenerator:
 
     def prepare(self, *, from_timestamp=None):
 
-        t_now = int(1000 * datetime.now().timestamp())
+        t_now = int(1_000 * datetime.now().timestamp())
         if from_timestamp is None:
-            values = 5000
+            ts = 5_000
         elif from_timestamp == 0:
-            values = 30 * 50
+            ts = 30 * 1_000
         else:
-            values = min(int(t_now - from_timestamp) // 50, 30 * 50)
+            ts = min(int(t_now - from_timestamp), 10_000)
 
         if self.parent.isDisconnected[self.version_num] > t_now:
             return {}
 
         sim = self.parent.sims[self.version_num]
 
-        d = sim.get_from_timestamp(t_now, values)
+        d = sim.get_from_timestamp(t_now, ts)
 
         # enrich with stuff that comes from the analysis
         d["alarms"] = {}

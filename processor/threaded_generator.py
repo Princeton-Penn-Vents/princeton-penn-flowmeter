@@ -42,7 +42,13 @@ class RemoteThread(threading.Thread):
 
         while not self.parent._stop.is_set():
             try:
-                r = requests.get(self._address)
+                if len(self._time) > 0:
+                    last_ts = self._time[-1]
+                else:
+                    last_ts = 0
+
+                r = requests.get(f"{self._address}?ts={last_ts}")
+
                 self._last_update = datetime.now().timestamp()
             except requests.ConnectionError:
                 with self._remote_lock:
