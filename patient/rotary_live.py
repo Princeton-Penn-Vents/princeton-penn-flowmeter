@@ -9,7 +9,7 @@ import yaml
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("pofm")
+logger = logging.getLogger("povm")
 
 T = TypeVar("T", bound="LiveRotary")
 

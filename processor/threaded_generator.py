@@ -15,7 +15,7 @@ from processor.generator import Status, Generator
 if TYPE_CHECKING:
     from processor.remote_generator import RemoteGenerator
 
-logger = logging.getLogger("pofm")
+logger = logging.getLogger("povm")
 
 
 class RemoteThread(threading.Thread):

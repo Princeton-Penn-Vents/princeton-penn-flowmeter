@@ -7,7 +7,7 @@ from typing import Callable, Dict, Any, Optional, TypeVar
 
 import logging
 
-logger = logging.getLogger("pofm")
+logger = logging.getLogger("povm")
 
 pinA = 17  # terminal A
 pinB = 27  # terminal B

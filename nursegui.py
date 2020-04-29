@@ -30,7 +30,7 @@ from processor.config import init_logger, ArgumentParser
 
 DIR = Path(__file__).parent.resolve()
 
-logger = logging.getLogger("pofm")
+logger = logging.getLogger("povm")
 
 
 class MainStack(QtWidgets.QWidget):

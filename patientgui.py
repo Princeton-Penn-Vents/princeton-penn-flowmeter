@@ -24,8 +24,8 @@ DIR = Path(__file__).parent.resolve()
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(rotary=rotary) as collector:
 
-    rotary.live_load(DIR / "pofm-live.yml")
-    rotary.live_save(DIR / "pofm-live.yml", every=10)
+    rotary.live_load(DIR / "povm-live.yml")
+    rotary.live_save(DIR / "povm-live.yml", every=10)
 
     server_address = ("0.0.0.0", 8100)
     with http.server.ThreadingHTTPServer(

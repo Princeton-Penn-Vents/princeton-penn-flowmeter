@@ -6,7 +6,7 @@ import logging
 
 DIR = Path(__file__).parent.resolve()
 
-config = confuse.Configuration("pofm", "pofm")
+config = confuse.Configuration("povm", "povm")
 
 # Currently we are not a library; change if we change
 config.clear()
@@ -24,7 +24,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self.add_argument(
             "--config",
-            default=str(DIR.parent / "pofm.yml"),
+            default=str(DIR.parent / "povm.yml"),
             help="YAML configuration file",
         )
 
@@ -59,7 +59,7 @@ def init_logger(logstr: str = None) -> None:
     logstr should be nurse_log/nursegui.log or similar (or None for screen only, even non-debug)
     """
 
-    logger = logging.getLogger("pofm")
+    logger = logging.getLogger("povm")
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
     if logstr is None or config["global"]["debug"].get(bool):

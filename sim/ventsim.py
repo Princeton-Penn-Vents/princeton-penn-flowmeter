@@ -5,7 +5,7 @@ import yaml
 import logging
 
 
-logger = logging.getLogger("pofm")
+logger = logging.getLogger("povm")
 
 
 def constant_compliance(**kwargs):

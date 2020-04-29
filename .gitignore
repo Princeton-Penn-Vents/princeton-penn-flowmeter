@@ -135,7 +135,7 @@ dmypy.json
 /*.dat
 
 # Live file(s)
-/pofm-live.yml
+/povm-live.yml
 
 # Logs
 /*-log/*
