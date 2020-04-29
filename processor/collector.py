@@ -72,22 +72,6 @@ class CollectorThread(threading.Thread):
             self.parent._flow = np.asarray(self._flow_live).copy()
             self.parent._pressure = np.asarray(self._pressure_live).copy()
 
-    def access_partial_data(self, from_timestamp: Optional[int] = None):
-        with self.parent.lock, self._collector_lock:
-            if from_timestamp is None:
-                window = slice(min(len(self._time_live), 50 * 5), None)
-            elif from_timestamp == 0:
-                window = slice(None)
-            else:
-                start = np.searchsorted(self._time_live, from_timestamp, side="right")
-                window = slice(start, None)
-
-            return {
-                "timestamps": self._time_live[window].tolist(),
-                "flows": self._flow_live[window].tolist(),
-                "pressures": self._pressure_live[window].tolist(),
-            }
-
 
 class Collector(Generator):
     def __init__(self, *, rotary: Optional[LocalRotary] = None, port: int = 8100):
@@ -127,24 +111,6 @@ class Collector(Generator):
             self.rotary.external_update()
 
         self.rotary.alarms = self.alarms
-
-    def prepare(self, *, from_timestamp: Optional[int] = None) -> Dict[str, Any]:
-        """
-        Prepare a dict for transmission via json. Does *not* call `get_data()`
-        """
-        if self._collect_thread is not None:
-            data = self._collect_thread.access_partial_data(from_timestamp)
-        else:
-            data = {}
-
-        return {
-            "version": 1,
-            "time": datetime.now().timestamp(),
-            # "alarms": self.alarms,
-            # "cumulative": self.cumulative,
-            "rotary": self.rotary.to_dict(),
-            "data": data,
-        }
 
     @property
     def timestamps(self):

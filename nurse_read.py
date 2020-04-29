@@ -21,7 +21,7 @@ from processor.generator import Generator
 gen: Generator
 
 if arg.port is not None:
-    print(f"Remote: http://{arg.ip}:{arg.port}")
+    print(f"Remote: tcp://{arg.ip}:{arg.port}")
     gen = RemoteGenerator(ip=arg.ip, port=arg.port)
 else:
     print("Local Generator")

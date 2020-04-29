@@ -11,6 +11,5 @@ dependencies:
   - python==3.7
   - pyyaml
   - pyzmq
-  - requests
   - scipy
   - confuse
