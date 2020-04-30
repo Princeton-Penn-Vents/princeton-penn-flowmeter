@@ -69,10 +69,17 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
     )
 
 
+class CantComputeDerivative(Exception):
+    pass
+
+
 def smooth_derivative(times, values, sig=0.2):
     values = values - values.mean()
 
     window_width = int(np.ceil(4 * sig / np.min(times[1:] - times[:-1])))
+    if len(times) - window_width + 1 < 10 or window_width < 10:
+        raise CantComputeDerivative
+
     windowed_times = np.lib.stride_tricks.as_strided(
         times,
         (len(times) - window_width + 1, window_width),
@@ -213,8 +220,9 @@ def measure_breaths(time, flow, volume, pressure):
 
         breath_times = find_breaths(*turning_points)
 
-    except:
-        if config["global"]["debug"].get(bool):
+    except Exception as err:
+        if (not isinstance(err, CantComputeDerivative) and
+            config["global"]["debug"].get(bool)):
             raise
         return []
 
