@@ -20,10 +20,13 @@ The software is written in Python and PyQt for portability.
 #### On a local machine:
 
 ```bash
+git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
+cd princeton-penn-flowmeter
 conda env create
+conda activate flowmeter
 ```
 
-(and conda env update to update)
+(and git pull, then conda env update to update)
 
 ### On a Raspberry Pi running Raspbian:
 
@@ -107,8 +110,6 @@ These lines are added:
 dtoverlay=i2c1,pins_2_3
 dtoverlay=i2c6,pins_22_23
 ```
-
-<details><summary>Previous notes: (click to expand)</summary>
 
 #### pigpio cleanup, if needed:
 
