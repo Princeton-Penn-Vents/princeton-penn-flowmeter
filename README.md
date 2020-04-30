@@ -2,10 +2,11 @@
 Software for patient and nurse stations for multi-patient ventilator
 monitoring.
 
-The hardware at the patient includes two sensors, a single board computer
-(SBC, in this case a Raspberry Pi model 4b), a 20x2 LCD, a rotary encoder and
-additional electronics to allow configuration of alarm parameters. The sensor
-time series data from up to 20 patient boxes are transmitted to a nurse
+The hardware at the patient includes two sensors to measure flow and pressure
+mounted on a flow block and equipped with a heating circuit to reduce condensation, 
+a single board computer (SBC, in this case a Raspberry Pi model 4b/4GB), a 2x20 
+character LCD display with RBG backlight, a rotary encoder and a piezo buzzer.
+The sensor time series data from up to 20 patient boxes are transmitted to a nurse
 monitoring station, where a graphical GUI presents an aggregate view of the
 time series. The nurse monitoring station can either be an SBC or a more
 standard laptop/desktop machine. Analysis code runs on both the patient box
@@ -37,9 +38,8 @@ Open the settings (Raspberry menu -> `Preferences` -> `Raspberry Pi Configuratio
 In the display tab, select "Disable" for `Screen Blanking`. Check the Interfaces tab to
 see if there is anything you want to enable.
 
-For a patient box, you need: I2C enabled, SPI enabled, GPIO enabled.
-
-
+For a patient box, you need: I2C enabled, SPI enabled.  These are also set in config.txt.
+Optional:  SSH enabled.
 
 ```bash
 git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
@@ -48,33 +48,13 @@ sudo apt update
 sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt-install python3-scipy
-sudo apt install vim                       # For my sanity for development
+sudo apt install vim                       # For development, skip for production
 sudo python3 -m pip install pyqtgraph pyzmq confuse
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
 
----
-
-## Patient box
-
-
-Basic install instructions for a new RPi4:  Once you have the RPi4 with an HDMI screen, USB keyboard and mouse, plug in the power cord.
-It will load an operating system install tool called NOOBs. You choose US keyboard from the pulldown
-and click to install Raspbian. This will take ~1 hour to complete and runs on its own.
-
-After it reboots, it will ask you to change root password.
-You should also go into interfaces and enable ssh, spi, i2c.
-You might reboot again.
-
-The tough part will be to connect this on the wireless. I think eduroam should work - click on the upper left WiFi icon and login.
-
-Then you need to do this once:
-
-Click on a terminal icon and execute these commands (copy `config.txt` to the disk from the email - could use a memory stick).
-
 ```bash
-git clone https://github.com/princeton-penn-vents/princeton-penn-flowmeter
 cd princeton-penn-flowmeter
 sudo cp config/config.txt /boot/config.txt
 sudo cp config/patientdevice.service /lib/systemd/system
@@ -82,27 +62,36 @@ sudo cp config/patientloop.service /lib/systemd/system
 sudo systemctl enable pigpiod
 sudo systemctl enable patientdevice
 sudo systemctl enable patientloop
-sudo apt-get update
-sudo apt-get install python3-scipy python3-numpy python3-pyqt5
-python3 -m pip install pyyaml pyqtgraph confuse
 ```
-Now, you have all the code. I would reboot the RPi4 (this will start pigpiod).
+Now, you have all the code and automatic startup setup.
+On reboot, all patient processes will be launched automatically.
+
+<details><summary>Additional information: (click to expand)</summary>
+
+To operate patient box manually:
 
 To execute the readout, click on a terminal icon, then in the shell:
 
 ```
 cd princeton-penn-flowmeter
-python3 ./patient/__main__.py —-file data.out
+./stopall
+python3 ./device_loop.py —-file test.out
 ```
 
 This will start printing temperature settings every second to the screen - will thermalize at 40C with the temperature servo,
-and it will be recording pressure (in ADC counts from 0 to 4095) and flow rate (in signed integer) and the time in milliseconds (with a precision of microseconds).
+and it will be recording pressure (in ADC counts from 0 to 4095) and flow rate (signed integer 0 to 32,767) and the time in milliseconds (with a precision of microseconds).  The RPi4 does not operate a clock when powered down, but rather begins from where it left off when shutdown.
 
 You can `^C` at any time and look at the data. This will print it to the screen:
 
-
 ```bash
 cat data.out
+```
+
+Operation of the LCD display and rotary and to serve data to the nurseguii from the device_loop, one can run locally:
+
+```
+cd princeton-penn-flowmeter
+python3 ./patient_loop.py
 ```
 
 For `/boot/config.txt`:  These lines change:
@@ -121,31 +110,10 @@ dtoverlay=i2c6,pins_22_23
 
 <details><summary>Previous notes: (click to expand)</summary>
 
-#### pigpio requires:
+#### pigpio cleanup, if needed:
 
 ```bash
-sudo apt-get update (before install, if needed)
-sudo apt-get install pigpio python-pigpio python3-pigpio (install once)
-sudo pigpiod (on each boot)
-sudo killall pigpiod (for cleanup, if needed)
-import pigpio
-```
-
-#### smbus requires:
-
-```bash
-# or manually sudo vi /etc/modprobe.d/raspi-blacklist.conf
-# the underlying device is the i2c-bcm2708 (comment out blacklist)
-sudo apt-get install i2c-tools
-sudo install python-smbus
-import smbus
-```
-
-#### spidev requires:
-
-```bash
-lsmod | grep spi (check that spidev and spi_bcm2708 are running)
-spidev is there by default
+sudo killall pigpiod
 ```
 
 </details>
