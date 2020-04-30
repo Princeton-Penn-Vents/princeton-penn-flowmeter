@@ -70,10 +70,8 @@ class MainStack(QtWidgets.QWidget):
             if not sim:
                 gen = RemoteGenerator(ip=ip, port=port + i)
             else:
-                status = Status.OK if i % 7 != 1 else Status.ALERT
-                if i == 7:
-                    status = Status.DISCON
-                gen = LocalGenerator(status, logging=logging)
+                gen = LocalGenerator()
+
             gen.run()  # Close must be called
 
             graph = PatientSensor(i + offset, gen=gen, logging=logging, debug=debug)
