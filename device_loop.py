@@ -49,7 +49,7 @@ dcTEMP = 3000
 dcMAX = 9000
 dcRANGE = 10000
 dcSTROBE = 1 * NReadoutTemp
-sgn = lambda a: (a>0) - (a<0)
+sgn = lambda a: (a > 0) - (a < 0)
 first_crossTEMP = True
 dcTEMP_at_cross = 0
 last_errorTEMP = 0
@@ -162,17 +162,17 @@ def pi_cleanup() -> Iterator[None]:
         pi.stop()
 
 
-@contextmanager
-def wait_frequency(length: float, event: threading.Event) -> Iterator[None]:
+def frequency(length: float, event: threading.Event) -> Iterator[None]:
     """
     This pauses as long as needed after running
     """
-    start_time = time.monotonic()
-    yield
-    diff = time.monotonic() - start_time
-    left = length - diff
-    if left > 0:
-        event.wait(left)
+    while not event.is_set():
+        start_time = time.monotonic()
+        yield
+        diff = time.monotonic() - start_time
+        left = length - diff
+        if left > 0:
+            event.wait(left)
 
 
 def open_next(mypath: Path) -> TextIO:
@@ -207,68 +207,66 @@ with pi_cleanup(), ExitStack() as stack:
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    while not running.is_set():
-        with wait_frequency(
-            1.0 / (ReadoutHz * oversampleADC), running
-        ):  # Readout in Hz
+    for _ in frequency(1.0 / (ReadoutHz * oversampleADC), running):  # Readout in Hz
 
-            NReadout += 1
-            tmpADC = getADC(chanMP3V5004)
-            ADCsamples.append(tmpADC)
+        NReadout += 1
+        tmpADC = getADC(chanMP3V5004)
+        ADCsamples.append(tmpADC)
 
-            # Continue if we are currently in oversampling
-            if (NReadout % oversampleADC) != 0:
-                continue
+        # Continue if we are currently in oversampling
+        if (NReadout % oversampleADC) != 0:
+            continue
 
-            ADCavg = 0.0
-            if len(ADCsamples):
-                ADCavg = sum(ADCsamples) / len(ADCsamples)
-            ADCsamples = []
+        ADCavg = 0.0
+        if len(ADCsamples):
+            ADCavg = sum(ADCsamples) / len(ADCsamples)
+        ADCsamples = []
 
-            ts = int(1000 * time.monotonic())
+        ts = int(1000 * time.monotonic())
 
-            if (NReadout % NReadoutTemp) == 0:
-                nbytes = nbytesTEMP
-            else:
-                nbytes = nbytesDP
+        if (NReadout % NReadoutTemp) == 0:
+            nbytes = nbytesTEMP
+        else:
+            nbytes = nbytesDP
 
-            tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
-            btmpdataSDP3 = tmpdataSDP3[1]
-            tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
+        tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+        btmpdataSDP3 = tmpdataSDP3[1]
+        tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
 
-            d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
+        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
 
-            if len(btmpdataSDP3) == nbytesTEMP:
-                tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
-                print(ts, tmptemp, dcTEMP)
-                if (NReadout % dcSTROBE) == 0:
-# take-back-half algorithm
-                    errorTEMP = operTEMP - curTEMP
-                    if (sgn(errorTEMP)!=sgn(last_errorTEMP)):
-                       if ( first_crossTEMP ):
-                           first_crossTEMP = False
-                       else:
-                           dcTEMP = (dcTEMP + dcTEMP_at_cross) // 2
-                       dcTEMP_at_cross = dcTEMP
-                    last_errorTEMP = errorTEMP
-# standard servo (loop gain response)
-                    deltatemp = tmptemp - curTEMP
-                    if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
-                        dcTEMP += dcSTEP
-                        dcTEMP = min(dcMAX, dcTEMP)
-                    if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
-                        curTEMP > maxTEMP
-                    ):
-                        dcTEMP -= dcSTEP
-                        dcTEMP = max(0, dcTEMP)
-                    pi.set_PWM_dutycycle(pinPWM, dcTEMP)
+        if len(btmpdataSDP3) == nbytesTEMP:
+            tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
+            print(ts, tmptemp, dcTEMP)
+            if (NReadout % dcSTROBE) == 0:
+                # Take-back-half algorithm
+                errorTEMP = operTEMP - curTEMP
+                if sgn(errorTEMP) != sgn(last_errorTEMP):
+                    if first_crossTEMP:
+                        first_crossTEMP = False
+                    else:
+                        dcTEMP = (dcTEMP + dcTEMP_at_cross) // 2
+                    dcTEMP_at_cross = dcTEMP
+                last_errorTEMP = errorTEMP
 
-                curTEMP = tmptemp
+                # Standard servo (loop gain response)
+                deltatemp = tmptemp - curTEMP
+                if (deltatemp < hystTEMP / 10.0) and (curTEMP < minTEMP):
+                    dcTEMP += dcSTEP
+                    dcTEMP = min(dcMAX, dcTEMP)
+                if ((curTEMP > operTEMP) and (deltatemp > hystTEMP / 20.0)) or (
+                    curTEMP > maxTEMP
+                ):
+                    dcTEMP -= dcSTEP
+                    dcTEMP = max(0, dcTEMP)
+                pi.set_PWM_dutycycle(pinPWM, dcTEMP)
 
-                d.update({"C": curTEMP, "D": dcTEMP})
+            curTEMP = tmptemp
 
-            ds = json.dumps(d)
-            socket.send_string(ds)
+            d.update({"C": curTEMP, "D": dcTEMP})
 
-            if myfile is not None:
-                print(ds, file=myfile)
+        ds = json.dumps(d)
+        socket.send_string(ds)
+
+        if myfile is not None:
+            print(ds, file=myfile)
