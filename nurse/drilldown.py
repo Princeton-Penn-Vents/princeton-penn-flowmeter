@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 
-from typing import Optional
+from typing import Optional, Dict
 
 import numpy as np
 
@@ -291,8 +291,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     def __init__(self):
         super().__init__()
-        self.curves = {}
-        self.curves2 = {}
+        self.curves: Dict[str, pg.PlotCurveItem] = {}
+        self.curves2: Dict[str, pg.PlotCurveItem] = {}
         self.upper = {}
         self.lower = {}
         self.current = {}
@@ -466,7 +466,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             self.curves[key].setData(
                                 self.gen.time, getattr(self.gen, key)
                             )
-                            self.curves2[key].setData(x=None, y=None)
+                            x, _y = self.curves2[key].getData()
+                            if x is not None and len(x) > 0:
+                                self.curves2[key].setData(
+                                    x=np.array([], dtype=float),
+                                    y=np.array([], dtype=float),
+                                )
 
                         else:
                             last = self.gen.realtime[-1]
