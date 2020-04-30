@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Rolling:
-    def __init__(self, init=None, *, window_size, dtype=None):
+    def __init__(self, init=None, *, window_size: int, dtype=None):
         if dtype is None:
             if init:
                 dtype = np.asarray(init).dtype
@@ -17,17 +17,40 @@ class Rolling:
         if init is not None:
             self.inject(init)
 
+    def clear(self) -> None:
+        self._start = 0
+        self._current_size = 0
+
     @property
-    def window_size(self):
+    def window_size(self) -> int:
         return self._window_size
 
-    def inject(self, values):
+    def inject_value(self, value: float) -> None:
+        """
+        High performance version of inject.
+        """
+
+        fill_start = (
+            self._start
+            if self._current_size == self._window_size
+            else self._current_size
+        )
+
+        self._values[fill_start] = value
+        self._values[fill_start + self._window_size] = value
+
+        if self._current_size < self._window_size:
+            self._current_size += 1
+        else:
+            self._start += 1
+            self._start %= self._window_size
+
+    def inject(self, values: np.ndarray) -> None:
         """
         Add a value or an array of values to the end of the rolling buffer.  It
         is currently invalid to input a 2D array.
 
-        This could be optimized or augmented in the future for faster scalar
-        addition.
+        Single values can be injected much more quickly with inject_value.
         """
 
         # Make sure input is an array, truncate if larger than rolling buffer
@@ -67,9 +90,7 @@ class Rolling:
             fill_start + values.size - (self._current_size - self._window_size)
         ) % self._window_size
 
-        return self
-
-    def explain(self):
+    def explain(self) -> str:
         "Gives a nice text display of the internal structure"
         mask = np.ones_like(self._values, dtype=np.bool)
         mask[: self._current_size] = False
@@ -77,15 +98,15 @@ class Rolling:
         data = np.ma.masked_array(data=self._values, mask=mask)
         return f"{data} -> {self}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         r = repr(np.asarray(self))
         start = "Rolling(" + "\n" if "\n" in r else ""
         return start + r[6:-1] + f", window_size={self._window_size})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(np.array(self))
 
-    def __array__(self):
+    def __array__(self) -> np.ndarray:
         data = self._values[self._start : self._start + self._current_size]
         data.flags.writeable = False
         return data
@@ -93,7 +114,7 @@ class Rolling:
     def __getitem__(self, arg):
         return np.asarray(self).__getitem__(arg)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._current_size
 
 

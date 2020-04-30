@@ -1,7 +1,7 @@
 import pyqtgraph as pg
 
 from datetime import datetime
-import time
+from urllib.parse import urlparse
 from typing import Dict, Any
 
 from nurse.qt import (
@@ -136,13 +136,14 @@ class ConnectionDialog(QtWidgets.QDialog):
 
     def exec_(self):
 
-        gen = self.p.gen
+        gen: RemoteGenerator = self.p.gen
         i = self.p.label
 
         self.setWindowTitle(f"Patient box {i+1} connection")
 
-        self.ip_address.setText(getattr(gen, "ip", "127.0.0.1"))
-        self.port.setText(str(getattr(gen, "port", 8100)))
+        parsed = urlparse(gen.address)
+        self.ip_address.setText(parsed.hostname)
+        self.port.setText(str(parsed.port))
 
         return super().exec_()
 
@@ -167,7 +168,7 @@ class PatientSensor(QtGui.QFrame):
         super().__init__(*args, **kwargs)
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
-        self.gen = gen
+        self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
         self.logging = logging
 
@@ -204,14 +205,21 @@ class PatientSensor(QtGui.QFrame):
 
     @Slot()
     def click_number(self):
-        dialog = ConnectionDialog(self)
-        ok = dialog.exec_()
-        if ok:
-            port = int(dialog.port.text())
-            ip_address = dialog.ip_address.text()
+        if isinstance(self.gen, RemoteGenerator):
+            dialog = ConnectionDialog(self)
+            ok = dialog.exec_()
+            if ok:
+                port = int(dialog.port.text())
+                ip_address = dialog.ip_address.text()
 
-            self.gen.close()
-            self.gen = RemoteGenerator(ip=ip_address, port=port)
+                self.gen.address = f"tcp://{ip_address}:{port}"
+        else:
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Information,
+                "Local Generator",
+                "Local generators cannot be changed, run without --sim next time.",
+            )
+            dialog.exec_()
 
     def set_plot(self):
         assert len(self.curves) == 0
