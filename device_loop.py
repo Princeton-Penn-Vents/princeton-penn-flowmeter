@@ -25,11 +25,6 @@ from contextlib import contextmanager, ExitStack
 DIR = Path(__file__).parent.resolve()
 (DIR.parent / "device_log").mkdir(exist_ok=True)
 
-# No cleanup needed
-context = zmq.Context()
-socket = context.socket(zmq.PUB)  # publish (broadcast)
-socket.bind("tcp://*:5556")
-
 ReadoutHz = 50.0
 oversampleADC = 4
 ADCsamples = []
@@ -52,7 +47,7 @@ dcSTROBE = 1 * NReadoutTemp
 sgn = lambda a: (a > 0) - (a < 0)
 first_crossTEMP = True
 dcTEMP_at_cross = 0
-last_errorTEMP = 0
+last_errorTEMP = 0.0
 pinPWM = 13
 
 
@@ -189,7 +184,10 @@ def open_next(mypath: Path) -> TextIO:
             i += 1
 
 
-with pi_cleanup(), ExitStack() as stack:
+with pi_cleanup(), ExitStack() as stack, zmq.Context() as ctx, ctx.socket(
+    zmq.PUB
+) as pub_socket:
+    pub_socket.bind("tcp://*:5556")
 
     myfile = None  # type: Optional[TextIO]
 
@@ -266,7 +264,7 @@ with pi_cleanup(), ExitStack() as stack:
             d.update({"C": curTEMP, "D": dcTEMP})
 
         ds = json.dumps(d)
-        socket.send_string(ds)
+        pub_socket.send_string(ds)
 
         if myfile is not None:
             print(ds, file=myfile)

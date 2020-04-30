@@ -9,6 +9,7 @@ import numpy as np
 
 import threading
 import zmq
+from zmq.decorators import context, socket
 import time
 from typing import Optional
 import math
@@ -31,21 +32,22 @@ class CollectorThread(threading.Thread):
 
         super().__init__()
 
-    def run(self) -> None:
-        context = zmq.Context()
-        socket = context.socket(zmq.SUB)
+    @context()
+    @socket(zmq.SUB)
+    @socket(zmq.PUB)
+    def run(
+        self, _ctx: zmq.Context, sub_socket: zmq.Socket, pub_socket: zmq.Socket
+    ) -> None:
+        sub_socket.connect("tcp://localhost:5556")
+        sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
-        socket.connect("tcp://localhost:5556")
-        socket.setsockopt_string(zmq.SUBSCRIBE, "")
-
-        pub_socket = context.socket(zmq.PUB)  # publish (broadcast)
         pub_socket.bind(f"tcp://*:{self.parent._port}")
 
         every = 0
         while not self.parent._stop.is_set():
-            socks, *_ = zmq.select([socket], [], [], 0.1)
-            for sock in socks:
-                j = sock.recv_json()
+            ready_events = sub_socket.poll(0.1)
+            for _ in range(ready_events):
+                j = sub_socket.recv_json()
                 t = j["t"]
                 f = (
                     math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale

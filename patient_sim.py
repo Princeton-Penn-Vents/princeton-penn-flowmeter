@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 import threading
 import zmq
+from zmq.decorators import context, socket
 from typing import Iterator
 import signal
 
@@ -29,10 +30,10 @@ class SimGenerator:
     def __init__(self):
         self.done = threading.Event()
 
-    def run(self, port: int):
-        context = zmq.Context()
-        socket = context.socket(zmq.PUB)
-        socket.bind(f"tcp://*:{port}")
+    @context()
+    @socket(zmq.PUB)
+    def run(self, port: int, _ctx: zmq.Context, pub_socket: zmq.Socket):
+        pub_socket.bind(f"tcp://*:{port}")
 
         start_time = int(1_000 * time.monotonic())  # milliseconds
         (sim,) = start_sims(1, start_time, 12_000_000)  # milliseconds
@@ -45,7 +46,7 @@ class SimGenerator:
                 "p": d["P"],
             }
 
-            socket.send_json(mod)
+            pub_socket.send_json(mod)
 
 
 if __name__ == "__main__":

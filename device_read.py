@@ -10,29 +10,26 @@ pressure_roll = Rolling(window_size=1000)
 flow_roll = Rolling(window_size=1000)
 time_roll = Rolling(window_size=1000, dtype=np.int64)
 
-context = zmq.Context()
-socket = context.socket(zmq.SUB)
 
-print("Collecting data")
-socket.connect("tcp://localhost:5556")
+with zmq.Context() as ctx, ctx.socket(zmq.SUB) as sub_socket:
+    print("Collecting data")
 
-socket.setsockopt_string(zmq.SUBSCRIBE, "")
+    sub_socket.connect("tcp://localhost:5556")
+    sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
+    for i in range(100):
 
-for i in range(100):
+        j = sub_socket.recv_json()
+        print(f"Received: {j}")
 
-    j = socket.recv_json()
-    print(f"Received: {j}")
+        if "max_pressure" in j:
+            max_pressure_roll.inject(j["max_pressure"])
 
-    if "max_pressure" in j:
-        max_pressure_roll.inject(j["max_pressure"])
+        pressure_roll.inject(j["P"])
+        flow_roll.inject(j["F"])
+        time_roll.inject(j["t"])
 
-    pressure_roll.inject(j["P"])
-    flow_roll.inject(j["F"])
-    time_roll.inject(j["t"])
-
-
-print(max_pressure_roll)
-print(pressure_roll)
-print(time_roll)
-print(flow_roll)
+    print(max_pressure_roll)
+    print(pressure_roll)
+    print(time_roll)
+    print(flow_roll)

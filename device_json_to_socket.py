@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
+import zmq
+import contextlib
+import time
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input single-line json file")
@@ -9,16 +13,6 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-
-import zmq
-import contextlib
-import time
-import json
-
-
-context = zmq.Context()
-socket = context.socket(zmq.PUB)  # publish (broadcast)
-socket.bind("tcp://*:5556")
 
 rate = 50  # Hz
 
@@ -32,25 +26,27 @@ def controlled_time(t):
     time.sleep(max(remaining, 0))
 
 
-with open(args.input) as f:
-    for line in f:
-        with controlled_time(1 / rate):
-            socket.send_string(line)
-
-before = json.loads(line)
-timestamp = before["t"]
-
-i = 1
-
-while args.repeat == 0 or i < args.repeat:
-    print(f"Re-serving: {i}")
+with zmq.Context() as ctx, ctx.socket(zmq.PUB) as pub_socket:
+    pub_socket.bind("tcp://*:5556")
 
     with open(args.input) as f:
         for line in f:
             with controlled_time(1 / rate):
-                current = json.loads(line)
-                timestamp += 20
-                current["t"] = timestamp
-                socket.send_json(current)
+                pub_socket.send_string(line)
 
-    i += 1
+    before = json.loads(line)
+    timestamp = before["t"]
+
+    i = 1
+    while args.repeat == 0 or i < args.repeat:
+        print(f"Re-serving: {i}")
+
+        with open(args.input) as f:
+            for line in f:
+                with controlled_time(1 / rate):
+                    current = json.loads(line)
+                    timestamp += 20
+                    current["t"] = timestamp
+                    pub_socket.send_json(current)
+
+        i += 1

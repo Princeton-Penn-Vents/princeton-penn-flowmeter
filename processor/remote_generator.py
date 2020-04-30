@@ -5,6 +5,7 @@ from processor.analysis import pressure_deglitch_smooth
 
 import numpy as np
 import zmq
+from zmq.decorators import context, socket
 import threading
 import time
 from datetime import datetime
@@ -34,18 +35,18 @@ class RemoteThread(threading.Thread):
 
         super().__init__()
 
-    def run(self) -> None:
-        context = zmq.Context()
-        socket = context.socket(zmq.SUB)
+    @context()
+    @socket(zmq.SUB)
+    def run(self, _ctx: zmq.Context, sub_socket: zmq.Socket) -> None:
 
-        socket.connect(self._address)
-        socket.setsockopt_string(zmq.SUBSCRIBE, "")
+        sub_socket.connect(self._address)
+        sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
         while not self.parent._stop.is_set():
-            socks, *_ = zmq.select([socket], [], [], 1)
-            for sock in socks:
+            number_events = sub_socket.poll(1 * 1000)
+            for _ in range(number_events):
                 self._last_update = datetime.now().timestamp()
-                root = sock.recv_json()
+                root = sub_socket.recv_json()
                 if "rotary" in root:
                     with self._remote_lock:
                         self.rotary_dict = root["rotary"]
@@ -61,7 +62,7 @@ class RemoteThread(threading.Thread):
                             logger.info("(Re)Connecting successful")
                             self.status = Status.OK
 
-            if not socks and self.status != Status.DISCON:
+            if number_events == 0 and self.status != Status.DISCON:
                 with self._remote_lock:
                     self.status = Status.DISCON
 
