@@ -41,10 +41,10 @@ class CollectorThread(threading.Thread):
         sub_socket.connect("tcp://localhost:5556")
         sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
-        pub_socket.bind(f"tcp://*:{self.parent._port}")
+        pub_socket.bind(f"tcp://*:{self.parent.port}")
 
         every = 0
-        while not self.parent._stop.is_set():
+        while not self.parent.stop.is_set():
             ready_events = sub_socket.poll(0.1)
             for _ in range(ready_events):
                 j = sub_socket.recv_json()
@@ -83,7 +83,7 @@ class Collector(Generator):
         self._pressure = np.array([], dtype=np.double)
 
         self._collect_thread: Optional[CollectorThread] = None
-        self._port = port
+        self.port = port
 
         # The collector does not need the full breath analysis
         self.disable_full_analyze = True

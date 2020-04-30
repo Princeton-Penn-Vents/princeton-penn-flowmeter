@@ -109,7 +109,7 @@ class Generator(abc.ABC):
         self._run_thread: Optional[threading.Thread] = None
 
         # A stop signal to turn off the thread
-        self._stop = threading.Event()
+        self.stop = threading.Event()
 
         # A quick way to get the debug status
         self._debug = config["global"]["debug"].get(bool)
@@ -122,7 +122,7 @@ class Generator(abc.ABC):
         Started by the context manager
         """
 
-        self._stop.clear()
+        self.stop.clear()
         self._run_thread = threading.Thread(target=self._run)
         self._run_thread.start()
 
@@ -131,11 +131,11 @@ class Generator(abc.ABC):
         Must be run in the background, by run()
         """
 
-        while not self._stop.is_set():
+        while not self.stop.is_set():
             with self.lock:
                 self._get_data()
                 self.analyze_as_needed()
-            self._stop.wait(self.run_every)
+            self.stop.wait(self.run_every)
 
     def analyze_as_needed(self) -> None:
         """
@@ -401,7 +401,7 @@ class Generator(abc.ABC):
         """
         Always close or use a context manager if running threads!
         """
-        self._stop.set()
+        self.stop.set()
         if self._run_thread is not None:
             self._run_thread.join()
 

@@ -42,7 +42,7 @@ class RemoteThread(threading.Thread):
         sub_socket.connect(self._address)
         sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
-        while not self.parent._stop.is_set():
+        while not self.parent.stop.is_set():
             number_events = sub_socket.poll(1 * 1000)
             for _ in range(number_events):
                 self._last_update = datetime.now().timestamp()
