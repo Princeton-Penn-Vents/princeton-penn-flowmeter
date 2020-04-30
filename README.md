@@ -87,8 +87,10 @@ and it will be recording pressure (in ADC counts from 0 to 4095) and flow rate (
 You can `^C` at any time and look at the data. This will print it to the screen:
 
 ```bash
-cat data.out
+cat test0000.out
 ```
+where the 0000 will increment every time the process is restarted through a local directory scan.
+Logging of data is by default in ./device_log/
 
 Operation of the LCD display and rotary and to serve data to the nurseguii from the device_loop, one can run locally:
 
