@@ -519,7 +519,24 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     time_str = (
                         "now" if self.gen.tardy < 1 else f"{self.gen.tardy:.0f}s ago"
                     )
-                    self.last_ts.setText(f"Last updated: {time_str}")
+                    date_str = (
+                        "---"
+                        if self.gen.last_update is None
+                        else format(self.gen.last_update, "%m-%d-%Y %H:%M:%S")
+                    )
+
+                    for breath in reversed(self.gen.breaths):
+                        if "full timestamp" in breath:
+                            time_since = (
+                                self.gen.realtime[-1] - breath["full timestamp"]
+                            ) + self.gen.tardy
+                            breath_str = f"Most recent breath: {time_since:.0f} s ago"
+                            break
+                    else:
+                        breath_str = "No detected breaths yet"
+                    self.last_ts.setText(
+                        f"Updated: {time_str} @ {date_str}\n{breath_str}"
+                    )
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack

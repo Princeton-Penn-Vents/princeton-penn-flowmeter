@@ -68,7 +68,7 @@ class RemoteThread(threading.Thread):
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:
-            self.parent._last_update = self._last_update
+            self.parent.last_update = self._last_update
             self.parent._last_get = self._last_get
 
             newel = new_elements(self.parent._time, self._time)
@@ -95,8 +95,6 @@ class RemoteGenerator(Generator):
         super().__init__()
         self.ip = ip
         self.port = port
-
-        self._last_update: Optional[float] = None
 
         self.status = Status.DISCON
         self._last_ts: int = 0

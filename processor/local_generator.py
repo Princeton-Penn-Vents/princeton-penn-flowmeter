@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import numpy as np
 
 from sim.start_sims import start_sims
@@ -31,6 +32,7 @@ class LocalGenerator(Generator):
             self._pressure.inject(pressure[-to_add:])
 
         self._last_get = self._time[-1] / 1000
+        self.last_update = datetime.now()
 
     @property
     def flow(self):

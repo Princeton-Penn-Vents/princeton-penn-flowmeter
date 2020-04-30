@@ -60,7 +60,7 @@ class Generator(abc.ABC):
         }
 
         # The list of breaths
-        self._breaths: List[Any] = []
+        self._breaths: List[Dict[str, float]] = []
 
         # The list of cumulative values from the analysis
         self._cumulative: Dict[str, float] = {}
