@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import numpy as np
 import yaml
 import logging
+from typing import Tuple
 
 
 logger = logging.getLogger("povm")
@@ -250,7 +252,9 @@ class VentSim:
             + np.random.normal(0, self.measurement_error_pressure, len(self.times)),
         )
 
-    def get_from_timestamp(self, t, nMilliSeconds):
+    def get_from_timestamp(
+        self, t: int, nMilliSeconds: int
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
         if lbin == len(self.times):
             self.extend()
@@ -265,25 +269,13 @@ class VentSim:
         else:
             fbin = lbin - nbins
 
-        d = {
-            "version": 1,
-            "source": "simulation",
-            "parameters": {},
-            "data": {
-                "timestamps": (self.curr_time + self.times[fbin:lbin])
-                .astype(int)
-                .tolist(),
-                "flows": (
-                    self.flow[fbin:lbin]
-                    + np.random.normal(0, self.measurement_error_flow, lbin - fbin)
-                ).tolist(),
-                "pressures": (
-                    self.pressure[fbin:lbin]
-                    + np.random.normal(0, self.measurement_error_pressure, lbin - fbin)
-                ).tolist(),
-            },
-        }
-        return d
+        return (
+            (self.curr_time + self.times[fbin:lbin]).astype(int),
+            self.flow[fbin:lbin]
+            + np.random.normal(0, self.measurement_error_flow, lbin - fbin),
+            self.pressure[fbin:lbin]
+            + np.random.normal(0, self.measurement_error_pressure, lbin - fbin),
+        )
 
 
 if __name__ == "__main__":
@@ -305,8 +297,8 @@ if __name__ == "__main__":
     print("testing get from timestamp features")
 
     time.sleep(5)
-    d = simulator.get_from_timestamp(1000 * time.monotonic(), 10000)
-    print(len(d["data"]["timestamps"]))
+    d = simulator.get_from_timestamp(int(1000 * time.monotonic()), 10000)
+    print(len(d[0]))
     time, flow, volume, pressure = simulator.get_all()
 
     fig = plt.figure()
