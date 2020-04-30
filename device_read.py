@@ -25,9 +25,9 @@ with zmq.Context() as ctx, ctx.socket(zmq.SUB) as sub_socket:
         if "max_pressure" in j:
             max_pressure_roll.inject(j["max_pressure"])
 
-        pressure_roll.inject(j["P"])
-        flow_roll.inject(j["F"])
-        time_roll.inject(j["t"])
+        pressure_roll.inject_value(j["P"])
+        flow_roll.inject_value(j["F"])
+        time_roll.inject_value(j["t"])
 
     print(max_pressure_roll)
     print(pressure_roll)

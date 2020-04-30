@@ -47,6 +47,49 @@ def test_rolling_single():
     assert_allclose(np.asarray(r), [5.0, 6.0, 7.0])
 
 
+def test_rolling_single_value():
+    r = Rolling(window_size=3)
+
+    assert len(r) == 0
+    assert r._start == 0
+    assert_allclose(np.asarray(r), [])
+
+    r.inject_value(1)
+    assert len(r) == 1
+    assert r._start == 0
+    assert_allclose(np.asarray(r), [1.0])
+
+    r.inject_value(2)
+    assert len(r) == 2
+    assert r._start == 0
+    assert_allclose(np.asarray(r), [1.0, 2.0])
+
+    r.inject_value(3)
+    assert len(r) == 3
+    assert r._start == 0
+    assert_allclose(np.asarray(r), [1.0, 2.0, 3.0])
+
+    r.inject_value(4)
+    assert len(r) == 3
+    assert r._start == 1
+    assert_allclose(np.asarray(r), [2.0, 3.0, 4.0])
+
+    r.inject_value(5)
+    assert len(r) == 3
+    assert r._start == 2
+    assert_allclose(np.asarray(r), [3.0, 4.0, 5.0])
+
+    r.inject_value(6)
+    assert len(r) == 3
+    assert r._start == 0
+    assert_allclose(np.asarray(r), [4.0, 5.0, 6.0])
+
+    r.inject_value(7)
+    assert len(r) == 3
+    assert r._start == 1
+    assert_allclose(np.asarray(r), [5.0, 6.0, 7.0])
+
+
 def test_rolling_double():
     r = Rolling(window_size=3)
 

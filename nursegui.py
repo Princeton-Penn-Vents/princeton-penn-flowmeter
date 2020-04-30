@@ -68,7 +68,7 @@ class MainStack(QtWidgets.QWidget):
             gen: Generator
 
             if not sim:
-                gen = RemoteGenerator(ip=ip, port=port + i)
+                gen = RemoteGenerator(address=f"tcp://{ip}:{port + i}")
             else:
                 gen = LocalGenerator()
 

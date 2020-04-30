@@ -19,9 +19,10 @@ logger = logging.getLogger("povm")
 
 
 class RemoteThread(threading.Thread):
-    def __init__(self, parent: RemoteGenerator, *, address: str):
+    def __init__(self, parent: RemoteGenerator):
         self.parent = parent
-        self._address = address
+        self._address = self.parent.address
+        self._address_change = threading.Event()
         self.status = Status.DISCON
 
         self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
@@ -29,11 +30,18 @@ class RemoteThread(threading.Thread):
         self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
 
         self._remote_lock = threading.Lock()
-        self._last_update: Optional[float] = None
+        self._last_update: Optional[datetime] = None
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
 
         super().__init__()
+
+    def clear(self) -> None:
+        self._time.clear()
+        self._flow.clear()
+        self._pressure.clear()
+        self._last_get = None
+        self._last_update = None
 
     @context()
     @socket(zmq.SUB)
@@ -43,9 +51,22 @@ class RemoteThread(threading.Thread):
         sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
 
         while not self.parent.stop.is_set():
+            # Allow changing connections
+            if self._address_change.is_set():
+                with self._remote_lock, self.parent.lock:
+                    sub_socket.disconnect(self._address)
+                    sub_socket.connect(self.parent._address)
+                    self._address = self.parent._address
+                    self._address_change.clear()
+
+                    self.clear()
+                    self.parent.clear()
+
+                    self.status = self.parent.status = Status.DISCON
+
             number_events = sub_socket.poll(1 * 1000)
             for _ in range(number_events):
-                self._last_update = datetime.now().timestamp()
+                self._last_update = datetime.now()
                 root = sub_socket.recv_json()
                 if "rotary" in root:
                     with self._remote_lock:
@@ -53,9 +74,9 @@ class RemoteThread(threading.Thread):
 
                 if "t" in root:
                     with self._remote_lock:
-                        self._time.inject(root["t"])
-                        self._flow.inject(root["f"])
-                        self._pressure.inject(root["p"])
+                        self._time.inject_value(root["t"])
+                        self._flow.inject_value(root["f"])
+                        self._pressure.inject_value(root["p"])
                         self._last_get = time.monotonic()
 
                         if self.status == Status.DISCON:
@@ -91,23 +112,24 @@ class RemoteThread(threading.Thread):
 
 
 class RemoteGenerator(Generator):
-    def __init__(self, *, ip: str = "127.0.0.1", port: int = 8100):
+    def __init__(self, *, address: str = "tcp://127.0.0.1:8100"):
         super().__init__()
-        self.ip = ip
-        self.port = port
+        self._address = address
 
         self.status = Status.DISCON
         self._last_ts: int = 0
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
-
         self._remote_thread: Optional[RemoteThread] = None
+
+    def clear(self) -> None:
+        super().clear()
+
+        self.status = Status.DISCON
+        self._last_ts = 0
 
     def run(self) -> None:
         super().run()
-        self._remote_thread = RemoteThread(self, address=f"tcp://{self.ip}:{self.port}")
+        self._remote_thread = RemoteThread(self)
         self._remote_thread.start()
 
     def _get_data(self) -> None:
@@ -115,16 +137,18 @@ class RemoteGenerator(Generator):
             self._remote_thread.access_collected_data()
 
     @property
-    def flow(self) -> np.ndarray:
-        return np.asarray(self._flow)
+    def address(self) -> str:
+        return self._address
+
+    @address.setter
+    def address(self, value: str) -> None:
+        self._address = value
+        if self._remote_thread is not None:
+            self._remote_thread._address_change.set()
 
     @property
     def pressure(self) -> np.ndarray:
         return pressure_deglitch_smooth(np.asarray(self._pressure))
-
-    @property
-    def timestamps(self) -> np.ndarray:
-        return np.asarray(self._time)
 
     def close(self) -> None:
         super().close()
