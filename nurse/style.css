@@ -167,6 +167,8 @@ PatientSensor[alert_status="DISCON"] {
 
 NumbersWidget > QLabel {
   font-size: 16px;
+  margin: -1px 1px -1px 1px;
+  padding: 0px;
 }
 
 NumbersWidget > QLabel[measure="OK"] {
@@ -184,7 +186,9 @@ NumbersWidget > QLabel[measure="ERR"] {
 
 NumbersWidget > NumberLabel {
   font-size: 20px;
-  padding: 2px 0px 0px 0px;
+  margin: -2px 1px -2px 3px;
+  padding: 0px;
+  font-weight: bold;
 }
 
 /* Drilldown screen */
