@@ -108,7 +108,7 @@ def get_last(rolling, n):
     return rolling[-n:]
 
 
-def new_elements(rolling, addition):
+def new_elements(rolling, addition) -> int:
     """
     Given two sorted arrays, find the number of elements in the second array
     that are past the end of the first array.
