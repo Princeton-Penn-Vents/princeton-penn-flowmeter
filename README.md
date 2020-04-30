@@ -38,24 +38,32 @@ to the internet. Press "next" when asked about updating if you connected
 to the internet. Press OK then restart.
 
 Open the settings (Raspberry menu -> `Preferences` -> `Raspberry Pi Configuration`).
-In the display tab, select "Disable" for `Screen Blanking`. Check the Interfaces tab to
-see if there is anything you want to enable.
+Rename hostname, as needed.
+In the display tab, select "Disable" for `Screen Blanking`.  For a patient box, 
+select "Disable" for `Overscan`.
+
+Select the Interfaces tab to enable hardware interfaces.
 
 For a patient box, you need: I2C enabled, SPI enabled.  These are also set in config.txt.
 Optional:  SSH enabled.
+Reboot required.
+
+Click on terminal icon and execute:
 
 ```bash
 git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
+# if a username is requested, then a typo has been made in the name, try again carefully
 cd princeton-penn-flowmeter
 sudo apt update
 sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
-sudo apt-install python3-scipy
+sudo apt install python3-scipy
 sudo apt install vim                       # For development, skip for production
 sudo python3 -m pip install pyqtgraph pyzmq confuse
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
+For patient box setup:
 
 ```bash
 cd princeton-penn-flowmeter
