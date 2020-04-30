@@ -99,7 +99,14 @@ cd princeton-penn-flowmeter
 python3 ./patient_loop.py
 ```
 
-For `/boot/config.txt`:  These lines change:
+The local IP address of eth0 can be found using ifconfig.  A remote nurse station can receive the data from the patient_loop by starting:
+
+```
+cd princeton-penn-flowmeter
+python3 ./nursegui.py -n 1 --port 8100 --ip <patientboxIP>
+```
+
+For reference, instead of a full copy of config.txt, the changes that need to be made to `/boot/config.txt` are specifically:
 
 ```
 dtparam=i2c_arm=on,baudrate=200000
