@@ -2,76 +2,73 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from itertools import chain
-from sim.start_sims import start_sims
-import numpy as np
-import random
 import time
-from dataclasses import dataclass
+import threading
+import zmq
+from typing import Iterator
+import signal
 
+from sim.start_sims import start_sims
 from processor.config import ArgumentParser
 
 
-@dataclass
-class PseudoGenerator:
-    parent: OurServer
-    version_num: int
-    last_ts: int = 0
+def frequency(length: float, event: threading.Event) -> Iterator[None]:
+    """
+    This pauses as long as needed after running
+    """
+    while not event.is_set():
+        start_time = time.monotonic()
+        yield
+        diff = time.monotonic() - start_time
+        left = length - diff
+        if left > 0:
+            event.wait(left)
 
 
-class OurServer:
-    def serve_on_port(self, server_address, i):
-        if server_address == 0:
-            print("Starting disconnector service")
-            self.update_disconnect()
-        else:
-            print(f"Serving on http://{server_address[0]}:{server_address[1]}")
-            gen = PseudoGenerator(self, i)
+class SimGenerator:
+    def __init__(self):
+        self.done = threading.Event()
 
-    def __init__(self, args):
-        self.done = False
-        self.start_time = int(1000 * time.monotonic())  # milliseconds
-        self.sims = start_sims(args.n, self.start_time, 12000000)  # milliseconds
-        self.disconnect_prob = args.discon_prob
-        self.isDisconnected = np.zeros(args.n)
-        ip = args.bind
+    def run(self, port: int):
+        context = zmq.Context()
+        socket = context.socket(zmq.PUB)
+        socket.bind(f"tcp://*:{port}")
 
-        if args.n > 1:
-            print("Serving; press Control-C multiple times to quit")
-            addresses = ((ip, args.port + i) for i in range(args.n))
-            with ThreadPoolExecutor(max_workers=args.n + 1) as e:
-                e.map(self.serve_on_port, chain(addresses, [0]), range(args.n + 1))
-        else:
-            port = args.port
-            server_address = (ip, port)
-            self.serve_on_port(server_address, 0)
+        start_time = int(1_000 * time.monotonic())  # milliseconds
+        (sim,) = start_sims(1, start_time, 12_000_000)  # milliseconds
 
-    def update_disconnect(self):
-        while True:
-            rand = random.random()
-            if rand < self.disconnect_prob:
-                t_now = int(1000 * time.monotonic())
-                sensor_num = random.randint(0, len(self.sims) - 1)
-                self.isDisconnected[sensor_num] = t_now + 30 * 1000  # 30 seconds
-                print("Disconnecting ", sensor_num, t_now)
-            time.sleep(1)
+        for _ in frequency(1 / 50, self.done):
+            d = sim.get_next()
+            mod = {
+                "t": int(time.monotonic() * 1000),
+                "f": d["F"],
+                "p": d["P"],
+            }
+
+            socket.send_json(mod)
 
 
 if __name__ == "__main__":
-    print("Currently needs to be refactored for ZMQ")
-    exit(1)
     parser = ArgumentParser(description="Serve values on network as JSON")
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
-    parser.add_argument(
-        "--bind", default="0.0.0.0", help="Binding address (default: all)"
-    )
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
-    parser.add_argument(
-        "--discon_prob",
-        type=float,
-        default=0.0,
-        help="Probability of disconnecting a sim for 30 seconds each second",
-    )
+
     args = parser.parse_args()
     print(args)
-    myServer = OurServer(args)
+
+    sim_gen = SimGenerator()
+
+    def ctrl_c(_signal, _frame):
+        print("You pressed Ctrl+C!")
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        sim_gen.done.set()
+
+    signal.signal(signal.SIGINT, ctrl_c)
+
+    if args.n > 1:
+        print("Serving; press Control-C quit")
+        addresses = ((args.port + i) for i in range(args.n))
+        with ThreadPoolExecutor(max_workers=args.n + 1) as e:
+            e.map(sim_gen.run, addresses)
+    else:
+        sim_gen.run(args.port)
