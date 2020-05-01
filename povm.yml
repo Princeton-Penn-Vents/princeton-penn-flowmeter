@@ -61,4 +61,4 @@ rotary:
     max: 60
     incr: 2
     unit: sec
-    zero: OFF
+    zero: "OFF"

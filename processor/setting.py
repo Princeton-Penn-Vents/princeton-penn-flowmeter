@@ -60,7 +60,7 @@ class Setting(abc.ABC):
 
     def __str__(self) -> str:
         if self._zero is not None and self._value == 0:
-            return self._zero
+            return str(self._zero)
         else:
             unit = "" if self.unit is None else f" {self.unit}"
             return f"{self.value}{unit}"
