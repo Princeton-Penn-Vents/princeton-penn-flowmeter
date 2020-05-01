@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from processor.rotary import Setting
+from processor.setting import Setting
+from processor.display_settings import ResetSetting
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -33,7 +34,7 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def __enter__(self) -> RotaryLCD:
-        self._current = 2  # Current Setting
+        self._current = 3  # Current Setting
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()
@@ -75,15 +76,18 @@ class RotaryLCD(Rotary):
 
     def pushed_turn(self, dir: Dir) -> None:
         # Top display keeps ID number!
+        super().pushed_turn(dir)
+        value = self.value()
+        if isinstance(value, ResetSetting):
+            self.reset()
         self.upper_display()
         self.lower_display()
-        super().pushed_turn(dir)
 
     def turn(self, dir: Dir) -> None:
         # Top display keeps ID number!
+        super().turn(dir)
         self.upper_display()
         self.lower_display()
-        super().turn(dir)
 
     def alert(self) -> None:
         if self.alarms and self.alarm_level == AlarmLevel.OFF:

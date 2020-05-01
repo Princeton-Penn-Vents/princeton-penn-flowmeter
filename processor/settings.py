@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from processor.setting import IncrSetting, SelectionSetting, Setting
-from processor.display_settings import FilenameSetting, CurrentSetting
+from processor.display_settings import FilenameSetting, CurrentSetting, ResetSetting
 from processor.config import config
 
 from typing import Dict
@@ -30,10 +30,12 @@ def get_setting(c: ConfigView) -> Setting:
         )
     elif type_name == "Current":
         return CurrentSetting(
-            "Current:",
-            listing=[v.as_number() for v in c["items"]],
             default=c["default"].get(int),
+            listing=[v.as_number() for v in c["items"]],
+            name="Current:",
         )
+    elif type_name == "Reset":
+        return ResetSetting(name=c["name"].get(),)
     elif type_name == "Filename":
         return FilenameSetting("Log filename")
     else:

@@ -8,7 +8,7 @@ DIR = Path(__file__).parent.resolve()
 
 
 class FilenameSetting(DisplaySetting):
-    def __init__(self, name):
+    def __init__(self, name: str):
         super().__init__("", name=name)
 
     @property
@@ -32,7 +32,7 @@ class FilenameSetting(DisplaySetting):
 
 
 class CurrentSetting(SelectionSetting):
-    def __init__(self, name, *, listing: Sequence[int], default: int):
+    def __init__(self, default: int, listing: Sequence[int], *, name: str):
         string_listing = [f"{s}s" for s in listing]
 
         self._F: Optional[List[float]] = None
@@ -64,6 +64,22 @@ class CurrentSetting(SelectionSetting):
 
         return f"{ave_t} -> F:{F:.5g} P:{P:5.5g}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         ave_t = self._listing[self._value]
         return f"Current: {ave_t:>3}"
+
+
+class ResetSetting(SelectionSetting):
+    def __init__(self, name: str):
+        super().__init__(0, [f"[{x*'x':8}]" for x in range(9)], name=name)
+
+    def active(self) -> None:
+        self._value = 0
+
+    @property
+    def default(self) -> float:
+        return 0.0
+
+    @default.setter
+    def default(self, val: float):
+        pass
