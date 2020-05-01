@@ -11,6 +11,7 @@ init_logger()
 import signal
 import threading
 from pathlib import Path
+import sys
 
 from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
@@ -27,11 +28,13 @@ with RotaryLCD(get_live_settings()) as rotary, Collector(
 
     forever = threading.Event()
 
-    def ctrl_c(_number, _frame):
+    def close(_number, _frame):
         print("Closing down server...")
         signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
         forever.set()
 
-    signal.signal(signal.SIGINT, ctrl_c)
+    signal.signal(signal.SIGINT, close)
+    signal.signal(signal.SIGTERM, close)
 
     forever.wait()

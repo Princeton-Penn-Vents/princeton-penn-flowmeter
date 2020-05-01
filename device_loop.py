@@ -198,12 +198,14 @@ with pi_cleanup(), ExitStack() as stack, zmq.Context() as ctx, ctx.socket(
 
     running = threading.Event()
 
-    def signal_handler(_signal, _frame):
-        print("You pressed Ctrl+C!")
+    def close(_number, _frame):
+        print("Closing down server...")
         signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
         running.set()
 
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, close)
+    signal.signal(signal.SIGTERM, close)
 
     for _ in frequency(1.0 / (ReadoutHz * oversampleADC), running):  # Readout in Hz
 

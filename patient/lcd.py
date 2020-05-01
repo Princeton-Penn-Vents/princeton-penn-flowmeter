@@ -27,21 +27,17 @@ class LCD:
 
         # Get I2C bus handle
         self.hLCD = self.pi.i2c_open(6, DEVICE_LCD)
-        print(self.hLCD)
 
         # initialize
         self.reset()  # issue soft reset to LCD
-        print("LCD Reset")
         time.sleep(0.04)  # wait 40ms
 
         self.clear()  # Needed to fix flakiness when restarting
         time.sleep(0.002)
         self.ctrl(0x38)  # Function set - 8 bit, 2 line, norm height, inst table 0
-        print("LCD Function Set")
         time.sleep(0.01)
 
         self.ctrl(0x39)  # Function set - 8 bit, 2 line, norm height, inst table 1
-        print("LCD Function Set 2")
         time.sleep(0.01)
 
         self.ctrl(0x14)  # Set bias 1/5
