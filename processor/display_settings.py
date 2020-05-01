@@ -83,3 +83,6 @@ class ResetSetting(SelectionSetting):
     @default.setter
     def default(self, val: float):
         pass
+
+    def at_maximum(self):
+        return self._value == (len(self._listing) - 1)
