@@ -153,7 +153,7 @@ class SelectionSetting(Setting):
         super().__init__(unit=unit, name=name, lcd_name=lcd_name)
 
         assert (
-            0 < default < len(listing)
+            0 <= default < len(listing)
         ), "Default must be an index into the list given"
 
         self._value = default
