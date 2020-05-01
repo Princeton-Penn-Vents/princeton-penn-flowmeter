@@ -3,8 +3,8 @@ Software for patient and nurse stations for multi-patient ventilator
 monitoring.
 
 The hardware at the patient includes two sensors to measure flow and pressure
-mounted on a flow block and equipped with a heating circuit to reduce condensation, 
-a single board computer (SBC, in this case a Raspberry Pi model 4b/4GB), a 2x20 
+mounted on a flow block and equipped with a heating circuit to reduce condensation,
+a single board computer (SBC, in this case a Raspberry Pi model 4b/4GB), a 2x20
 character LCD display with RBG backlight, a rotary encoder and a piezo buzzer.
 The sensor time series data from up to 20 patient boxes are transmitted to a nurse
 monitoring station, where a graphical GUI presents an aggregate view of the
@@ -39,7 +39,7 @@ to the internet. Press OK then restart.
 
 Open the settings (Raspberry menu -> `Preferences` -> `Raspberry Pi Configuration`).
 Rename hostname, as needed.
-In the display tab, select "Disable" for `Screen Blanking`.  For a patient box, 
+In the display tab, select "Disable" for `Screen Blanking`.  For a patient box,
 select "Disable" for `Overscan`.
 
 Select the Interfaces tab to enable hardware interfaces.
@@ -60,6 +60,7 @@ sudo apt install python3-pyqt5 python3-zmq # Required on the base system, includ
 sudo apt install python3-scipy
 sudo apt install vim                       # For development, skip for production
 sudo python3 -m pip install pyqtgraph pyzmq confuse
+sudo python3 -m pip install zeroconf
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 

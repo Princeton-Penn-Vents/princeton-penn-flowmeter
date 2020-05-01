@@ -82,14 +82,20 @@ if __name__ == "__main__":
         print("Preparing to buzz")
         time.sleep(1)
 
-        for level in range(50, 251, 50):
+        for level in [50, 100, 150, 200, 225, 250, 255]:
             print(f"Buzz level: {level}")
             buzzer.buzz(level)
             time.sleep(1)
         print("Buzz off")
         time.sleep(1)
         print("Buzz pattern test at .2s, 200 volume")
-        buzzer.buzz_pattern(200, 0.2)
+        buzzer.buzz_pattern(200, 0.05)
         time.sleep(2)
         buzzer.clear()
         print("Buzz off")
+        time.sleep(1)
+
+        print("Buzz pattern test at .1s, 255 volume")
+        buzzer.buzz_pattern(250, 0.3)
+        time.sleep(2)
+        buzzer.clear()
