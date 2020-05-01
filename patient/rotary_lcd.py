@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, CurrentSetting
+from processor.collector import MAC_STR
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -10,7 +11,7 @@ from patient.buzzer import Buzzer
 import pigpio
 from typing import Dict
 import enum
-import uuid
+
 import time
 
 
@@ -42,11 +43,7 @@ class RotaryLCD(Rotary):
 
         self.backlight.white()
         self.lcd.upper("Princeton Open Vent ")
-        mac_addr = uuid.getnode()
-        mac_str = ":".join(
-            f"{(mac_addr >> ele) & 0xff :02x}" for ele in range(40, -8, -8)
-        )
-        self.lcd.lower(mac_str)
+        self.lcd.lower(MAC_STR)
         time.sleep(3.5)
         return self
 

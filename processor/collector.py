@@ -11,8 +11,13 @@ import threading
 import zmq
 from zmq.decorators import context, socket
 import time
+from datetime import datetime
 from typing import Optional
 import math
+import uuid
+
+_mac_addr = uuid.getnode()
+MAC_STR = ":".join(f"{(_mac_addr >> ele) & 0xff :02x}" for ele in range(40, -8, -8))
 
 
 class CollectorThread(threading.Thread):
@@ -65,7 +70,13 @@ class CollectorThread(threading.Thread):
             # Send rotary every ~1 second, regardless of status of input
             if time.monotonic() > (last + 1) or self.parent.rotary._changed.is_set():
                 with self.parent.lock:
-                    pub_socket.send_json({"rotary": self.parent.rotary.to_dict()})
+                    pub_socket.send_json(
+                        {
+                            "rotary": self.parent.rotary.to_dict(),
+                            "date": datetime.now().timestamp(),
+                            "mac": MAC_STR,
+                        }
+                    )
                 last = time.monotonic()
                 self.parent.rotary._changed.clear()
 

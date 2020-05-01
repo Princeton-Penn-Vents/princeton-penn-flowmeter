@@ -31,7 +31,6 @@ class LocalRotary:
 
     def to_dict(self) -> Dict[str, Any]:
         "Convert config to dict"
-        self._changed.clear()
         return {
             k: v.to_dict()
             for k, v in self.config.items()
