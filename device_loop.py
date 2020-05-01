@@ -18,12 +18,13 @@ import spidev
 import json
 import zmq
 import threading
+import sys
 from pathlib import Path
 from typing import Optional, TextIO, Iterator
 from contextlib import contextmanager, ExitStack
 
 DIR = Path(__file__).parent.resolve()
-(DIR.parent / "device_log").mkdir(exist_ok=True)
+(DIR / "device_log").mkdir(exist_ok=True)
 
 ReadoutHz = 50.0
 oversampleADC = 4
@@ -83,7 +84,7 @@ DEVICE_SDP3 = 0x21  # grounded ADDR pin
 # Get pigio connection
 pi = pigpio.pi()
 if not pi.connected:
-    exit()
+    sys.exit(1)
 # Get I2C bus handle
 hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
 # first issue stop command
