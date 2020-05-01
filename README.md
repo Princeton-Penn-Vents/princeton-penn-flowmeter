@@ -64,6 +64,73 @@ sudo python3 -m pip install zeroconf
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
+#### Networking for the nurse box:
+
+This should only be done for *one* nurse box, even if you connect two nurse stations to a network,
+only one of them should have the following setup:
+
+Nurse box networking (assuming debian family, like Ubuntu, when naming specifics):
+
+```bash
+sudo apt install isc-dhcp-server
+sudo cp config/isc-dhcp-server /etc/default/     # OVERWRITES
+sudo cp config/dhcpd.conf /etc/dhcp/             # OVERWRITES
+sudo cp config/10-eth0-povm.config /etc/network/interfaces.d/
+sudo systemctl enable isc-dhcp-server
+```
+
+The new nurse station IP (192.168.3.3) will come up automatically and the DHCP
+server will start on next computer restart.
+
+<details><summary>Additional information: (click to expand)</summary>
+
+Edit the file `/etc/default/isc-dhcp-server` and set `eth0` as the interface to serve:
+
+```
+INTERFACESv4="eth0"
+```
+
+Edit the file `/etc/dhcp/dhcpd.conf` to include these lines:
+
+```
+option domain-name "local";
+option domain-name-servers ns1.local, ns2.local;
+default-lease-time 6000;
+max-lease-time 72000;
+ddns-update-style none;
+authoritative;
+subnet 192.168.3.0 netmask 255.255.255.0 {
+  range 192.168.3.20 192.168.3.250;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.3.1;
+  option broadcast-address 192.168.3.255;
+  option domain-name-servers 192.168.3.2;
+  option domain-search "local";
+}
+```
+
+Finally, edit the `/etc/network/interface/` file or add a file in `/etc/network/interface.d/` with these lines:
+
+```
+iface eth0 inet static
+    address 192.168.3.2/24
+    gateway 192.168.3.1
+```
+
+Finally, bring up your interface and start/enable the service:
+
+```bash
+sudo ifup eth0
+sudo systemctl enable isc-dhcp-server
+sudo systemctl start isc-dhcp-server
+```
+
+Connections to the outside world / internet can be done through wireless, which
+is unaffected by the above settings.
+
+</details>
+
+
 For patient box setup:
 
 ```bash
@@ -90,25 +157,32 @@ cd princeton-penn-flowmeter
 python3 ./device_loop.py —-file test.out
 ```
 
-This will start printing temperature settings every second to the screen - will thermalize at 40C with the temperature servo,
-and it will be recording pressure (in ADC counts from 0 to 4095) and flow rate (signed integer 0 to 32,767) and the time in milliseconds (with a precision of microseconds).  The RPi4 does not operate a clock when powered down, but rather begins from where it left off when shutdown.
+This will start printing temperature settings every second to the screen - will
+thermalize at 40C with the temperature servo, and it will be recording pressure
+(in ADC counts from 0 to 4095) and flow rate (signed integer 0 to 32,767) and
+the time in milliseconds (with a precision of microseconds).  The RPi4 does not
+operate a clock when powered down, but rather begins from where it left off
+when shutdown.
 
 You can `^C` at any time and look at the data. This will print it to the screen:
 
 ```bash
 cat test0000.out
 ```
-where the 0000 will increment every time the process is restarted through a local directory scan.
-Logging of data is by default in ./device_log/
 
-Operation of the LCD display and rotary and to serve data to the nurseguii from the device_loop, one can run locally:
+where the 0000 will increment every time the process is restarted through a
+local directory scan.  Logging of data is by default in `./device_log/`.
+
+Operation of the LCD display and rotary and to serve data to the nurseguii from
+the device_loop, one can run locally:
 
 ```
 cd princeton-penn-flowmeter
 python3 ./patient_loop.py
 ```
 
-The local IP address of eth0 can be found using ifconfig.  A remote nurse station can receive the data from the patient_loop by starting:
+The local IP address of eth0 can be found using ifconfig.  A remote nurse
+station can receive the data from the `patient_loop` by starting:
 
 ```
 cd princeton-penn-flowmeter
