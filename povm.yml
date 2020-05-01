@@ -55,7 +55,7 @@ rotary:
   Stale Data Timeout:
     type: Incr
     name: Stale Data Timeout
-    lcd_name: Stale Breaths
+    lcd_name: No breath since
     default: 10
     min: 0
     max: 60
