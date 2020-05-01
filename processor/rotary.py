@@ -32,7 +32,11 @@ class LocalRotary:
     def to_dict(self) -> Dict[str, Any]:
         "Convert config to dict"
         self._changed.clear()
-        return {k: v.to_dict() for k, v in self.config.items()}
+        return {
+            k: v.to_dict()
+            for k, v in self.config.items()
+            if k not in ["Current Setting", "Reset Setting"]
+        }
 
     @property
     def alarms(self) -> Dict[str, Dict[str, float]]:

@@ -65,7 +65,7 @@ class CollectorThread(threading.Thread):
             # Send rotary every ~1 second, regardless of status of input
             if time.monotonic() > (last + 1) or self.parent.rotary._changed.is_set():
                 with self.parent.lock:
-                    pub_socket.send_json(self.parent.rotary.to_dict())
+                    pub_socket.send_json({"rotary": self.parent.rotary.to_dict()})
                 last = time.monotonic()
                 self.parent.rotary._changed.clear()
 
