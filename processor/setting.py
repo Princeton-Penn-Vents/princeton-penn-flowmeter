@@ -8,7 +8,9 @@ Number = Union[float, int]
 
 
 class Setting(abc.ABC):
-    def __init__(self, *, name: str, unit: str = None, lcd_name: str = None):
+    def __init__(
+        self, *, name: str, unit: str = None, lcd_name: str = None, zero: str = None
+    ):
         self._name = name
         self._lcd_name: Optional[str] = lcd_name or name
         assert (
@@ -18,6 +20,7 @@ class Setting(abc.ABC):
         self._lock = threading.Lock()
         self._value: Any = None
         self._original_value: Any = None
+        self._zero = zero
 
     @property
     def name(self) -> str:
@@ -56,8 +59,11 @@ class Setting(abc.ABC):
             self._value = value
 
     def __str__(self) -> str:
-        unit = "" if self.unit is None else f" {self.unit}"
-        return f"{self.value}{unit}"
+        if self._zero is not None and self._value == 0:
+            return self._zero
+        else:
+            unit = "" if self.unit is None else f" {self.unit}"
+            return f"{self.value}{unit}"
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self}, name={self.name})"
@@ -109,10 +115,11 @@ class IncrSetting(Setting):
         name: str,
         unit: str = None,
         lcd_name: str = None,
+        zero: str = None,
     ):
         "Note: incr should be a nice floating point number"
 
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero)
 
         self._min = min
         self._max = max
@@ -148,9 +155,10 @@ class SelectionSetting(Setting):
         name: str,
         unit: str = None,
         lcd_name: str = None,
+        zero: str = None,
     ):
 
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero)
 
         assert (
             0 <= default < len(listing)
@@ -159,6 +167,7 @@ class SelectionSetting(Setting):
         self._value = default
         self._original_value = default
         self._listing = listing
+        self._zero = zero
 
     def up(self) -> bool:
         "Return true if not at limit"

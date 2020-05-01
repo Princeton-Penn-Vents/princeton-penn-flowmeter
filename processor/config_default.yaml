@@ -19,7 +19,7 @@ rotary-live:
     name: Sensor ID
     default: 1
     min: 1
-    max: 20
+    max: 24
     incr: 1
 
   Reset Setting:
@@ -35,7 +35,7 @@ rotary:
   AvgWindow:
     type: Selection
     name: Average Window
-    lcd_name: AvgWindow
+    lcd_name: Avg Window
     default: 3
     items: [1, 3, 5, 10, 20, 30]
     unit: sec
