@@ -10,6 +10,7 @@ import pigpio
 from typing import Dict
 import enum
 import uuid
+import time
 
 
 class AlarmLevel(enum.Enum):
@@ -129,7 +130,6 @@ class RotaryLCD(Rotary):
 
 
 if __name__ == "__main__":
-    import time
     from processor.settings import get_live_settings
 
     with RotaryLCD(get_live_settings()) as rotary:
