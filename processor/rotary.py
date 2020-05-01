@@ -22,10 +22,6 @@ class LocalRotary:
         # Cached for simplicity (dicts are ordered)
         self._items: List[str] = list(self.config.keys())
 
-    def reset(self):
-        for item in self.config:
-            item.reset()
-
     def changed(self):
         """
         This should always be called when an item in the rotary is changed

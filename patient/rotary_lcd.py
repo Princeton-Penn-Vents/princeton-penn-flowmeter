@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from processor.setting import Setting
-from processor.display_settings import ResetSetting
+from processor.display_settings import ResetSetting, CurrentSetting
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -65,6 +65,11 @@ class RotaryLCD(Rotary):
             self.pi.stop()
             self.pi = None
 
+    def reset(self):
+        for key, item in self.config.items():
+            if key != "Sensor ID":
+                item.reset()
+
     def push(self) -> None:
         if self.alarm_level == AlarmLevel.LOUD and self.alarms:
             self.buzzer.clear()
@@ -78,9 +83,10 @@ class RotaryLCD(Rotary):
         # Top display keeps ID number!
         super().pushed_turn(dir)
         value = self.value()
-        if isinstance(value, ResetSetting):
+        if isinstance(value, ResetSetting) and value.at_maximum():
             self.reset()
-        self.upper_display()
+        if isinstance(value, CurrentSetting):
+            self.upper_display()
         self.lower_display()
 
     def turn(self, dir: Dir) -> None:
