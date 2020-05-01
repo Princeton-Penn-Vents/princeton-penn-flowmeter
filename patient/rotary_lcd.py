@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 from processor.rotary import Setting
-from patient.rotary import Rotary
-from patient.lcd import LCD, Align
+from patient.rotary import Rotary, Dir
+from patient.lcd import LCD
 from patient.backlight import Backlight
 from patient.buzzer import Buzzer
 import pigpio
 from typing import Dict
 import enum
-import time
 import uuid
 
 
@@ -31,7 +31,7 @@ class RotaryLCD(Rotary):
         self.upper_display()
         self.lower_display()
 
-    def __enter__(self) -> "RotaryLCD":
+    def __enter__(self) -> RotaryLCD:
         self._current = 2  # Current Setting
         self.lcd.__enter__()
         self.backlight.__enter__()
@@ -69,19 +69,22 @@ class RotaryLCD(Rotary):
             self.backlight.orange()
             self.alarm_level = AlarmLevel.QUIET
         else:
+            self.alert()
             super().push()
 
-    def pushed_turned_display(self, up: bool) -> None:
+    def pushed_turn(self, dir: Dir) -> None:
         # Top display keeps ID number!
         self.upper_display()
         self.lower_display()
+        super().pushed_turn(dir)
 
-    def turned_display(self, up: bool) -> None:
+    def turn(self, dir: Dir) -> None:
         # Top display keeps ID number!
         self.upper_display()
         self.lower_display()
+        super().turn(dir)
 
-    def alert_display(self) -> None:
+    def alert(self) -> None:
         if self.alarms and self.alarm_level == AlarmLevel.OFF:
             self.backlight.red()
             self.buzzer.buzz(200)
@@ -92,9 +95,7 @@ class RotaryLCD(Rotary):
             self.alarm_level = AlarmLevel.OFF
 
         self.lower_display()
-
-    def pushed_display(self) -> None:
-        self.alert_display()
+        super().alert()
 
     def upper_display(self) -> None:
         ID = self["Sensor ID"].value

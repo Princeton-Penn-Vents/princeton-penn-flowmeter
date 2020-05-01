@@ -15,9 +15,9 @@ class LocalRotary:
     def __init__(self, config: Dict[str, Setting]):
         self.config = config
         self._alarms: Dict[str, Any] = {}
-        self._changed = (
-            threading.Event()
-        )  # Will be set by changing a value, unset by access (to_dict)
+
+        # Will be set by changing a value, unset by access (to_dict)
+        self._changed = threading.Event()
 
         # Cached for simplicity (dicts are ordered)
         self._items: List[str] = list(self.config.keys())

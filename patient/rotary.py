@@ -19,6 +19,11 @@ class Mode(enum.Enum):
     ALARM = enum.auto()
 
 
+class Dir(enum.Enum):
+    CLOCKWISE = 1
+    COUNTERCLOCKWISE = -1
+
+
 T = TypeVar("T", bound="Rotary")
 
 
@@ -34,47 +39,25 @@ class Rotary(LiveRotary):
 
         self._current: int = 0
 
-    def clockwise(self) -> None:
-        self._current = (self._current + 1) % len(self.config)
-        self.turned_display(up=True)
+    def turn(self, dir: Dir) -> None:
+        self._current = (self._current + dir.value) % len(self.config)
 
-    def counterclockwise(self) -> None:
-        self._current = (self._current - 1) % len(self.config)
-        self.turned_display(up=False)
+    def pushed_turn(self, dir: Dir) -> None:
+        if dir == Dir.CLOCKWISE:
+            self.value().up()
+        else:
+            self.value().down()
 
-    def pushed_clockwise(self) -> None:
-        self.value().up()
         self.changed()
-        self.pushed_turned_display(up=True)
-
-    def pushed_counterclockwise(self) -> None:
-        self.value().down()
-        self.changed()
-        self.pushed_turned_display(up=False)
 
     def push(self) -> None:
-        self.pushed_display()
+        pass
 
     def key(self) -> str:
         return self._items[self._current]
 
     def value(self) -> Setting:
         return self.config[self._items[self._current]]
-
-    def turned_display(self, up: bool) -> None:
-        "Override in subclass to customize"
-        dir = "up" if up else "down"
-        print(f"Changed to {self.key()}")
-
-    def pushed_turned_display(self, up: bool) -> None:
-        "Override in subclass to customize"
-        dir = "up" if up else "down"
-        print(f"Changed {self.key()} {dir}")
-
-    def pushed_display(self) -> None:
-        "Override in subclass to customize"
-        print(f"Pushed")
-        print(rotary)
 
     @property
     def alarms(self) -> Dict[str, Any]:
@@ -86,15 +69,11 @@ class Rotary(LiveRotary):
             self._alarms = item
             self.alert()
 
-    def alert(self) -> None:
-        self.alert_display()
-
-    def alert_display(self) -> None:
-        "Override in subclass to customize"
-        print(f"Displaying alert status")
+    def alert(self):
+        pass
 
     def __enter__(self: T) -> T:
-        glitchFilter = 300  # ms
+        glitchFilter = 100  # ms
 
         # Get pigio connection
         if self.pi is None:
@@ -135,14 +114,14 @@ class Rotary(LiveRotary):
 
                     if self.pushed_in:
                         if levelB:
-                            self.pushed_clockwise()
+                            self.pushed_turn(Dir.CLOCKWISE)
                         else:
-                            self.pushed_counterclockwise()
+                            self.pushed_turn(Dir.COUNTERCLOCKWISE)
                     else:
                         if levelB:
-                            self.clockwise()
+                            self.turn(Dir.CLOCKWISE)
                         else:
-                            self.counterclockwise()
+                            self.turn(Dir.COUNTERCLOCKWISE)
 
         def rotary_switch(ch: int, level: int, _tick: int) -> None:
             # Allow rotations to tell if this is pushed in or out
@@ -167,11 +146,5 @@ class Rotary(LiveRotary):
         return super().__exit__(*exc)
 
 
-if __name__ == "__main__":
-    import signal
-    from processor.settings import get_live_settings
-
-    with Rotary(get_live_settings()) as rotary:
-
-        while True:
-            signal.pause()
+# from processor.settings import get_live_settings
+# with Rotary(get_live_settings()) as rotary:
