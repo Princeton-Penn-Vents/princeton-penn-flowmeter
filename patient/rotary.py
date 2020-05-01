@@ -41,6 +41,7 @@ class Rotary(LiveRotary):
 
     def turn(self, dir: Dir) -> None:
         self._current = (self._current + dir.value) % len(self.config)
+        self.value().active()
 
     def pushed_turn(self, dir: Dir) -> None:
         if dir == Dir.CLOCKWISE:
@@ -69,7 +70,7 @@ class Rotary(LiveRotary):
             self._alarms = item
             self.alert()
 
-    def alert(self):
+    def alert(self) -> None:
         pass
 
     def __enter__(self: T) -> T:

@@ -17,6 +17,7 @@ class Setting(abc.ABC):
         self.unit = unit
         self._lock = threading.Lock()
         self._value: Any = None
+        self._original_value: Any = None
 
     @property
     def name(self) -> str:
@@ -36,6 +37,10 @@ class Setting(abc.ABC):
         # Only used to set values remotely
         with self._lock:
             self._value = val
+
+    def reset(self):
+        with self._lock:
+            self._value = self._original_value
 
     @property
     def default(self) -> Any:
@@ -71,6 +76,11 @@ class Setting(abc.ABC):
     def down(self) -> bool:
         pass
 
+    def active(self) -> None:
+        """
+        Called when this becomes the active item.
+        """
+
 
 class DisplaySetting(Setting):
     def __init__(
@@ -79,6 +89,7 @@ class DisplaySetting(Setting):
         super().__init__(unit=unit, name=name, lcd_name=lcd_name)
 
         self._value = value
+        self._original_value = value
 
     def up(self) -> bool:
         return False
@@ -106,6 +117,7 @@ class IncrSetting(Setting):
         self._min = min
         self._max = max
         self._value = default
+        self._original_value = default
         self._incr = incr
 
     def up(self) -> bool:
@@ -145,6 +157,7 @@ class SelectionSetting(Setting):
         ), "Default must be an index into the list given"
 
         self._value = default
+        self._original_value = default
         self._listing = listing
 
     def up(self) -> bool:
