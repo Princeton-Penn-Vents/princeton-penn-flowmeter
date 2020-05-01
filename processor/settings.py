@@ -19,6 +19,7 @@ def get_setting(c: ConfigView) -> Setting:
             incr=c["incr"].as_number(),
             name=c["name"].get(),
             unit=c["unit"].get() if "unit" in c else None,
+            zero=c["zero"].get() if "zero" in c else None,
             lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
         )
     elif type_name == "Selection":
