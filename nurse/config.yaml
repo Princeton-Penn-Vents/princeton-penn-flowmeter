@@ -1,12 +1,4 @@
 rotary:
-  RR Max:
-    type: Incr
-    name: RespRate Max
-    default: 30
-    min: 5
-    max: 180
-    incr: 5
-    unit: 1/min
 
   PIP Max:
     type: Incr
@@ -49,13 +41,3 @@ rotary:
     default: 700
     min: 50
     max: 2000
-
-  Stale Data Timeout:
-    type: Incr
-    name: Stale Data Timeout
-    lcd_name: StaleDataTimeout
-    default: 8
-    min: 1
-    max: 20
-    incr: 1
-    unit: sec

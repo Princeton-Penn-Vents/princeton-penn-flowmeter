@@ -85,9 +85,6 @@ class Collector(Generator):
         self._collect_thread: Optional[CollectorThread] = None
         self.port = port
 
-        # The collector does not need the full breath analysis
-        self.disable_full_analyze = True
-
     def _get_data(self) -> None:
         if self._collect_thread is not None:
             self._collect_thread.access_collected_data()

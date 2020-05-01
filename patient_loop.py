@@ -11,7 +11,6 @@ init_logger()
 import signal
 import threading
 from pathlib import Path
-import sys
 
 from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
