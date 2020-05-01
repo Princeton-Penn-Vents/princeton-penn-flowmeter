@@ -44,10 +44,12 @@ class Rotary(LiveRotary):
 
     def pushed_clockwise(self) -> None:
         self.value().up()
+        self.changed()
         self.pushed_turned_display(up=True)
 
     def pushed_counterclockwise(self) -> None:
         self.value().down()
+        self.changed()
         self.pushed_turned_display(up=False)
 
     def push(self) -> None:

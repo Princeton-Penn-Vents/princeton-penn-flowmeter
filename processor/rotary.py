@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import abc
-from typing import List, Dict, Union, Any, ValuesView, TypeVar, ItemsView, Iterable
+from typing import List, Dict, Any, ValuesView, TypeVar, Iterable
 
 from processor.setting import Setting
+import threading
 
 
 T = TypeVar("T", bound="LocalRotary")
@@ -14,12 +15,23 @@ class LocalRotary:
     def __init__(self, config: Dict[str, Setting]):
         self.config = config
         self._alarms: Dict[str, Any] = {}
+        self._changed = (
+            threading.Event()
+        )  # Will be set by changing a value, unset by access (to_dict)
 
         # Cached for simplicity (dicts are ordered)
         self._items: List[str] = list(self.config.keys())
 
+    def changed(self):
+        """
+        This should always be called when an item in the rotary is changed
+        """
+
+        self._changed.set()
+
     def to_dict(self) -> Dict[str, Any]:
         "Convert config to dict"
+        self._changed.clear()
         return {k: v.to_dict() for k, v in self.config.items()}
 
     @property

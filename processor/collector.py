@@ -43,7 +43,7 @@ class CollectorThread(threading.Thread):
 
         pub_socket.bind(f"tcp://*:{self.parent.port}")
 
-        every = 0
+        last = time.monotonic()
         while not self.parent.stop.is_set():
             ready_events = sub_socket.poll(0.1)
             for _ in range(ready_events):
@@ -56,16 +56,18 @@ class CollectorThread(threading.Thread):
                 p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})
-                every += 1
-                every %= 50
-                if every == 0:
-                    with self.parent.lock:
-                        pub_socket.send_json(self.parent.rotary.to_dict())
 
                 with self._collector_lock:
                     self._time.inject_value(t)
                     self._flow.inject_value(f)
                     self._pressure.inject_value(p)
+
+            # Send rotary every ~1 second, regardless of status of input
+            if time.monotonic() > (last + 1) or self.parent.rotary._changed.is_set():
+                with self.parent.lock:
+                    pub_socket.send_json(self.parent.rotary.to_dict())
+                last = time.monotonic()
+                self.parent.rotary._changed.clear()
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._collector_lock:

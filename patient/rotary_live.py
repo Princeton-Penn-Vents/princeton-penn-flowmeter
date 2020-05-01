@@ -20,22 +20,30 @@ class LiveRotary(LocalRotary):
 
         self._live_save_stop = threading.Event()
         self._live_save_thread: Optional[threading.Thread] = None
+        self._live_save_change = threading.Event()
+
+    def changed(self):
+        self._live_save_change.set()
+        super().changed()
 
     def _live_save(self, filename: Path, every: float) -> None:
         while not self._live_save_stop.is_set():
-            d = {
-                "rotary-live": {
-                    key: {"default": self.config[key].default}
-                    for key in config["rotary-live"]
-                },
-                "rotary": {
-                    key: {"default": self.config[key].default}
-                    for key in config["rotary"]
-                },
-            }
+            if self._live_save_change.is_set():
+                d = {
+                    "rotary-live": {
+                        key: {"default": self.config[key].default}
+                        for key in config["rotary-live"]
+                    },
+                    "rotary": {
+                        key: {"default": self.config[key].default}
+                        for key in config["rotary"]
+                    },
+                }
 
-            with open(filename, "w") as f:
-                yaml.dump(d, f)
+                with open(filename, "w") as f:
+                    yaml.dump(d, f)
+
+                self._live_save_change.clear()
 
             self._live_save_stop.wait(every)
 

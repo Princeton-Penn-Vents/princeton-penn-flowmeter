@@ -221,8 +221,9 @@ def measure_breaths(time, flow, volume, pressure):
         breath_times = find_breaths(*turning_points)
 
     except Exception as err:
-        if (not isinstance(err, CantComputeDerivative) and
-            config["global"]["debug"].get(bool)):
+        if not isinstance(err, CantComputeDerivative) and config["global"]["debug"].get(
+            bool
+        ):
             raise
         return []
 
