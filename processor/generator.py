@@ -101,9 +101,6 @@ class Generator(abc.ABC):
         # Last analyze run in local time - used by analyze_as_needed
         self._last_ana = time.monotonic()
 
-        # Turn off the full analyze (for on-device flow/pressure only)
-        self.disable_full_analyze = False
-
         # Last partial analyze for plotting
         self._last_get: Optional[float] = None
 
@@ -196,8 +193,7 @@ class Generator(abc.ABC):
         self._analyze_timeseries()
 
         if time.monotonic() - self._last_ana > self.analyze_every:
-            if not self.disable_full_analyze:
-                self._analyze_full()
+            self._analyze_full()
 
             self._last_ana = time.monotonic()
 
@@ -335,7 +331,8 @@ class Generator(abc.ABC):
             else (10 if self._debug else None)
         )
 
-        if stale_threshold is not None:
+        # This can be None or 0 to deactivate
+        if stale_threshold:
             default = timestamp - stale_threshold
             stale = {}
             for field in self._cumulative:

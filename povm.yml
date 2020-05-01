@@ -42,3 +42,22 @@ rotary:
     max: 100
     incr: 1
     unit: cm H2O
+
+  RR Max:
+    type: Incr
+    name: RespRate Max
+    default: 40
+    min: 5
+    max: 180
+    incr: 5
+    unit: 1/min
+
+  Stale Data Timeout:
+    type: Incr
+    name: Stale Data Timeout
+    lcd_name: Stale Breaths
+    default: 10
+    min: 0
+    max: 60
+    incr: 1
+    unit: sec
