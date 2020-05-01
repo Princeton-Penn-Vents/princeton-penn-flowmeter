@@ -48,7 +48,7 @@ class RemoteThread(threading.Thread):
     def run(self, _ctx: zmq.Context, sub_socket: zmq.Socket) -> None:
 
         sub_socket.connect(self._address)
-        sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+        sub_socket.subscribe(b"")
 
         while not self.parent.stop.is_set():
             # Allow changing connections

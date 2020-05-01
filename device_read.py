@@ -15,7 +15,7 @@ with zmq.Context() as ctx, ctx.socket(zmq.SUB) as sub_socket:
     print("Collecting data")
 
     sub_socket.connect("tcp://localhost:5556")
-    sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+    sub_socket.subscribe(b"")
 
     for i in range(100):
 

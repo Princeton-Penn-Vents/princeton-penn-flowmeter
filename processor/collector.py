@@ -44,7 +44,10 @@ class CollectorThread(threading.Thread):
         self, _ctx: zmq.Context, sub_socket: zmq.Socket, pub_socket: zmq.Socket
     ) -> None:
         sub_socket.connect("tcp://localhost:5556")
-        sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+        sub_socket.subscribe(b"")
+
+        # Up to 60 seconds of data (roughly, not promised)
+        pub_socket.hwm = 3000
 
         pub_socket.bind(f"tcp://*:{self.parent.port}")
 
