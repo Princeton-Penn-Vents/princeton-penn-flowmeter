@@ -26,7 +26,7 @@ if arg.port is not None:
     gen = RemoteGenerator(address=address)
 else:
     print("Local Generator")
-    gen = LocalGenerator()
+    gen = LocalGenerator(i=1)
 
 print(f"Reporting every {arg.n} seconds, use Ctrl-C to exit.")
 
