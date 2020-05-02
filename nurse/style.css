@@ -150,7 +150,7 @@ PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QLineEdit {
 
 /* Grid tile */
 
-PatientSensor {
+PatientSensor, WaitingWidget {
   background-color: black;
   border: 0.5px solid #202020;
 }
@@ -161,6 +161,11 @@ PatientSensor[alert_status="ALERT"] {
 
 PatientSensor[alert_status="DISCON"] {
   background-color: #000050;
+}
+
+WaitingWidget QLabel {
+  font-size: 24px;
+  font-weight: bold;
 }
 
 /* Grid numbers on the side */

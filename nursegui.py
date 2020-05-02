@@ -37,14 +37,20 @@ DIR = Path(__file__).parent.resolve()
 logger = logging.getLogger("povm")
 
 
+class WaitingWidget(QtWidgets.QFrame):
+    def __init__(self):
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addStretch()
+        text = QtWidgets.QLabel("Waiting for a device to be connected...")
+        text.setAlignment(Qt.AlignCenter)
+        layout.addWidget(text)
+        layout.addStretch()
+
+
 class MainStack(QtWidgets.QWidget):
     def __init__(
-        self,
-        *,
-        listener: FindBroadcasts,
-        displays: Optional[int],
-        debug: bool,
-        sim: bool,
+        self, *, listener: FindBroadcasts, displays: Optional[int], sim: bool,
     ):
         super().__init__()
 
@@ -60,6 +66,7 @@ class MainStack(QtWidgets.QWidget):
         layout.addLayout(grid_layout)
 
         self.graphs: List[PatientSensor] = []
+        self.infos: List[WaitingWidget] = []
 
         if displays:
             for i in range(displays):
@@ -71,6 +78,10 @@ class MainStack(QtWidgets.QWidget):
                 gen.run()  # Close must be called
 
                 self.add_item(gen)
+        else:
+            waiting = WaitingWidget()
+            self.infos.append(waiting)
+            self.grid_layout.addWidget(waiting)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.timeout.connect(self.update_plots)
@@ -110,6 +121,9 @@ class MainStack(QtWidgets.QWidget):
 
     def add_item(self, gen: Generator):
         ind = self.grid_layout.count()
+        if len(self.graphs) == 0:
+            waiting = self.infos.pop()
+            self.grid_layout.removeWidget(waiting)
         i, j = self._get_next_empty()
 
         graph = PatientSensor(i=ind, gen=gen)
@@ -133,8 +147,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setObjectName("MainWindow")
 
-        # May be expensive, probably only enable if we multithread the draw
-        # pg.setConfigOptions(antialias=True)
         pg.setConfigOption("background", (0, 0, 0, 0))
 
         gis = GraphInfo()
@@ -200,7 +212,7 @@ def main(argv, *, fullscreen: bool, debug: bool, **kwargs):
     app = QtWidgets.QApplication(argv)
 
     with FindBroadcasts() as listener:
-        main = MainWindow(debug=debug, listener=listener, **kwargs)
+        main = MainWindow(listener=listener, **kwargs)
         if fullscreen:
             main.showFullScreen()
         else:
