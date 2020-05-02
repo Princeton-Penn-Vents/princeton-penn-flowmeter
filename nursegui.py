@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import pyqtgraph as pg
 
 # stdlib
@@ -8,7 +9,7 @@ from string import Template
 from pathlib import Path
 import signal
 import logging
-from typing import Optional
+from typing import Optional, List, Tuple
 
 from nurse.qt import (
     QtCore,
@@ -58,32 +59,18 @@ class MainStack(QtWidgets.QWidget):
         self.grid_layout = grid_layout
         layout.addLayout(grid_layout)
 
-        self.graphs = []
+        self.graphs: List[PatientSensor] = []
 
         if displays:
-            height = math.ceil(math.sqrt(displays))
-            width = math.ceil(displays / height)
-
-            # Avoid wiggles when updating
-            for i in range(width):
-                grid_layout.setColumnStretch(i, 3)
-
             for i in range(displays):
-                gen: Generator
-
-                if not sim:
-                    gen = RemoteGenerator(address="tcp://127.0.0.1:8100")
-                else:
-                    gen = LocalGenerator()
-                gen.rotary["Sensor ID"].value = i + 1
-
+                gen = (
+                    RemoteGenerator(address="tcp://127.0.0.1:8100")
+                    if not sim
+                    else LocalGenerator(i=i + 1)
+                )
                 gen.run()  # Close must be called
 
-                graph = PatientSensor(gen=gen, i=i)
-                self.graphs.append(graph)
-
-                grid_layout.addWidget(graph, *reversed(divmod(i, height)))
-                graph.set_plot()
+                self.add_item(gen)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.timeout.connect(self.update_plots)
@@ -103,7 +90,7 @@ class MainStack(QtWidgets.QWidget):
 
             self.add_item(gen)
 
-    def add_item(self, gen: Generator):
+    def _get_next_empty(self) -> Tuple[int, int]:
         ind = self.grid_layout.count()
         n_items = ind + 1
         height = math.ceil(math.sqrt(n_items))
@@ -115,8 +102,15 @@ class MainStack(QtWidgets.QWidget):
 
         for i in range(height):
             for j in range(width):
-                if self.grid_layout.itemAtPosition(i, j) is None:
-                    break
+                empty = self.grid_layout.itemAtPosition(i, j) is None
+                if empty:
+                    return i, j
+
+        raise RuntimeError("No empty space!")
+
+    def add_item(self, gen: Generator):
+        ind = self.grid_layout.count()
+        i, j = self._get_next_empty()
 
         graph = PatientSensor(i=ind, gen=gen)
         self.graphs.append(graph)

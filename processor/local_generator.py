@@ -8,8 +8,9 @@ from processor.generator import Generator, Status
 
 
 class LocalGenerator(Generator):
-    def __init__(self):
+    def __init__(self, *, i: int):
         super().__init__()
+        self.rotary["Sensor ID"].value = i
         self.status = Status.OK
 
         self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
@@ -17,7 +18,6 @@ class LocalGenerator(Generator):
         self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
 
         self._start_time = int(1000 * time.monotonic())
-        print(self._start_time)
         (self._sim,) = start_sims(1, self._start_time, 12000000)
 
     def _get_data(self):
