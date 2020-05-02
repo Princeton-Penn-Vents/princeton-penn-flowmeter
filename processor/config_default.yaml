@@ -14,14 +14,6 @@ rotary-live:
     type: Filename
     name: Log filename
 
-  Sensor ID:
-    type: Incr
-    name: Sensor ID
-    default: 1
-    min: 1
-    max: 24
-    incr: 1
-
   Reset Setting:
     type: Reset
     name: Turn to Reset
@@ -39,3 +31,11 @@ rotary:
     default: 3
     items: [1, 3, 5, 10, 20, 30]
     unit: sec
+
+  Sensor ID:
+    type: Incr
+    name: Sensor ID
+    default: 1
+    min: 1
+    max: 24
+    incr: 1

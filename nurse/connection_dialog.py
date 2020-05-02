@@ -7,7 +7,7 @@ from nurse.qt import (
     Qt,
 )
 
-from processor.remote_generator import RemoteGenerator
+from processor.generator import Generator
 
 
 class ManualTab(QtWidgets.QWidget):
@@ -49,10 +49,12 @@ class TabbedConnection(QtWidgets.QTabWidget):
 
 
 class ConnectionDialog(QtWidgets.QDialog):
-    def __init__(self, parent: QtWidgets.QWidget):
+    def __init__(self, listener: FindBroadcasts, gen: Generator):
         super().__init__()
 
-        self.p = parent
+        self.gen = gen
+        self.listener = listener
+
         self.setWindowModality(Qt.ApplicationModal)
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -69,17 +71,15 @@ class ConnectionDialog(QtWidgets.QDialog):
 
     def exec_(self):
 
-        gen: RemoteGenerator = self.p.gen
-        i = self.p.label
-        listener: FindBroadcasts = self.p.parent().listener
+        i = self.gen.rotary["Sensor ID"]
 
-        self.setWindowTitle(f"Patient box {i+1} connection")
+        self.setWindowTitle(f"Patient box {i} connection")
 
-        parsed = urlparse(gen.address)
+        parsed = urlparse(self.gen.address)
         self.tabbed.manual_tab.ip_address.setText(parsed.hostname)
         self.tabbed.manual_tab.port.setText(str(parsed.port))
 
-        self.tabbed.detected_tab.detected.addItems(sorted(listener.detected))
+        self.tabbed.detected_tab.detected.addItems(sorted(self.listener.detected))
 
         return super().exec_()
 
