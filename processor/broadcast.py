@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from zeroconf import ServiceInfo, Zeroconf
-from ifaddr import get_adapters
+from ifaddr import get_adapters  # type: ignore
 from processor.collector import MAC_STR
 from typing import Iterator
 import threading
@@ -16,13 +16,13 @@ def get_ip() -> Iterator[str]:
 
 
 class Broadcast:
-    def __init__(self, service: str) -> None:
+    def __init__(self, service: str, port: int = 8100) -> None:
         self.zeroconf = Zeroconf()
         self.info = ServiceInfo(
             "_http._tcp.local.",
             "Princeton Open Vent Monitor._http._tcp.local.",
             addresses=[ipaddress.ip_address(ip).packed for ip in get_ip()],
-            port=8100,
+            port=port,
             properties={
                 "type": "povm",
                 "mac_addr": MAC_STR,
@@ -36,7 +36,6 @@ class Broadcast:
         return self
 
     def __exit__(self, *exc) -> None:
-        # Unregister service for whatever reason
         self.zeroconf.unregister_service(self.info)
         self.zeroconf.close()
 

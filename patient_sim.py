@@ -10,7 +10,8 @@ from typing import Iterator
 import signal
 
 from sim.start_sims import start_sims
-from processor.config import ArgumentParser
+from processor.config import ArgumentParser, init_logger
+from processor.broadcast import Broadcast
 
 
 def frequency(length: float, event: threading.Event) -> Iterator[None]:
@@ -57,6 +58,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
+    init_logger()
+
     sim_gen = SimGenerator()
 
     def ctrl_c(_signal, _frame):
@@ -66,10 +69,11 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, ctrl_c)
 
-    if args.n > 1:
-        print("Serving; press Control-C quit")
-        addresses = ((args.port + i) for i in range(args.n))
-        with ThreadPoolExecutor(max_workers=args.n + 1) as e:
-            e.map(sim_gen.run, addresses)
-    else:
-        sim_gen.run(args.port)
+    with Broadcast("patient_sim", port=args.port):
+        if args.n > 1:
+            print("Serving; press Control-C quit")
+            addresses = ((args.port + i) for i in range(args.n))
+            with ThreadPoolExecutor(max_workers=args.n + 1) as e:
+                e.map(sim_gen.run, addresses)
+        else:
+            sim_gen.run(args.port)

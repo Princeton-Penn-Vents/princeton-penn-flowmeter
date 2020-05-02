@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import abc
 from typing import List, Dict, Any, ValuesView, TypeVar, Iterable
 
 from processor.setting import Setting
