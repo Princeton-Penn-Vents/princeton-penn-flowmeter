@@ -16,12 +16,13 @@ from nurse.qt import QtWidgets
 from processor.settings import get_live_settings
 from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
+from processor.broadcast import Broadcast
 
 DIR = Path(__file__).parent.resolve()
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port
-) as collector:
+) as collector, Broadcast("patientgui"):
 
     rotary.live_load(DIR / "povm-live.yml")
     rotary.live_save(DIR / "povm-live.yml", every=10)
