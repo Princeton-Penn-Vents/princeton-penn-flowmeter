@@ -167,16 +167,19 @@ class PatientSensor(QtGui.QFrame):
     @Slot()
     def click_number(self):
         if isinstance(self.gen, RemoteGenerator):
-            dialog = ConnectionDialog(self.parent().listener, self.gen)
+            dialog = ConnectionDialog(
+                self.parent().listener, self.sensor_id, self.gen.address
+            )
             if dialog.exec_():
                 self.gen.address = dialog.connection_address
         else:
-            dialog = QtWidgets.QMessageBox(
-                QtWidgets.QMessageBox.Information,
-                "Local Generator",
-                "Local generators cannot be changed, run without --sim next time.",
+            dialog = ConnectionDialog(
+                self.parent().listener, self.sensor_id, "tcp://127.0.0.1:8100"
             )
-            dialog.exec_()
+            if dialog.exec_():
+                self.gen.close()
+                self.gen = RemoteGenerator(address=dialog.connection_address)
+                self.gen.run()
 
     def set_plot(self):
         assert len(self.curves) == 0
@@ -215,7 +218,7 @@ class PatientSensor(QtGui.QFrame):
                         self.gen.time[select], getattr(self.gen, key)[select]
                     )
                 else:
-                    self.curves[key].setData(None, None)
+                    self.curves[key].setData(x=None, y=None)
 
             # Change of status requires a background color change
             self.status = self.gen.status
