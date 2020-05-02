@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from zeroconf import Zeroconf, ServiceBrowser, ServiceListener
 import threading
+import queue
 import logging
 import ipaddress
-from typing import Set
+from typing import Set, Callable
 from processor.config import init_logger
 
 logger = logging.getLogger("povm")
@@ -14,22 +15,30 @@ logger = logging.getLogger("povm")
 class Listener(ServiceListener):
     def __init__(self):
         self.detected: Set[str] = set()
+        self.inject: Callable[[], None] = lambda: None
+        self.queue = queue.Queue()
+
+    def _injects(self, addrs: Set[str]):
+        new = addrs - self.detected
+        self.detected |= addrs
+        for item in new:
+            self.queue.put(item)
+        self.inject()
 
     def add_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        adrs = self._add_if_unseen("added", zeroconf, service_type, name)
-        self.detected |= adrs
+        addrs = self._add_if_unseen("added", zeroconf, service_type, name)
+        self._injects(addrs)
 
     def update_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        adrs = self._add_if_unseen("updated", zeroconf, service_type, name)
-        self.detected |= adrs
+        addrs = self._add_if_unseen("updated", zeroconf, service_type, name)
+        self._injects(addrs)
 
     def remove_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        adrs = self._add_if_unseen("updated", zeroconf, service_type, name)
-        print(*adrs)
+        self._add_if_unseen("updated", zeroconf, service_type, name)
 
     def _add_if_unseen(
         self, status: str, zeroconf: Zeroconf, service_type: str, name: str
-    ):
+    ) -> Set[str]:
         if "Princeton Open Vent Monitor" in name:
             info = zeroconf.get_service_info(service_type, name)
             if not info:
@@ -66,6 +75,18 @@ class FindBroadcasts:
     @property
     def detected(self) -> Set[str]:
         return self.listener.detected
+
+    @property
+    def inject(self) -> Callable[[], None]:
+        return self.listener.inject
+
+    @inject.setter
+    def inject(self, func: Callable[[], None]):
+        self.listener.inject = func
+
+    @property
+    def queue(self) -> queue.Queue:
+        return self.listener.queue
 
 
 if __name__ == "__main__":

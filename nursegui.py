@@ -10,12 +10,14 @@ from pathlib import Path
 import signal
 import logging
 from typing import Optional, List, Tuple
+import threading
 
 from nurse.qt import (
     QtCore,
     QtWidgets,
     Qt,
     Slot,
+    Signal,
     VBoxLayout,
     GridLayout,
 )
@@ -46,6 +48,10 @@ class WaitingWidget(QtWidgets.QFrame):
         text.setAlignment(Qt.AlignCenter)
         layout.addWidget(text)
         layout.addStretch()
+
+
+class InjectDiscovery(QtCore.QObject):
+    inject = Signal()
 
 
 class MainStack(QtWidgets.QWidget):
@@ -90,16 +96,34 @@ class MainStack(QtWidgets.QWidget):
 
         self.header.add_btn.clicked.connect(self.add_item_dialog)
 
+        self.injector = InjectDiscovery()
+        self.queue_lock = threading.Lock()
+
+        if displays is None:
+            self.injector.inject.connect(self.add_from_queue)
+            self.listener.inject = self.injector.inject.emit
+
+    @Slot()
+    def add_from_queue(self):
+        # The header doesn't display properly if this runs at the same time via
+        # different triggers
+        with self.queue_lock:
+            while not self.listener.queue.empty():
+                address = self.listener.queue.get()
+                self.add_new_by_address(address)
+
     @Slot()
     def add_item_dialog(self):
         dialog = ConnectionDialog(
             self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
         )
         if dialog.exec_():
-            gen = RemoteGenerator(address=dialog.connection_address)
-            gen.run()
+            self.add_new_by_address(dialog.connection_address)
 
-            self.add_item(gen)
+    def add_new_by_address(self, addr: str):
+        gen = RemoteGenerator(address=addr)
+        gen.run()
+        self.add_item(gen)
 
     def _get_next_empty(self) -> Tuple[int, int]:
         ind = self.grid_layout.count()
