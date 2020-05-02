@@ -148,6 +148,7 @@ class MainStack(QtWidgets.QWidget):
         if len(self.graphs) == 0:
             waiting = self.infos.pop()
             self.grid_layout.removeWidget(waiting)
+            waiting.setParent(None)
         i, j = self._get_next_empty()
 
         graph = PatientSensor(i=ind, gen=gen)
