@@ -15,43 +15,44 @@ class Listener(ServiceListener):
     def __init__(self):
         self.detected: Set[str] = set()
 
-    def remove_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        logger.info(f"Service {name} removed")
+    def add_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
+        adrs = self._add_if_unseen("added", zeroconf, service_type, name)
+        self.detected |= adrs
 
     def update_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        self._add_if_unseen("update", zeroconf, service_type, name)
+        adrs = self._add_if_unseen("updated", zeroconf, service_type, name)
+        self.detected |= adrs
+
+    def remove_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
+        adrs = self._add_if_unseen("updated", zeroconf, service_type, name)
+        print(*adrs)
 
     def _add_if_unseen(
         self, status: str, zeroconf: Zeroconf, service_type: str, name: str
     ):
-        if name == "Princeton Open Vent Monitor._http._tcp.local.":
+        if "Princeton Open Vent Monitor" in name:
             info = zeroconf.get_service_info(service_type, name)
             if not info:
-                logger.info(f"Not adding Service {name}, missing info!")
+                logger.info(f"Service {name} not {status}, missing info!")
                 return
 
             addresses = {
                 f"tcp://{ipaddress.ip_address(ip)}:{info.port}" for ip in info.addresses
             }
-            self.detected |= addresses
 
             macaddr = info.properties.get(b"mac_addr")
             service = info.properties.get(b"service")
 
-            logger.info(
-                f"Service {name} {status} (total {len(self.detected)}): {addresses} - {macaddr} - {service}"
-            )
+            logger.info(f"Service {name} {status}: {addresses} - {macaddr} - {service}")
+            return addresses
 
         else:
-            logger.info(f"Not adding Service {name}")
-
-    def add_service(self, zeroconf: Zeroconf, service_type: str, name: str) -> None:
-        self._add_if_unseen("update", zeroconf, service_type, name)
+            logger.info(f"Service {name} not {status}")
+            return set()
 
 
 class FindBroadcasts:
     def __init__(self):
-
         self.zeroconf = Zeroconf()
         self.listener = Listener()
 

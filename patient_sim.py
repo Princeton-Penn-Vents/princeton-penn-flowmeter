@@ -36,18 +36,20 @@ class SimGenerator:
     def run(self, port: int, _ctx: zmq.Context, pub_socket: zmq.Socket):
         pub_socket.bind(f"tcp://*:{port}")
 
-        start_time = int(1_000 * time.monotonic())  # milliseconds
-        (sim,) = start_sims(1, start_time, 12_000_000)  # milliseconds
+        with Broadcast("patient_sim", port=port):
 
-        for _ in frequency(1 / 50, self.done):
-            d = sim.get_next()
-            mod = {
-                "t": int(time.monotonic() * 1000),
-                "f": d["F"],
-                "p": d["P"],
-            }
+            start_time = int(1_000 * time.monotonic())  # milliseconds
+            (sim,) = start_sims(1, start_time, 12_000_000)  # milliseconds
 
-            pub_socket.send_json(mod)
+            for _ in frequency(1 / 50, self.done):
+                d = sim.get_next()
+                mod = {
+                    "t": int(time.monotonic() * 1000),
+                    "f": d["F"],
+                    "p": d["P"],
+                }
+
+                pub_socket.send_json(mod)
 
 
 if __name__ == "__main__":
@@ -69,11 +71,10 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, ctrl_c)
 
-    with Broadcast("patient_sim", port=args.port):
-        if args.n > 1:
-            print("Serving; press Control-C quit")
-            addresses = ((args.port + i) for i in range(args.n))
-            with ThreadPoolExecutor(max_workers=args.n + 1) as e:
-                e.map(sim_gen.run, addresses)
-        else:
-            sim_gen.run(args.port)
+    if args.n > 1:
+        print("Serving; press Control-C quit")
+        addresses = ((args.port + i) for i in range(args.n))
+        with ThreadPoolExecutor(max_workers=args.n + 1) as e:
+            e.map(sim_gen.run, addresses)
+    else:
+        sim_gen.run(args.port)

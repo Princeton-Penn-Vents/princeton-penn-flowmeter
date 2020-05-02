@@ -1,7 +1,7 @@
 import pyqtgraph as pg
 
 from datetime import datetime
-from urllib.parse import urlparse
+
 from typing import Dict, Any
 
 from nurse.qt import (
@@ -14,10 +14,11 @@ from nurse.qt import (
     FormLayout,
 )
 
-from nurse.common import prefill, GraphInfo
+from nurse.common import GraphInfo
 
 from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
+from nurse.connection_dialog import ConnectionDialog
 
 INFO_STRINGS = {
     "Avg Flow": ".0f",
@@ -76,7 +77,7 @@ class NumbersWidget(QtWidgets.QWidget):
 
 
 class PatientTitleWidget(QtWidgets.QWidget):
-    def __init__(self, i: int, debug: bool):
+    def __init__(self, i: int):
         super().__init__()
 
         layout = HBoxLayout(self)
@@ -85,7 +86,7 @@ class PatientTitleWidget(QtWidgets.QWidget):
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(prefill[i] if i < 20 and debug else f"Patient {i+1}")
+        self.name_edit.setText(f"Patient {i+1}")
         layout.addWidget(self.name_edit)
 
     def repolish(self):
@@ -108,46 +109,6 @@ class GraphicsView(pg.GraphicsView):
             self.parent().parent().parent().parent().drilldown_activate(self.i)
 
 
-class ConnectionDialog(QtWidgets.QDialog):
-    def __init__(self, parent):
-        super().__init__()
-        self.p = parent
-        self.setWindowModality(Qt.ApplicationModal)
-
-        layout = QtWidgets.QVBoxLayout(self)
-
-        form_layout = QtWidgets.QFormLayout()
-        layout.addLayout(form_layout)
-
-        self.ip_address = QtWidgets.QLineEdit()
-        form_layout.addRow("IP Address:", self.ip_address)
-
-        self.port = QtWidgets.QLineEdit()
-        validator = QtGui.QIntValidator()
-        self.port.setValidator(validator)
-        form_layout.addRow("Port:", self.port)
-
-        buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
-        )
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
-
-    def exec_(self):
-
-        gen: RemoteGenerator = self.p.gen
-        i = self.p.label
-
-        self.setWindowTitle(f"Patient box {i+1} connection")
-
-        parsed = urlparse(gen.address)
-        self.ip_address.setText(parsed.hostname)
-        self.port.setText(str(parsed.port))
-
-        return super().exec_()
-
-
 class PatientSensor(QtGui.QFrame):
     @property
     def status(self):
@@ -162,22 +123,20 @@ class PatientSensor(QtGui.QFrame):
             self.style().unpolish(self)
             self.style().polish(self)
 
-    def __init__(
-        self, i: int, *args, gen: Generator, logging: str = None, debug: bool, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
+    def __init__(self, i: int, *, gen: Generator):
+
+        super().__init__()
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.label = i
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
-        self.logging = logging
 
         layout = HBoxLayout(self)
 
         layout_left = VBoxLayout()
         layout.addLayout(layout_left)
 
-        self.title_widget = PatientTitleWidget(i, debug=debug)
+        self.title_widget = PatientTitleWidget(i)
         layout_left.addWidget(self.title_widget)
 
         self.graphview = GraphicsView(parent=self, i=i)
@@ -207,12 +166,8 @@ class PatientSensor(QtGui.QFrame):
     def click_number(self):
         if isinstance(self.gen, RemoteGenerator):
             dialog = ConnectionDialog(self)
-            ok = dialog.exec_()
-            if ok:
-                port = int(dialog.port.text())
-                ip_address = dialog.ip_address.text()
-
-                self.gen.address = f"tcp://{ip_address}:{port}"
+            if dialog.exec_():
+                self.gen.address = dialog.connection_address
         else:
             dialog = QtWidgets.QMessageBox(
                 QtWidgets.QMessageBox.Information,

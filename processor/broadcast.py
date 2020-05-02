@@ -20,7 +20,7 @@ class Broadcast:
         self.zeroconf = Zeroconf()
         self.info = ServiceInfo(
             "_http._tcp.local.",
-            "Princeton Open Vent Monitor._http._tcp.local.",
+            f"Princeton Open Vent Monitor {port}._http._tcp.local.",
             addresses=[ipaddress.ip_address(ip).packed for ip in get_ip()],
             port=port,
             properties={

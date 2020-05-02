@@ -8,6 +8,7 @@ from string import Template
 from pathlib import Path
 import signal
 import logging
+from typing import Optional
 
 from nurse.qt import (
     QtCore,
@@ -23,10 +24,11 @@ from nurse.header import MainHeaderWidget
 from nurse.grid import PatientSensor
 from nurse.drilldown import DrilldownWidget
 
-from processor.generator import Status, Generator
+from processor.generator import Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 from processor.config import init_logger, ArgumentParser
+from processor.listener import FindBroadcasts
 
 DIR = Path(__file__).parent.resolve()
 
@@ -37,18 +39,14 @@ class MainStack(QtWidgets.QWidget):
     def __init__(
         self,
         *,
-        ip: str,
-        port: int,
-        displays,
-        logging: str,
+        listener: FindBroadcasts,
+        displays: Optional[int],
         debug: bool,
         sim: bool,
-        offset: int,
     ):
         super().__init__()
 
-        height = math.ceil(math.sqrt(displays))
-        width = math.ceil(displays / height)
+        self.listener = listener
 
         layout = VBoxLayout(self)
 
@@ -56,37 +54,62 @@ class MainStack(QtWidgets.QWidget):
         layout.addWidget(self.header)
 
         grid_layout = GridLayout()
+        self.grid_layout = grid_layout
         layout.addLayout(grid_layout)
-
-        # Avoid wiggles when updating
-        for i in range(width):
-            grid_layout.setColumnStretch(i, 3)
 
         self.graphs = []
 
-        for i in range(displays):
-            gen: Generator
+        if displays:
+            height = math.ceil(math.sqrt(displays))
+            width = math.ceil(displays / height)
 
-            if not sim:
-                gen = RemoteGenerator(address=f"tcp://{ip}:{port + i}")
-            else:
-                gen = LocalGenerator()
+            # Avoid wiggles when updating
+            for i in range(width):
+                grid_layout.setColumnStretch(i, 3)
 
-            gen.run()  # Close must be called
+            for i in range(displays):
+                gen: Generator
 
-            graph = PatientSensor(i + offset, gen=gen, logging=logging, debug=debug)
-            self.graphs.append(graph)
+                if not sim:
+                    gen = RemoteGenerator(address="tcp://127.0.0.1:8100")
+                else:
+                    gen = LocalGenerator()
 
-            grid_layout.addWidget(graph, *reversed(divmod(i, height)))
-            graph.set_plot()
+                gen.run()  # Close must be called
+
+                graph = PatientSensor(i, gen=gen)
+                self.graphs.append(graph)
+
+                grid_layout.addWidget(graph, *reversed(divmod(i, height)))
+                graph.set_plot()
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.timeout.connect(self.update_plots)
         self.qTimer.setSingleShot(True)
         self.qTimer.start()
 
+    def add_item(self, gen: Generator):
+        n_items = self.grid_layout.count() + 1
+        height = math.ceil(math.sqrt(n_items))
+        width = math.ceil(n_items / height)
+
+        # Avoid wiggles when updating
+        for i in range(width):
+            self.grid_layout.setColumnStretch(i, 3)
+
+        for i in range(height):
+            for j in range(width):
+                if self.grid_layout.itemAtPosition(i, j) is None:
+                    break
+
+        graph = PatientSensor(n_items, gen=gen)
+        self.graphs.append(graph)
+
+        self.grid_layout.addWidget(graph, i, j)
+        graph.set_plot()
+
     @Slot()
-    def update_plots(self):
+    def update_plots(self) -> None:
         if self.isVisible():
             for graph in self.graphs:
                 graph.update_plot()
@@ -96,7 +119,7 @@ class MainStack(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *, ip: str, port: int, displays, **kwargs):
+    def __init__(self, *, displays: Optional[int], listener: FindBroadcasts, **kwargs):
         super().__init__()
         self.setObjectName("MainWindow")
 
@@ -111,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t = s.substitute(**gis.graph_pens)
             self.setStyleSheet(t)
 
-        self.main_stack = MainStack(ip=ip, port=port, displays=displays, **kwargs)
+        self.main_stack = MainStack(listener=listener, displays=displays, **kwargs)
         stacked_widget = QtWidgets.QStackedWidget()
         stacked_widget.addWidget(self.main_stack)
 
@@ -153,7 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(evt)
 
 
-def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kwargs):
+def main(argv, *, fullscreen: bool, debug: bool, **kwargs):
 
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
@@ -166,57 +189,42 @@ def main(argv, *, fullscreen: bool, logfile: str, debug: bool, config: str, **kw
 
     app = QtWidgets.QApplication(argv)
 
-    main = MainWindow(debug=debug, **kwargs)
-    if fullscreen:
-        main.showFullScreen()
-    else:
-        size = app.screens()[0].availableSize()
-        if size.width() < 2000 or size.height() < 1200:
-            main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
-            main.showMaximized()
+    with FindBroadcasts() as listener:
+        main = MainWindow(debug=debug, listener=listener, **kwargs)
+        if fullscreen:
+            main.showFullScreen()
         else:
-            main.resize(1920, 1080)
-            main.showNormal()
+            size = app.screens()[0].availableSize()
+            if size.width() < 2000 or size.height() < 1200:
+                main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
+                main.showMaximized()
+            else:
+                main.resize(1920, 1080)
+                main.showNormal()
 
-    def ctrl_c(_sig_num, _stack_frame):
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-        main.close()
+        def ctrl_c(_sig_num, _stack_frame):
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            main.close()
 
-    signal.signal(signal.SIGINT, ctrl_c)
-    sys.exit(app.exec_())
+        signal.signal(signal.SIGINT, ctrl_c)
+        sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
-    parser.add_argument("--port", type=int, default=8100, help="Select a starting port")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument(
-        "--displays",
-        "-n",
-        type=int,
-        default=20,
-        help="# of displays, currently not dynamic",
-    )
-    parser.add_argument(
-        "--offset", type=int, default=0, help="Offset the numbers by this amount"
-    )
-    parser.add_argument(
-        "--logfile",
-        type=str,
-        default="nurse_log/nursegui.log",
-        help="logging directory",
+        "--displays", "-n", type=int, help="# of displays (Dynamic if not given)",
     )
     parser.add_argument(
         "--sim",
         action="store_true",
         help="Read from fake sim instead of remote generators",
     )
-    parser.add_argument(
-        "--logging",
-        help="If a directory name, local generators fill *.dat files in that directory with time-series (time, flow, pressure)",
-    )
 
     args, unparsed_args = parser.parse_known_args()
 
-    main(argv=sys.argv[:1] + unparsed_args, **args.__dict__)
+    d = args.__dict__
+    del d["config"]
+
+    main(argv=sys.argv[:1] + unparsed_args, **d)
