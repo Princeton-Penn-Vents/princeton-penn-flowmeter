@@ -149,6 +149,9 @@ class MainHeaderWidget(HeaderWidget):
         graph_info = GraphLabelWidget()
         layout.addWidget(graph_info)
 
+        self.add_btn = QtWidgets.QPushButton("+")
+        layout.addWidget(self.add_btn)
+
         nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo)
 

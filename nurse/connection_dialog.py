@@ -49,11 +49,12 @@ class TabbedConnection(QtWidgets.QTabWidget):
 
 
 class ConnectionDialog(QtWidgets.QDialog):
-    def __init__(self, listener: FindBroadcasts, gen: Generator):
+    def __init__(self, listener: FindBroadcasts, i: int, address: str):
         super().__init__()
 
-        self.gen = gen
+        self.i = i
         self.listener = listener
+        self.address = address
 
         self.setWindowModality(Qt.ApplicationModal)
 
@@ -71,11 +72,9 @@ class ConnectionDialog(QtWidgets.QDialog):
 
     def exec_(self):
 
-        i = self.gen.rotary["Sensor ID"]
+        self.setWindowTitle(f"Patient box {self.i} connection")
 
-        self.setWindowTitle(f"Patient box {i} connection")
-
-        parsed = urlparse(self.gen.address)
+        parsed = urlparse(self.address)
         self.tabbed.manual_tab.ip_address.setText(parsed.hostname)
         self.tabbed.manual_tab.port.setText(str(parsed.port))
 

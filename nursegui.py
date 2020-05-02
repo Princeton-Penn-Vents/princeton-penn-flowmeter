@@ -23,6 +23,7 @@ from nurse.common import style_path, GraphInfo
 from nurse.header import MainHeaderWidget
 from nurse.grid import PatientSensor
 from nurse.drilldown import DrilldownWidget
+from nurse.connection_dialog import ConnectionDialog
 
 from processor.generator import Generator
 from processor.local_generator import LocalGenerator
@@ -88,6 +89,19 @@ class MainStack(QtWidgets.QWidget):
         self.qTimer.timeout.connect(self.update_plots)
         self.qTimer.setSingleShot(True)
         self.qTimer.start()
+
+        self.header.add_btn.clicked.connect(self.add_item_dialog)
+
+    @Slot()
+    def add_item_dialog(self):
+        dialog = ConnectionDialog(
+            self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
+        )
+        if dialog.exec_():
+            gen = RemoteGenerator(address=dialog.connection_address)
+            gen.run()
+
+            self.add_item(gen)
 
     def add_item(self, gen: Generator):
         ind = self.grid_layout.count()
