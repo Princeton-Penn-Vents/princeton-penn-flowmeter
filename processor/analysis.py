@@ -76,7 +76,14 @@ class CantComputeDerivative(Exception):
 def smooth_derivative(times, values, sig=0.2):
     values = values - values.mean()
 
-    window_width = int(np.ceil(4 * sig / np.min(times[1:] - times[:-1])))
+    if len(times) < 1:
+        raise CantComputeDerivative
+
+    themin = np.min(times[1:] - times[:-1])
+    if themin <= 0:
+        raise CantComputeDerivative
+
+    window_width = int(np.ceil(4 * sig / themin))
     if len(times) - window_width + 1 < 10 or window_width < 10:
         raise CantComputeDerivative
 
