@@ -67,7 +67,6 @@ class VentSim:
     def use_config(self, config, params={}):
         assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
-        logger.info(str(new_config))
         for t_dict in new_config:
             for key in t_dict:
                 if key not in params:
