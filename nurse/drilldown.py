@@ -297,6 +297,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.lower = {}
         self.current = {}
         self.gen: Optional[Generator] = None
+        self.sensor_id = -1
 
         layout = HBoxLayout(self)
 
@@ -461,6 +462,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
                     time_avg = self.gen.rotary["AvgWindow"].value
+                    sensor_id = int(self.gen.rotary["Sensor ID"].value)
+                    if self.sensor_id != sensor_id:
+                        self.sensor_id = sensor_id
+                        self.title.name_lbl.setText(f"{sensor_id}:")
+
                     for key in gis.graph_labels:
                         if scroll:
                             self.curves[key].setData(

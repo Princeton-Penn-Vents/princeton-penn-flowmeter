@@ -84,11 +84,11 @@ class PatientTitleWidget(QtWidgets.QWidget):
         layout = HBoxLayout(self)
 
         # Temporary setting - i is the grid #, not Sensor ID
-        self.name_btn = QtWidgets.QPushButton(f"{i}:")
+        self.name_btn = QtWidgets.QPushButton(f"{i+1}:")
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(f"Patient {i}")
+        self.name_edit.setText(f"Patient {i+1}")
         layout.addWidget(self.name_edit)
 
     def repolish(self):
@@ -131,6 +131,7 @@ class PatientSensor(QtGui.QFrame):
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
+        self.sensor_id = -1
 
         layout = HBoxLayout(self)
 
@@ -219,8 +220,10 @@ class PatientSensor(QtGui.QFrame):
             # Change of status requires a background color change
             self.status = self.gen.status
 
-            i = self.gen.rotary["Sensor ID"].value
-            self.title_widget.name_btn.setText(f"{i}:")
+            sensor_id = int(self.gen.rotary["Sensor ID"].value)
+            if self.sensor_id != sensor_id:
+                self.title_widget.name_btn.setText(f"{sensor_id}:")
+                self.sensor_id = sensor_id
 
             alarming_quanities = {key.rsplit(maxsplit=1)[0] for key in self.gen.alarms}
 
