@@ -79,14 +79,16 @@ class NumbersWidget(QtWidgets.QWidget):
 class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, i: int):
         super().__init__()
+        self.i = i
 
         layout = HBoxLayout(self)
 
-        self.name_btn = QtWidgets.QPushButton(f"{i+1}:")
+        # Temporary setting - i is the grid #, not Sensor ID
+        self.name_btn = QtWidgets.QPushButton(f"{i}:")
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(f"Patient {i+1}")
+        self.name_edit.setText(f"Patient {i}")
         layout.addWidget(self.name_edit)
 
     def repolish(self):
@@ -123,11 +125,10 @@ class PatientSensor(QtGui.QFrame):
             self.style().unpolish(self)
             self.style().polish(self)
 
-    def __init__(self, i: int, *, gen: Generator):
+    def __init__(self, *, i: int, gen: Generator):
 
         super().__init__()
         self.last_status_change = int(1000 * datetime.now().timestamp())
-        self.label = i
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
 
@@ -136,7 +137,7 @@ class PatientSensor(QtGui.QFrame):
         layout_left = VBoxLayout()
         layout.addLayout(layout_left)
 
-        self.title_widget = PatientTitleWidget(i)
+        self.title_widget = PatientTitleWidget(i=i)
         layout_left.addWidget(self.title_widget)
 
         self.graphview = GraphicsView(parent=self, i=i)
@@ -165,7 +166,7 @@ class PatientSensor(QtGui.QFrame):
     @Slot()
     def click_number(self):
         if isinstance(self.gen, RemoteGenerator):
-            dialog = ConnectionDialog(self)
+            dialog = ConnectionDialog(self.parent().listener, self.gen)
             if dialog.exec_():
                 self.gen.address = dialog.connection_address
         else:
@@ -217,6 +218,9 @@ class PatientSensor(QtGui.QFrame):
 
             # Change of status requires a background color change
             self.status = self.gen.status
+
+            i = self.gen.rotary["Sensor ID"].value
+            self.title_widget.name_btn.setText(f"{i}:")
 
             alarming_quanities = {key.rsplit(maxsplit=1)[0] for key in self.gen.alarms}
 

@@ -74,10 +74,11 @@ class MainStack(QtWidgets.QWidget):
                     gen = RemoteGenerator(address="tcp://127.0.0.1:8100")
                 else:
                     gen = LocalGenerator()
+                gen.rotary["Sensor ID"].value = i + 1
 
                 gen.run()  # Close must be called
 
-                graph = PatientSensor(i, gen=gen)
+                graph = PatientSensor(gen=gen, i=i)
                 self.graphs.append(graph)
 
                 grid_layout.addWidget(graph, *reversed(divmod(i, height)))
@@ -89,7 +90,8 @@ class MainStack(QtWidgets.QWidget):
         self.qTimer.start()
 
     def add_item(self, gen: Generator):
-        n_items = self.grid_layout.count() + 1
+        ind = self.grid_layout.count()
+        n_items = ind + 1
         height = math.ceil(math.sqrt(n_items))
         width = math.ceil(n_items / height)
 
@@ -102,7 +104,7 @@ class MainStack(QtWidgets.QWidget):
                 if self.grid_layout.itemAtPosition(i, j) is None:
                     break
 
-        graph = PatientSensor(n_items, gen=gen)
+        graph = PatientSensor(i=ind, gen=gen)
         self.graphs.append(graph)
 
         self.grid_layout.addWidget(graph, i, j)
