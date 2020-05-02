@@ -145,7 +145,7 @@ class MainStack(QtWidgets.QWidget):
 
     def add_item(self, gen: Generator):
         ind = self.grid_layout.count()
-        if len(self.graphs) == 0:
+        if len(self.graphs) == 0 and self.infos:
             waiting = self.infos.pop()
             self.grid_layout.removeWidget(waiting)
             waiting.setParent(None)
