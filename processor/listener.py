@@ -34,7 +34,7 @@ class Listener(ServiceListener):
             info = zeroconf.get_service_info(service_type, name)
             if not info:
                 logger.info(f"Service {name} not {status}, missing info!")
-                return
+                return set()
 
             addresses = {
                 f"tcp://{ipaddress.ip_address(ip)}:{info.port}" for ip in info.addresses
