@@ -118,7 +118,8 @@ class MainStack(QtWidgets.QWidget):
 
         if not displays and not addresses:
             self.injector.inject.connect(self.add_from_queue)
-            self.listener.inject = self.injector.inject.emit
+            self.listener.inject = lambda: self.injector.inject.emit()
+            self.injector.inject.emit()
 
     @Slot()
     def add_from_queue(self):
