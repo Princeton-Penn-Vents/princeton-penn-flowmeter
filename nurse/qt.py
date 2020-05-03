@@ -50,3 +50,20 @@ def update_textbox(textbox, text):
         val = textbox.verticalScrollBar().value()
         textbox.setText(text)
         textbox.verticalScrollBar().setValue(val)
+
+
+def swap_grid(
+    grid_layout: QtWidgets.QGridLayout,
+    source: QtWidgets.QWidget,
+    target: QtWidgets.QWidget,
+) -> None:
+    s_idx = grid_layout.indexOf(source)
+    t_idx = grid_layout.indexOf(target)
+    s_x, s_y, *_ = grid_layout.getItemPosition(s_idx)
+    t_x, t_y, *_ = grid_layout.getItemPosition(t_idx)
+    source_item = grid_layout.itemAtPosition(s_x, s_y)
+    target_item = grid_layout.itemAtPosition(t_x, t_y)
+    grid_layout.removeItem(source_item)
+    grid_layout.removeItem(target_item)
+    grid_layout.addItem(source_item, t_x, t_y)
+    grid_layout.addItem(target_item, s_x, s_y)
