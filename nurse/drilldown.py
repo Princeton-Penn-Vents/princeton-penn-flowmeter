@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import pyqtgraph as pg
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 import numpy as np
 
@@ -221,20 +223,22 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout = VBoxLayout()
         columns_layout.addLayout(side_layout)
 
-        grid_layout = GridLayout()
-        side_layout.addLayout(grid_layout)
+        self.grid_layout = GridLayout()
+        side_layout.addLayout(self.grid_layout)
         side_layout.addStretch()
 
-        self.alarm_boxes = [
-            AlarmBox(i) for i in range(len(self.parent().main_stack.graphs))
-        ]
-        for alarm_box in self.alarm_boxes:
-            grid_layout.addWidget(alarm_box, *divmod(alarm_box.i, 2))
-            alarm_box.clicked.connect(self.click_alarm)
+        self.alarm_boxes: List[AlarmBox] = []
+
+    def add_alarm_box(self):
+        i = len(self.alarm_boxes)
+        alarm_box = AlarmBox(i)
+        self.alarm_boxes.append(alarm_box)
+        self.grid_layout.addWidget(alarm_box, *divmod(i, 2))
+        alarm_box.clicked.connect(self.click_alarm)
 
     @Slot()
     def click_alarm(self):
-        alarm_box = self.sender()
+        alarm_box: AlarmBox = self.sender()
         self.parent().parent().drilldown_activate(alarm_box.i)
 
     def activate(self, i: int):
@@ -242,6 +246,7 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         for box in self.alarm_boxes:
             box.active = False
+
         self.alarm_boxes[i].active = True
 
         main_stack = self.parent().parent().main_stack
@@ -260,10 +265,20 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 
 class AlarmBox(QtWidgets.QPushButton):
-    def __init__(self, i):
+    def __init__(self, i: int):
         super().__init__(str(i + 1))
         self.i = i
+        self._sensor_id = i + 1
         self.active = False
+
+    @property
+    def sensor_id(self):
+        return self._sensor_id
+
+    @sensor_id.setter
+    def sensor_id(self, value):
+        self._sensor_id = value
+        self.setText(str(value))
 
     @property
     def status(self) -> Status:
@@ -547,7 +562,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
 
-            for alarm_box in patient.alarm_boxes:
-                alarm_box.status = main_stack.graphs[alarm_box.i].gen.status
+            for alarm_box, graph in zip(patient.alarm_boxes, main_stack.graphs):
+                alarm_box.status = graph.gen.status
+                alarm_box.sensor_id = graph.gen.rotary["Sensor ID"]
 
         self.qTimer.start(50)

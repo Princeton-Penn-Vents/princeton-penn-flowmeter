@@ -158,7 +158,11 @@ class MainStack(QtWidgets.QWidget):
             waiting = self.infos.pop()
             self.grid_layout.removeWidget(waiting)
             waiting.setParent(None)
+            ind = 0
         i, j = self._get_next_empty()
+
+        drilldown: DrilldownWidget = self.parent().parent().drilldown
+        drilldown.add_alarm_box()
 
         graph = PatientSensor(i=ind, gen=gen)
         self.graphs.append(graph)
