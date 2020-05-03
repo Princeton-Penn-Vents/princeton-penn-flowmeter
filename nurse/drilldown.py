@@ -205,8 +205,8 @@ class PatientTitle(QtWidgets.QWidget):
 
 
 class DrilldownWidget(QtWidgets.QWidget):
-    def __init__(self, *, parent):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         layout = VBoxLayout(self)
 

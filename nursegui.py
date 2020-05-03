@@ -58,13 +58,14 @@ class InjectDiscovery(QtCore.QObject):
 class MainStack(QtWidgets.QWidget):
     def __init__(
         self,
+        parent,
         *,
         listener: FindBroadcasts,
         displays: Optional[int],
         sim: bool,
         addresses: List[str],
     ):
-        super().__init__()
+        super().__init__(parent)
 
         self.listener = listener
 
@@ -194,17 +195,19 @@ class MainWindow(QtWidgets.QMainWindow):
             t = s.substitute(**gis.graph_pens)
             self.setStyleSheet(t)
 
-        self.main_stack = MainStack(listener=listener, displays=displays, **kwargs)
-        stacked_widget = QtWidgets.QStackedWidget()
-        stacked_widget.addWidget(self.main_stack)
-
-        self.drilldown = DrilldownWidget(parent=self)
-        self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
-        stacked_widget.addWidget(self.drilldown)
-
+        stacked_widget = QtWidgets.QStackedWidget(self)
         self.setCentralWidget(stacked_widget)
 
+        self.drilldown = DrilldownWidget(stacked_widget)
+        self.main_stack = MainStack(
+            stacked_widget, listener=listener, displays=displays, **kwargs
+        )
+
+        stacked_widget.addWidget(self.main_stack)
+        stacked_widget.addWidget(self.drilldown)
+
         self.main_stack.header.fs_exit.clicked.connect(self.close)
+        self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
 
     @Slot()
     def drilldown_deactivate(self):
