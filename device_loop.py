@@ -262,7 +262,13 @@ with pi_cleanup() as pi, spidev.SpiDev() as spiMCP3008, ExitStack() as stack, zm
         try:
             read_loop(spiMCP3008, pi, hSDP3, running, myfile)
         except pigpio.error:
-            print("Disconnected, trying again in 1s")
-            running.wait(1)
+            # 1 second of "fake" readings
+            for _ in range(int(ReadoutHz)):
+                d = {"v": 1, "t": int(1000 * time.monotonic())}
+                pub_socket.send_json(d)
+
+                running.wait(1 / ReadoutHz)
+                if running.is_set():
+                    break
         finally:
             pi.i2c_close(hSDP3)
