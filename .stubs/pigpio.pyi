@@ -16,6 +16,8 @@ PUD_OFF: PUD
 class Callback:
     def cancel(self) -> None: ...
 
+class error(Exception): ...
+
 class pi:
     connected: bool
     def __init__(
