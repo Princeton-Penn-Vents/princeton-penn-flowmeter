@@ -3,6 +3,7 @@ import enum
 import threading
 import time
 import warnings
+import logging
 
 import numpy as np
 from typing import Dict, Any, List, Optional, TypeVar
@@ -125,6 +126,9 @@ class Generator(abc.ABC):
 
         # The mac address if known
         self.mac = ""
+
+        # The logger instance
+        self.logger: logging.Logger = logging.getLogger("povm")
 
     def clear(self) -> None:
         """

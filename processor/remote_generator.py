@@ -10,12 +10,9 @@ import threading
 import time
 from datetime import datetime
 from typing import Optional, Dict
-import logging
 
 from processor.rolling import Rolling, new_elements
 from processor.generator import Status, Generator
-
-logger = logging.getLogger("povm")
 
 
 class RemoteThread(threading.Thread):
@@ -85,12 +82,15 @@ class RemoteThread(threading.Thread):
                         self._last_get = time.monotonic()
 
                         if self.status == Status.DISCON:
-                            logger.info("(Re)Connecting successful")
+                            self.parent.logger.info(
+                                f"(Re)Connecting to {self._address} successful"
+                            )
                             self.status = Status.OK
 
             if number_events == 0 and self.status != Status.DISCON:
                 with self._remote_lock:
                     self.status = Status.DISCON
+                    self.parent.logger.info(f"Dropped connection to {self._address}")
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:

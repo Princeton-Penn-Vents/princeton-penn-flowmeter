@@ -24,6 +24,7 @@ from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
 from nurse.connection_dialog import ConnectionDialog
 
+
 INFO_STRINGS = {
     "Avg Flow": ".0f",
     "Avg Pressure": ".0f",
@@ -181,8 +182,10 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
                 self.parent().listener, self.sensor_id, "tcp://127.0.0.1:8100"
             )
             if dialog.exec_():
+                logger = self.gen.logger
                 self.gen.close()
                 self.gen = RemoteGenerator(address=dialog.connection_address)
+                self.gen.logger = logger
                 self.gen.run()
 
     def set_plot(self):
