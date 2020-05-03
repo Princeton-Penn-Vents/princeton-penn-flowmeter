@@ -58,13 +58,15 @@ sudo apt update
 sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt install python3-scipy
-sudo apt install vim                       # For development, skip for production
-sudo python3 -m pip install pyqtgraph pyzmq confuse
-sudo python3 -m pip install zeroconf
+sudo apt install vim htop                  # For development, skip for production
+sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf
 python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
-#### Networking for the nurse box:
+<details><summary>Networking for the nurse box: (click to expand)</summary>
+
+Automatic discovery make make this no longer required; even the default auto-IP selection
+should work.
 
 This should only be done for *one* nurse box, even if you connect two nurse stations to a network,
 only one of them should have the following setup:
@@ -81,6 +83,8 @@ sudo systemctl enable isc-dhcp-server
 
 The new nurse station IP (192.168.3.3) will come up automatically and the DHCP
 server will start on next computer restart.
+
+</details>
 
 <details><summary>Additional information: (click to expand)</summary>
 
@@ -225,7 +229,7 @@ sudo killall pigpiod
 ./patientgui.py
 
 # Terminal 3
-./nursegui.py --debug -n 4 --port 8100
+./nursegui.py --debug --window
 ```
 
 ---
