@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, Optional
 import logging
 
 from processor.config import config
@@ -23,7 +23,7 @@ def open_next(mypath: Path) -> TextIO:
             i += 1
 
 
-def init_logger(logstr: str = None) -> None:
+def init_logger(logstr: Optional[str] = None) -> None:
     """
     logstr should be nurse_log/nursegui.log or similar (or None for screen only, even non-debug)
     """
@@ -39,8 +39,8 @@ def init_logger(logstr: str = None) -> None:
     else:
         file_path = DIR.parent / logstr
         file_path.parent.mkdir(exist_ok=True)
-        logfile_incr = file_path  # Only (over)written when no numbers left
-        for i in range(100_000):
+        i = 0
+        while True:
             logfile_incr = file_path.with_name(
                 f"{file_path.stem}{i:05}{file_path.suffix}"
             )
@@ -51,3 +51,37 @@ def init_logger(logstr: str = None) -> None:
         fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+
+
+def make_nested_logger(nested: int) -> logging.Logger:
+    logger = logging.getLogger("povm")
+
+    if len(logger.handlers) != 1:
+        raise RuntimeError("Too many handlers")
+
+    handler: logging.Handler = logger.handlers[0]
+
+    nested_logger: logging.Logger = logging.getLogger(f"povm-{nested:02}")
+    formatter = logging.Formatter(
+        f"%(asctime)s - %(levelname)s - {nested:02} - %(message)s"
+    )
+    nested_logger.setLevel(logger.level)
+
+    if isinstance(handler, logging.StreamHandler):
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        nested_logger.addHandler(ch)
+
+    elif isinstance(handler, logging.FileHandler):
+        main_path = Path(handler.baseFilename)
+        main_path.with_suffix("") / format(nested, "02") / f"{main_path.stem}.log"
+
+        fh = logging.FileHandler(main_path)
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        nested_logger.addHandler(fh)
+
+    else:
+        raise RuntimeError(f"Logger handler {handler} is not of a known type!")
+
+    return nested_logger

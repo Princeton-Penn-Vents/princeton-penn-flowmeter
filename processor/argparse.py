@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
 import argparse
 from typing import Tuple, List, Optional
 
 from processor.config import config
 from processor.logging import init_logger
+
+
+DIR = Path(__file__).parent.resolve()
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -34,7 +38,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if "debug" in args:
             config.set_args({"global": {"debug": args.debug}})
 
-        init_logger(f"{self.type}_log" if self.type is not None else None)
+        init_logger(self.type)
 
     def parse_known_args(
         self, *pargs, **kwargs

@@ -49,8 +49,8 @@ class Listener(ServiceListener):
                 f"tcp://{ipaddress.ip_address(ip)}:{info.port}" for ip in info.addresses
             }
 
-            macaddr = info.properties.get(b"mac_addr")
-            service = info.properties.get(b"service")
+            macaddr = info.properties.get(b"mac_addr", b"<unknown>").decode()
+            service = info.properties.get(b"service", b"<unknown>").decode()
 
             logger.info(f"Service {name} {status}: {addresses} - {macaddr} - {service}")
             return addresses

@@ -35,6 +35,7 @@ from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
+from processor.logging import make_nested_logger
 
 DIR = Path(__file__).parent.resolve()
 
@@ -92,6 +93,7 @@ class MainStack(QtWidgets.QWidget):
                     if not sim
                     else LocalGenerator(i=i + 1)
                 )
+                gen.logger = make_nested_logger(i)
                 gen.run()  # Close must be called
 
                 self.add_item(gen)
@@ -140,6 +142,7 @@ class MainStack(QtWidgets.QWidget):
 
     def add_new_by_address(self, addr: str):
         gen = RemoteGenerator(address=addr)
+        gen.logger = make_nested_logger(len(self.graphs))
         gen.run()
         self.add_item(gen)
 
