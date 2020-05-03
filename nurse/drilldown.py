@@ -20,6 +20,7 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
+from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 
 
@@ -266,14 +267,12 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.patient.qTimer.stop()
 
 
-class AlarmBox(QtWidgets.QPushButton):
+class AlarmBox(QtWidgets.QPushButton, DragDropGridMixin):
     def __init__(self, i: int):
         super().__init__(str(i + 1))
         self.i = i
         self._sensor_id = i + 1
         self.active = False
-        self._start_pos: Optional[QtGui.QMouseEvent] = None
-        self.setAcceptDrops(True)
 
     @property
     def sensor_id(self):
@@ -283,6 +282,11 @@ class AlarmBox(QtWidgets.QPushButton):
     def sensor_id(self, value):
         self._sensor_id = value
         self.setText(str(value))
+
+    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+        if event.button() == Qt.LeftButton:
+            if self._start_pos is not None:
+                self.clicked.emit()
 
     @property
     def status(self) -> Status:
@@ -295,72 +299,6 @@ class AlarmBox(QtWidgets.QPushButton):
             self.setProperty("alert_status", value_name)
             self.style().unpolish(self)
             self.style().polish(self)
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
-            self._start_pos = event.pos()
-
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
-            if self._start_pos is not None:
-                self.clicked.emit()
-
-    def mouseMoveEvent(self, evt: QtGui.QMouseEvent) -> None:
-        if self._start_pos is None or not (evt.buttons() & Qt.LeftButton):
-            return
-        if (
-            evt.pos() - self._start_pos
-        ).manhattanLength() < QtWidgets.QApplication.startDragDistance():
-            return
-
-        self._start_pos = None
-        hot_spot = evt.pos()
-
-        mime_data = QtCore.QMimeData()
-        mime_data.setData(
-            "application/povm-alarmbox",
-            QtCore.QByteArray.number(hot_spot.x())
-            + b" "
-            + QtCore.QByteArray.number(hot_spot.y()),
-        )
-
-        dpr = QtWidgets.QApplication.instance().devicePixelRatio()
-        pixmap = QtGui.QPixmap(self.size() * dpr)
-        pixmap.setDevicePixelRatio(dpr)
-        self.render(pixmap)
-
-        drag = QtGui.QDrag(self)
-        drag.setMimeData(mime_data)
-        drag.setPixmap(pixmap)
-        drag.setHotSpot(hot_spot)
-
-        self.setVisible(False)
-        drag.exec_()
-
-        if drag.target() and drag.source() != drag.target():
-            parent: DrilldownWidget = self.parent()
-            swap_grid(parent.grid_layout, drag.source(), drag.target())
-
-        self.setVisible(True)
-
-    def dragEnterEvent(self, evt: QtGui.QDragEnterEvent) -> None:
-        if evt.mimeData().hasFormat("application/povm-alarmbox"):
-            evt.accept()
-            eff = QtWidgets.QGraphicsOpacityEffect(self)
-            eff.setOpacity(0.5)
-            self.setGraphicsEffect(eff)
-        else:
-            evt.ignore()
-
-    def dragLeaveEvent(self, evt: QtGui.QDragEnterEvent) -> None:
-        self.setGraphicsEffect(None)
-
-    def dropEvent(self, evt):
-        if evt.mimeData().hasFormat("application/povm-alarmbox"):
-            evt.accept()
-            self.setGraphicsEffect(None)
-        else:
-            evt.ignore()
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):

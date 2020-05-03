@@ -4,24 +4,21 @@ import pyqtgraph as pg
 
 from datetime import datetime
 
-from typing import Dict, Any, TYPE_CHECKING, Optional
+from typing import Dict, Any
 
-if TYPE_CHECKING:
-    from nursegui import MainStack
 
 from nurse.qt import (
     QtWidgets,
     QtGui,
-    QtCore,
     Qt,
     Slot,
     HBoxLayout,
     VBoxLayout,
     FormLayout,
-    swap_grid,
 )
 
 from nurse.common import GraphInfo
+from nurse.dragdrop import DragDropGridMixin
 
 from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
@@ -118,7 +115,7 @@ class GraphicsView(pg.GraphicsView):
             self.parent().parent().parent().parent().drilldown_activate(self.i)
 
 
-class PatientSensor(QtGui.QFrame):
+class PatientSensor(QtGui.QFrame, DragDropGridMixin):
     @property
     def status(self):
         return Status[self.property("alert_status")]
@@ -139,7 +136,6 @@ class PatientSensor(QtGui.QFrame):
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
         self.sensor_id = -1
-        self._start_pos: Optional[QtGui.QMouseEvent] = None
 
         layout = HBoxLayout(self)
 
@@ -171,7 +167,6 @@ class PatientSensor(QtGui.QFrame):
         layout.addWidget(self.values)
 
         self.curves: Dict[str, Any] = {}
-        self.setAcceptDrops(True)
 
     @Slot()
     def click_number(self):
@@ -189,66 +184,6 @@ class PatientSensor(QtGui.QFrame):
                 self.gen.close()
                 self.gen = RemoteGenerator(address=dialog.connection_address)
                 self.gen.run()
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
-            self._start_pos = event.pos()
-
-    def mouseMoveEvent(self, evt: QtGui.QMouseEvent) -> None:
-        if self._start_pos is None or not (evt.buttons() & Qt.LeftButton):
-            return
-        if (
-            evt.pos() - self._start_pos
-        ).manhattanLength() < QtWidgets.QApplication.startDragDistance():
-            return
-
-        hot_spot = evt.pos()
-
-        mime_data = QtCore.QMimeData()
-        mime_data.setData(
-            "application/povm-tile",
-            QtCore.QByteArray.number(hot_spot.x())
-            + b" "
-            + QtCore.QByteArray.number(hot_spot.y()),
-        )
-
-        dpr = QtWidgets.QApplication.instance().devicePixelRatio()
-        pixmap = QtGui.QPixmap(self.size() * dpr)
-        pixmap.setDevicePixelRatio(dpr)
-        self.render(pixmap)
-
-        drag = QtGui.QDrag(self)
-        drag.setMimeData(mime_data)
-        drag.setPixmap(pixmap)
-        drag.setHotSpot(hot_spot)
-
-        self.setVisible(False)
-        drag.exec_()
-
-        if drag.target() and drag.source() != drag.target():
-            parent: MainStack = self.parent()
-            swap_grid(parent.grid_layout, drag.source(), drag.target())
-
-        self.setVisible(True)
-
-    def dragEnterEvent(self, evt: QtGui.QDragEnterEvent) -> None:
-        if evt.mimeData().hasFormat("application/povm-tile"):
-            evt.accept()
-            eff = QtWidgets.QGraphicsOpacityEffect(self)
-            eff.setOpacity(0.5)
-            self.setGraphicsEffect(eff)
-        else:
-            evt.ignore()
-
-    def dragLeaveEvent(self, evt: QtGui.QDragEnterEvent) -> None:
-        self.setGraphicsEffect(None)
-
-    def dropEvent(self, evt):
-        if evt.mimeData().hasFormat("application/povm-tile"):
-            evt.accept()
-            self.setGraphicsEffect(None)
-        else:
-            evt.ignore()
 
     def set_plot(self):
         assert len(self.curves) == 0
