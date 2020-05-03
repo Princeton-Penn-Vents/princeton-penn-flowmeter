@@ -33,6 +33,7 @@ class RemoteThread(threading.Thread):
         self._last_update: Optional[datetime] = None
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
+        self.mac = ""
 
         super().__init__()
 
@@ -42,6 +43,7 @@ class RemoteThread(threading.Thread):
         self._pressure.clear()
         self._last_get = None
         self._last_update = None
+        self.mac = ""
 
     @context()
     @socket(zmq.SUB)
@@ -68,6 +70,9 @@ class RemoteThread(threading.Thread):
             for _ in range(number_events):
                 self._last_update = datetime.now()
                 root = sub_socket.recv_json()
+                if "mac" in root:
+                    with self._remote_lock:
+                        self.mac = root["mac"]
                 if "rotary" in root:
                     with self._remote_lock:
                         self.rotary_dict = root["rotary"]
@@ -102,6 +107,8 @@ class RemoteThread(threading.Thread):
                 self.parent.status = Status.DISCON
             elif self.parent.status == Status.DISCON:
                 self.parent.status = Status.OK
+
+            self.parent.mac = self.mac
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]

@@ -123,6 +123,9 @@ class Generator(abc.ABC):
         # A quick way to get the debug status
         self._debug = config["global"]["debug"].get(bool)
 
+        # The mac address if known
+        self.mac = ""
+
     def clear(self) -> None:
         """
         Reset the generator to empty.

@@ -23,6 +23,9 @@ from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 
 
+MAC_MSG = "Patient MAC Address: {mac} - Edits above are recorded in logs"
+
+
 class BoxHeader(QtWidgets.QLabel):
     pass
 
@@ -332,6 +335,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.title = PatientTitle()
         left_layout.addWidget(self.title)
 
+        self.title_warning = QtWidgets.QLabel(MAC_MSG.format(mac="<unknown>"))
+        self.title_warning.setObjectName("TitleWarning")
+        left_layout.addWidget(self.title_warning, 0, Qt.AlignHCenter)
+
         self.graphview = pg.GraphicsView(parent=self)
         graph_layout = pg.GraphicsLayout()
         self.graphview.setCentralWidget(graph_layout)
@@ -488,6 +495,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     if self.sensor_id != sensor_id:
                         self.sensor_id = sensor_id
                         self.title.name_lbl.setText(f"{sensor_id}:")
+
+                    text = MAC_MSG.format(mac=self.gen.mac or "<unknown>")
+                    if text != self.title_warning.text():
+                        self.title_warning.setText(text)
 
                     for key in gis.graph_labels:
                         if scroll:
