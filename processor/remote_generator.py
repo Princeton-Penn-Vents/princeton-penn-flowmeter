@@ -115,6 +115,7 @@ class RemoteGenerator(Generator):
     def __init__(self, *, address: str = "tcp://127.0.0.1:8100"):
         super().__init__()
         self._address = address
+        self.rotary["Sensor ID"].value = 0
 
         self.status = Status.DISCON
         self._last_ts: int = 0

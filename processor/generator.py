@@ -209,6 +209,14 @@ class Generator(abc.ABC):
         Copy in the remote/local datastream to internal cache.
         """
 
+    @property
+    def sensor_id(self) -> int:
+        """
+        Get the sensor ID set on the device
+        """
+
+        return int(self.rotary["Sensor ID"].value)
+
     def _analyze_timeseries(self) -> None:
         """
         Quick analysis that's easier to run often, makes volume (run by `analyze` too)

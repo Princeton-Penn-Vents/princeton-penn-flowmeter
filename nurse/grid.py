@@ -227,7 +227,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
             # Change of status requires a background color change
             self.status = self.gen.status
 
-            sensor_id = int(self.gen.rotary["Sensor ID"].value)
+            sensor_id = self.gen.sensor_id
             if self.sensor_id != sensor_id:
                 self.title_widget.name_btn.setText(f"{sensor_id}:")
                 self.sensor_id = sensor_id

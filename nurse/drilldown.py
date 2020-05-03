@@ -15,7 +15,6 @@ from nurse.qt import (
     HBoxLayout,
     VBoxLayout,
     GridLayout,
-    swap_grid,
 )
 
 from nurse.common import GraphInfo
@@ -485,7 +484,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
                     time_avg = self.gen.rotary["AvgWindow"].value
-                    sensor_id = int(self.gen.rotary["Sensor ID"].value)
+                    sensor_id = self.gen.sensor_id
                     if self.sensor_id != sensor_id:
                         self.sensor_id = sensor_id
                         self.title.name_lbl.setText(f"{sensor_id}:")
@@ -572,6 +571,6 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             for alarm_box, graph in zip(patient.alarm_boxes, main_stack.graphs):
                 alarm_box.status = graph.gen.status
-                alarm_box.sensor_id = graph.gen.rotary["Sensor ID"]
+                alarm_box.sensor_id = graph.gen.sensor_id
 
         self.qTimer.start(50)
