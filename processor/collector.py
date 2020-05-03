@@ -57,11 +57,17 @@ class CollectorThread(threading.Thread):
             for _ in range(ready_events):
                 j = sub_socket.recv_json()
                 t = j["t"]
-                f = (
-                    math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-                    - self._flow_offset
-                )
-                p = j["P"] * self._pressure_scale - self._pressure_offset
+
+                # Disconnected sensor block will send 0's
+                if "F" not in j or "P" not in j:
+                    f: float = 0
+                    p: float = 0
+                else:
+                    f = (
+                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+                        - self._flow_offset
+                    )
+                    p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})
 
