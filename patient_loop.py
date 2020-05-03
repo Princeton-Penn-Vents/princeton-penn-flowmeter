@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from processor.config import ArgumentParser, init_logger
+from processor.argparse import ArgumentParser
 
-parser = ArgumentParser()
+parser = ArgumentParser(type="patient")
 parser.add_argument("--port", "-p", type=int, default=8100, help="Select a port")
 args = parser.parse_args()
 
-init_logger()
 
 import signal
 import threading

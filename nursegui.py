@@ -33,7 +33,7 @@ from nurse.connection_dialog import ConnectionDialog
 from processor.generator import Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
-from processor.config import init_logger, ArgumentParser
+from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
 
 DIR = Path(__file__).parent.resolve()
@@ -287,8 +287,6 @@ def main(argv, *, window: bool, debug: bool, **kwargs):
     else:
         print("Fusion style is not available, display may be platform dependent")
 
-    init_logger("nurse_log/nursegui.log")
-
     logger.info("Starting nursegui")
 
     app = QtWidgets.QApplication(argv)
@@ -318,6 +316,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(
         description="Princeton Open Vent Monitor, nurse station graphical interface.",
         allow_abbrev=False,
+        type="nurse",
     )
     parser.add_argument("addresses", nargs="*", help="IP addresses to include")
     parser.add_argument(

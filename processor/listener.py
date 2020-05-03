@@ -7,7 +7,7 @@ import queue
 import logging
 import ipaddress
 from typing import Set, Callable
-from processor.config import init_logger
+from processor.argparse import init_logger
 
 logger = logging.getLogger("povm")
 
