@@ -256,7 +256,7 @@ with pi_cleanup() as pi, spidev.SpiDev() as spiMCP3008, ExitStack() as stack, zm
     spiMCP3008.open(0, 0)
     spiMCP3008.max_speed_hz = 1350000  # 500000
 
-    while True:
+    while not running.is_set():
         # Get I2C bus handle
         hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
         try:
