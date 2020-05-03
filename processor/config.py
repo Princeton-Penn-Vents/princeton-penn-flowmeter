@@ -31,7 +31,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "--debug",
             action="store_true",
-            help="Start up in debug mode (fake names, log to screen, etc)",
+            help="Start up in debug mode (log to screen)",
         )
 
     def _prepare(self, args):

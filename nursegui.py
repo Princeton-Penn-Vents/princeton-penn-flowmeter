@@ -11,6 +11,7 @@ import signal
 import logging
 from typing import Optional, List, Tuple
 import threading
+import itertools
 
 from nurse.qt import (
     QtCore,
@@ -56,7 +57,12 @@ class InjectDiscovery(QtCore.QObject):
 
 class MainStack(QtWidgets.QWidget):
     def __init__(
-        self, *, listener: FindBroadcasts, displays: Optional[int], sim: bool,
+        self,
+        *,
+        listener: FindBroadcasts,
+        displays: Optional[int],
+        sim: bool,
+        addresses: List[str],
     ):
         super().__init__()
 
@@ -74,10 +80,13 @@ class MainStack(QtWidgets.QWidget):
         self.graphs: List[PatientSensor] = []
         self.infos: List[WaitingWidget] = []
 
-        if displays:
-            for i in range(displays):
+        if displays or addresses:
+            disp_addr = itertools.zip_longest(
+                range(displays or len(addresses)), addresses or []
+            )
+            for i, addr in disp_addr:
                 gen = (
-                    RemoteGenerator(address="tcp://127.0.0.1:8100")
+                    RemoteGenerator(address=addr or "tcp://127.0.0.1:8100")
                     if not sim
                     else LocalGenerator(i=i + 1)
                 )
@@ -99,7 +108,7 @@ class MainStack(QtWidgets.QWidget):
         self.injector = InjectDiscovery()
         self.queue_lock = threading.Lock()
 
-        if displays is None:
+        if not displays and not addresses:
             self.injector.inject.connect(self.add_from_queue)
             self.listener.inject = self.injector.inject.emit
 
@@ -223,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(evt)
 
 
-def main(argv, *, fullscreen: bool, debug: bool, **kwargs):
+def main(argv, *, window: bool, debug: bool, **kwargs):
 
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
@@ -238,7 +247,7 @@ def main(argv, *, fullscreen: bool, debug: bool, **kwargs):
 
     with FindBroadcasts() as listener:
         main = MainWindow(listener=listener, **kwargs)
-        if fullscreen:
+        if not window:
             main.showFullScreen()
         else:
             size = app.screens()[0].availableSize()
@@ -258,20 +267,46 @@ def main(argv, *, fullscreen: bool, debug: bool, **kwargs):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--fullscreen", action="store_true")
-    parser.add_argument(
-        "--displays", "-n", type=int, help="# of displays (Dynamic if not given)",
+    parser = ArgumentParser(
+        description="Princeton Open Vent Monitor, nurse station graphical interface.",
+        allow_abbrev=False,
     )
+    parser.add_argument("addresses", nargs="*", help="IP addresses to include")
     parser.add_argument(
         "--sim",
         action="store_true",
-        help="Read from fake sim instead of remote generators",
+        help="Read from fake sim instead of remote generators (cannot be passed with addresses)",
+    )
+
+    parser.add_argument(
+        "--window", action="store_true", help="Open in window instead of fullscreen"
+    )
+    parser.add_argument(
+        "--displays", "-n", type=int, help="# of displays (Dynamic if not given)",
     )
 
     args, unparsed_args = parser.parse_known_args()
 
-    d = args.__dict__
-    del d["config"]
+    if args.displays is not None and len(args.addresses) > args.displays:
+        print(
+            "Can't start with more addresses than displays. "
+            "Increase one or decrease the other."
+        )
+        sys.exit(1)
 
-    main(argv=sys.argv[:1] + unparsed_args, **d)
+    addresses = [
+        f"tcp://{addr}" + ("" if ":" in addr else ":8100") for addr in args.addresses
+    ]
+
+    if args.addresses and args.sim:
+        print("Cannot give addresses and sim together")
+        sys.exit(1)
+
+    main(
+        argv=sys.argv[:1] + unparsed_args,
+        addresses=addresses,
+        sim=args.sim,
+        displays=args.displays,
+        window=args.window,
+        debug=args.debug,
+    )
