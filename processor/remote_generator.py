@@ -10,6 +10,7 @@ import threading
 import time
 from datetime import datetime
 from typing import Optional, Dict
+import logging
 
 from processor.rolling import Rolling, new_elements
 from processor.generator import Status, Generator
@@ -124,8 +125,10 @@ class RemoteThread(threading.Thread):
 
 
 class RemoteGenerator(Generator):
-    def __init__(self, *, address: str = "tcp://127.0.0.1:8100"):
-        super().__init__()
+    def __init__(
+        self, *, address: str = "tcp://127.0.0.1:8100", logger: logging.Logger
+    ):
+        super().__init__(logger=logger)
         self._address = address
         self.rotary["Sensor ID"].value = 0
 

@@ -13,20 +13,24 @@ arg = parser.parse_args()
 
 import time
 import numpy as np
+import logging
 
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 from processor.generator import Generator
+
+logger = logging.getLogger("povm")
+
 
 gen: Generator
 
 if arg.port is not None:
     address = f"tcp://{arg.ip}:{arg.port}"
     print(f"Remote: {address}")
-    gen = RemoteGenerator(address=address)
+    gen = RemoteGenerator(address=address, logger=logger)
 else:
     print("Local Generator")
-    gen = LocalGenerator(i=1)
+    gen = LocalGenerator(i=0, logger=logger)
 
 print(f"Reporting every {arg.n} seconds, use Ctrl-C to exit.")
 

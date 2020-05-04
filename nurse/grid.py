@@ -185,8 +185,9 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
             if dialog.exec_():
                 logger = self.gen.logger
                 self.gen.close()
-                self.gen = RemoteGenerator(address=dialog.connection_address)
-                self.gen.logger = logger
+                self.gen = RemoteGenerator(
+                    address=dialog.connection_address, logger=logger
+                )
                 self.gen.run()
 
     def set_plot(self):
