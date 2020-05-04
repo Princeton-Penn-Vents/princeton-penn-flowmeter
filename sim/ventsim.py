@@ -34,6 +34,7 @@ class VentSim:
         self.max_breath_interval = params.get("max_breath_interval", 9000.0)
         self.measurement_error_pressure = params.get("measurement_error_pressure", 0.0)
         self.measurement_error_flow = params.get("measurement_error_flow", 0.0)
+        self.average_flow = params.get("average_flow", 0.0)
 
     def initialize_sim(self):
         logger.info("Running sim with these parameters")
@@ -99,7 +100,8 @@ class VentSim:
         )[: len(self.flow)]
         self.volume = self.nominal_volume()
         self.pressure = self.nominal_pressure()
-
+        self.flow = self.average_flow + self.flow
+        
     def extend(self):
         self.curr_time += self.sim_time
         self.precompute()
