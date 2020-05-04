@@ -17,7 +17,7 @@ from processor.rotary import LocalRotary
 from processor.settings import get_remote_settings
 from processor.config import config
 from processor.rolling import Rolling
-from processor.saver import CSVSaver
+from processor.saver import CSVSaverTS, CSVSaverCML
 
 
 class Status(enum.Enum):
@@ -139,8 +139,8 @@ class Generator(abc.ABC):
         self.logger: logging.Logger = logger or logging.getLogger("povm")
 
         # Saver instances
-        self.saver_ts: Optional[CSVSaver]
-        self.saver_cml: Optional[CSVSaver]
+        self.saver_ts: Optional[CSVSaverTS] = None
+        self.saver_cml: Optional[CSVSaverCML] = None
 
         handlers = self.logger.handlers
         file_handlers = [
@@ -150,10 +150,10 @@ class Generator(abc.ABC):
             handler: logging.FileHandler = file_handlers[0]
             log_path = Path(handler.baseFilename).parent
 
-            self.saver_ts = CSVSaver(
+            self.saver_ts = CSVSaverTS(
                 self, log_path / "ts.csv", config["global"]["save-every"].as_number()
             )
-            self.saver_cml = CSVSaver(
+            self.saver_cml = CSVSaverCML(
                 self,
                 log_path / "cml.csv",
                 config["global"]["cumulative-every"].as_number(),
@@ -162,8 +162,6 @@ class Generator(abc.ABC):
             self.logger.info(
                 "No file-based logging attached, not saving time series or cumulatives"
             )
-            self.saver_ts = None
-            self.saver_cml = None
 
     def clear(self) -> None:
         """
@@ -215,8 +213,14 @@ class Generator(abc.ABC):
 
         self.stop.clear()
         self.logger.info("Starting run")
+
+        if self.saver_ts is not None:
+            self.saver_ts.enter()
+        if self.saver_cml is not None:
+            self.saver_cml.enter()
+
         for k, v in self.rotary.to_dict().items():
-            self.logger.info(f"rotary: {k} set to {v['value']} (inital value)")
+            self.logger.info(f"rotary: {k} set to {v['value']} (initial value)")
 
         self._run_thread = threading.Thread(target=self._run)
         self._run_thread.start()
@@ -512,6 +516,11 @@ class Generator(abc.ABC):
         self.stop.set()
         if self._run_thread is not None:
             self._run_thread.join()
+
+        if self.saver_ts is not None:
+            self.saver_ts.close()
+        if self.saver_cml is not None:
+            self.saver_cml.close()
 
     def __enter__(self: T) -> T:
         self.run()

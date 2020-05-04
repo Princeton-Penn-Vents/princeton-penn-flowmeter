@@ -106,6 +106,10 @@ class Collector(Generator):
         self._collect_thread: Optional[CollectorThread] = None
         self.port = port
 
+        # Collectors never log data
+        self.saver_cml = None
+        self.saver_ts = None
+
     def _get_data(self) -> None:
         if self._collect_thread is not None:
             self._collect_thread.access_collected_data()
