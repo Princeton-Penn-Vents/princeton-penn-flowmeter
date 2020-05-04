@@ -21,7 +21,7 @@ DIR = Path(__file__).parent.resolve()
 # Initialize LCD
 with RotaryLCD(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port
-) as collector, Broadcast("patient_loop", port=args.port):
+) as collector, Broadcast("patient_loop", port=args.port, live=4):
     rotary.live_load(DIR / "povm-live.yml")
     rotary.live_save(DIR / "povm-live.yml", every=10)
 
