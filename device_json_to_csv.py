@@ -3,7 +3,7 @@
 from processor.argparse import ArgumentParser
 from processor.config import config
 
-parser = ArgumentParser(type=None)
+parser = ArgumentParser(log_dir=None, log_stem=None)
 parser.add_argument("input", help="Input single-line json file")
 parser.add_argument("output", help="Output csv file")
 args = parser.parse_args()

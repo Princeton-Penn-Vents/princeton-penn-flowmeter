@@ -53,7 +53,11 @@ class SimGenerator:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Serve values on network as JSON", type=None)
+    parser = ArgumentParser(
+        description="Serve values on network as JSON",
+        log_dir="patient_log",
+        log_stem="patient_sim",
+    )
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
 

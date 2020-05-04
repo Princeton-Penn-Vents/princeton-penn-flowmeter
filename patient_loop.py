@@ -2,7 +2,7 @@
 
 from processor.argparse import ArgumentParser
 
-parser = ArgumentParser(type="patient")
+parser = ArgumentParser(log_dir="patient_log", log_stem="patient_loop")
 parser.add_argument("--port", "-p", type=int, default=8100, help="Select a port")
 args = parser.parse_args()
 

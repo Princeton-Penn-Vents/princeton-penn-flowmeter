@@ -35,6 +35,7 @@ class Generator(abc.ABC):
         *,
         rotary: processor.rotary.LocalRotary = None,
         logger: logging.Logger = None,
+        no_save: bool = False,
     ) -> None:
 
         self.window_size = config["global"]["window-size"].get(int)  # seconds
@@ -141,6 +142,9 @@ class Generator(abc.ABC):
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
         self.saver_cml: Optional[CSVSaverCML] = None
+
+        if no_save:
+            return
 
         handlers = self.logger.handlers
         file_handlers = [

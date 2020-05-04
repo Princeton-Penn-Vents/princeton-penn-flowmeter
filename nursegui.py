@@ -321,7 +321,8 @@ if __name__ == "__main__":
     parser = ArgumentParser(
         description="Princeton Open Vent Monitor, nurse station graphical interface.",
         allow_abbrev=False,
-        type="nurse",
+        log_dir="nurse_log",
+        log_stem="nursegui",
     )
     parser.add_argument("addresses", nargs="*", help="IP addresses to include")
     parser.add_argument(
