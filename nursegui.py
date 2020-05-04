@@ -88,12 +88,14 @@ class MainStack(QtWidgets.QWidget):
                 range(displays or len(addresses)), addresses or []
             )
             for i, addr in disp_addr:
+                make_nested_logger(i)
                 gen = (
-                    RemoteGenerator(address=addr or "tcp://127.0.0.1:8100")
+                    RemoteGenerator(
+                        address=addr or "tcp://127.0.0.1:8100", logger=logger
+                    )
                     if not sim
-                    else LocalGenerator(i=i + 1)
+                    else LocalGenerator(i=i + 1, logger=logger)
                 )
-                gen.logger = make_nested_logger(i)
                 gen.run()  # Close must be called
 
                 self.add_item(gen)
@@ -141,8 +143,8 @@ class MainStack(QtWidgets.QWidget):
             self.add_new_by_address(dialog.connection_address)
 
     def add_new_by_address(self, addr: str):
-        gen = RemoteGenerator(address=addr)
-        gen.logger = make_nested_logger(len(self.graphs))
+        logger = make_nested_logger(len(self.graphs))
+        gen = RemoteGenerator(address=addr, logger=logger)
         gen.run()
         self.add_item(gen)
 

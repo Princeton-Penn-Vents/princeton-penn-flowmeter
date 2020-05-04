@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 import numpy as np
+import logging
 
 from sim.start_sims import start_sims
 from processor.rolling import Rolling, new_elements
@@ -8,8 +9,8 @@ from processor.generator import Generator, Status
 
 
 class LocalGenerator(Generator):
-    def __init__(self, *, i: int):
-        super().__init__()
+    def __init__(self, *, i: int, logger: logging.Logger):
+        super().__init__(logger=logger)
         self.rotary["Sensor ID"].value = i
         self.status = Status.OK
 
