@@ -44,7 +44,7 @@ class RotaryLCD(Rotary):
         self.backlight.white()
         self.lcd.upper("Princeton Open Vent ")
         self.lcd.lower(MAC_STR)
-        time.sleep(3.5)
+        time.sleep(13.5)
         return self
 
     def __exit__(self, *exc) -> None:
