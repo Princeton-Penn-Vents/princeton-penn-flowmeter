@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import yaml
 import logging
-from typing import Tuple
+from typing import Tuple, Any, Dict
 
 
 logger = logging.getLogger("povm")
@@ -18,7 +18,7 @@ known_compliance_functions = {"constant_compliance": constant_compliance}
 
 
 class VentSim:
-    def __init__(self, curr_time, sim_time_max, params={}):
+    def __init__(self, curr_time: float, sim_time_max: float, params={}):
         self.current_bin = 0
         self.curr_time = curr_time
         self.sim_time = sim_time_max
@@ -36,12 +36,12 @@ class VentSim:
         self.measurement_error_flow = params.get("measurement_error_flow", 0.0)
         self.average_flow = params.get("average_flow", 0.0)
 
-    def initialize_sim(self):
+    def initialize_sim(self) -> None:
         logger.info("Running sim with these parameters")
         self.print_config()
         self.precompute()
 
-    def load_configs(self, yml_file):
+    def load_configs(self, yml_file: str) -> None:
 
         stream = open(yml_file, "r")
         params = yaml.safe_load(stream)
@@ -65,7 +65,7 @@ class VentSim:
         else:
             return val  # its a value
 
-    def use_config(self, config, params={}):
+    def use_config(self, config, params={}) -> None:
         assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
         for t_dict in new_config:
@@ -82,7 +82,7 @@ class VentSim:
             self.compliance_func = known_compliance_functions[self.compliance_func]
         logger.info("Changed ventsim configuration to {config}")
 
-    def print_config(self):
+    def print_config(self) -> None:
         logger.info(f"Sample length (ms) {self.sample_length}")
         logger.info(f"Breathing interval (ms) {self.breath_interval}")
         logger.info(f"Maximum flow (mL/m) {self.max_flow}")
@@ -92,7 +92,7 @@ class VentSim:
         logger.info(f"Breath variation (sigma in ms) {self.breath_variation}")
         logger.info(f"Maximum interval between breaths (ms) {self.max_breath_interval}")
 
-    def precompute(self):
+    def precompute(self) -> None:
         self.breath_starts = self.get_breath_starts()
         self.flow = self.nominal_flow()
         self.times = np.arange(
@@ -101,13 +101,13 @@ class VentSim:
         self.volume = self.nominal_volume()
         self.pressure = self.nominal_pressure()
         self.flow = self.average_flow + self.flow
-        
-    def extend(self):
+
+    def extend(self) -> None:
         self.curr_time += self.sim_time
         self.precompute()
         self.current_bin = 0
 
-    def get_breath_starts(self):
+    def get_breath_starts(self) -> np.array:
         """
         returns:
         array of breath start times
@@ -125,7 +125,7 @@ class VentSim:
         )  # put a breath at the beginning..
         return breath_starts
 
-    def nominal_flow(self):
+    def nominal_flow(self) -> np.array:
 
         """
         expected parameters:
@@ -194,7 +194,7 @@ class VentSim:
         pressure[1:] = pressure[0] + np.cumsum(delta_p)
         return pressure
 
-    def get_next(self):
+    def get_next(self) -> Dict[str, Any]:
         if self.current_bin >= len(self.times):
             self.extend()
         d = {
@@ -214,7 +214,7 @@ class VentSim:
         self.current_bin += 1
         return d
 
-    def get_batch(self, nMilliSeconds):
+    def get_batch(self, nMilliSeconds: float):
         nbins = int(nMilliSeconds / self.sample_length)
         if self.current_bin + nbins > len(self.times):
             self.extend()
