@@ -8,6 +8,11 @@ device:
 
 global:
   debug: false
+  analyze-every: 3 # seconds
+  save-every: 20 # seconds
+  cumulative-every: 10 # seconds
+  run-every: 0.5 # seconds
+  window-size: 1500 # 30 seconds @ 50 hertz
 
 rotary-live:
   Log Filename:

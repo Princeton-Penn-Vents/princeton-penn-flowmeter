@@ -13,10 +13,6 @@ class LocalGenerator(Generator):
         self.rotary["Sensor ID"].value = i
         self.status = Status.OK
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
-
         self._start_time = int(1000 * time.monotonic())
         (self._sim,) = start_sims(1, self._start_time, 12000000)
 

@@ -24,9 +24,9 @@ class CollectorThread(threading.Thread):
     def __init__(self, parent: Collector):
         self.parent = parent
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
+        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
+        self._flow = Rolling(window_size=parent.window_size)
+        self._pressure = Rolling(window_size=parent.window_size)
 
         self._flow_scale = config["device"]["flow"]["scale"].as_number()
         self._flow_offset = config["device"]["flow"]["offset"].as_number()
