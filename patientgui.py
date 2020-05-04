@@ -34,4 +34,4 @@ with RotaryGUI(get_live_settings()) as rotary, Collector(
     signal.signal(signal.SIGINT, ctrl_c)
 
     main.showNormal()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

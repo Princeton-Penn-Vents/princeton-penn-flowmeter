@@ -58,7 +58,7 @@ class LimitButton(QtWidgets.QPushButton):
 
     @Slot()
     def click_graph_info(self):
-        b = self.limit.exec_()
+        b = self.limit.exec()
         if b:
             for graph in self.parent().parent().parent().graphs:
                 graph.graph[self.limit.key].setRange(
@@ -118,12 +118,20 @@ class LimitDialog(QtWidgets.QDialog):
         with open(dialog_style_path) as f:
             self.setStyleSheet(f.read())
 
-    def exec_(self):
-        graph = self.p.parent().parent().parent().graphs[0]
+    def exec(self):
+        graphs = self.p.parent().parent().parent().graphs
+        if not graphs:
+            return QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                "No sensors connected",
+                "No sensors are connected, use the + button on the top right or plug in a sensor.",
+            ).exec()
+
+        graph = graphs[0]
         self.orig_lower, self.orig_upper = graph.graph[self.key].viewRange()[1]
         self.lower.setValue(self.orig_lower)
         self.upper.setValue(self.orig_upper)
-        return super().exec_()
+        return super().exec()
 
     @Slot()
     def change_value(self):
