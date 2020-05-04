@@ -138,7 +138,7 @@ class DisplayBox(QtWidgets.QFrame):
                 self.upper_limit.setText(format(gen.rotary[max_key].value, self.fmt))
 
             if hasattr(self, "avg_time"):
-                self.avg_time.setText(f"({gen.rotary['AvgWindow']}s)")
+                self.avg_time.setText(f"({gen.rotary['AvgWindow']})")
 
 
 class AllDisplays(QtWidgets.QWidget):
