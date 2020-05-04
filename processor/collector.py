@@ -93,9 +93,10 @@ class CollectorThread(threading.Thread):
         with self.parent.lock, self._collector_lock:
             newel = new_elements(self.parent._time, self._time)
 
-            self.parent._time.inject(self._time[-newel:])
-            self.parent._flow.inject(self._flow[-newel:])
-            self.parent._pressure.inject(self._pressure[-newel:])
+            if newel:
+                self.parent._time.inject(self._time[-newel:])
+                self.parent._flow.inject(self._flow[-newel:])
+                self.parent._pressure.inject(self._pressure[-newel:])
 
 
 class Collector(Generator):

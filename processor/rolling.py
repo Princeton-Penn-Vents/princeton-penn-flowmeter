@@ -133,6 +133,8 @@ def new_elements(rolling, addition) -> int:
     """
     Given two sorted arrays, find the number of elements in the second array
     that are past the end of the first array.
+
+    WARNING: Be sure to protect when this returns 0; do *not* inject!
     """
 
     if len(rolling) < 1:
