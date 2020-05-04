@@ -99,9 +99,10 @@ class RemoteThread(threading.Thread):
 
             newel = new_elements(self.parent._time, self._time)
 
-            self.parent._time.inject(self._time[-newel:])
-            self.parent._flow.inject(self._flow[-newel:])
-            self.parent._pressure.inject(self._pressure[-newel:])
+            if newel:
+                self.parent._time.inject(self._time[-newel:])
+                self.parent._flow.inject(self._flow[-newel:])
+                self.parent._pressure.inject(self._pressure[-newel:])
 
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON
@@ -147,6 +148,11 @@ class RemoteGenerator(Generator):
     def _get_data(self) -> None:
         if self._remote_thread is not None:
             self._remote_thread.access_collected_data()
+
+        if self._debug:
+            with self.lock:
+                if np.any(self._time[:-1] > self._time[1:]):
+                    self.logger.error("Time array is not sorted!")
 
     @property
     def address(self) -> str:
