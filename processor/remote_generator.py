@@ -22,9 +22,9 @@ class RemoteThread(threading.Thread):
         self._address_change = threading.Event()
         self.status = Status.DISCON
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
+        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
+        self._flow = Rolling(window_size=parent.window_size)
+        self._pressure = Rolling(window_size=parent.window_size)
 
         self._remote_lock = threading.Lock()
         self._last_update: Optional[datetime] = None
