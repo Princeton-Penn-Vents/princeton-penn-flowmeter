@@ -4,12 +4,13 @@ import pyqtgraph as pg
 
 from datetime import datetime
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 from nurse.qt import (
     QtWidgets,
     QtGui,
+    QtCore,
     Qt,
     Slot,
     HBoxLayout,
@@ -105,15 +106,14 @@ class PatientTitleWidget(QtWidgets.QWidget):
 
 
 class GraphicsView(pg.GraphicsView):
-    def __init__(self, *args, i, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.current_plot = i
-        self.i = i
+    def mousePressEvent(self, ev: QtGui.QMouseEvent):
+        ev.ignore()
 
-    def mousePressEvent(self, event):
-        super().mousePressEvent(event)
-        if event.button() == Qt.LeftButton:
-            self.parent().parent().parent().parent().drilldown_activate(self.i)
+    def mouseMoveEvent(self, ev: QtGui.QMouseEvent):
+        ev.ignore()
+
+    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):
+        ev.ignore()
 
 
 class PatientSensor(QtGui.QFrame, DragDropGridMixin):
@@ -137,6 +137,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
         self.sensor_id = -1
+        self.i = i
 
         layout = HBoxLayout(self)
 
@@ -146,7 +147,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         self.title_widget = PatientTitleWidget(i=i)
         layout_left.addWidget(self.title_widget)
 
-        self.graphview = GraphicsView(parent=self, i=i)
+        self.graphview = GraphicsView()
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 5, 0, 0)
         self.graphview.setCentralWidget(graphlayout)
@@ -250,3 +251,16 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
                 self.values.set_value(
                     key, value=value, ok=key not in alarming_quanities,
                 )
+
+    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):
+        if (
+            self._start_pos is not None
+            and ev.button() == Qt.LeftButton
+            and (ev.pos() - self._start_pos).manhattanLength()
+            < QtWidgets.QApplication.startDragDistance()
+        ):
+            self._start_pos = None
+            self.parent().parent().parent().drilldown_activate(self.i)
+        else:
+            self._start_pos = None
+            ev.ignore()
