@@ -20,7 +20,7 @@ DIR = Path(__file__).parent.resolve()
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port
-) as collector, Broadcast("patientgui", port=args.port):
+) as collector, Broadcast("patientgui", port=args.port, live=4):
 
     rotary.live_load(DIR / "povm-live.yml")
     rotary.live_save(DIR / "povm-live.yml", every=10)
