@@ -20,9 +20,10 @@ class RotaryGUI(LiveRotary):
 
 
 class SelectionSettingGUI(QtWidgets.QComboBox):
-    def __init__(self, setting: SelectionSetting):
+    def __init__(self, rotary: LiveRotary, setting: SelectionSetting):
         super().__init__()
         self.setting = setting
+        self.rotary = rotary
 
         for choice in setting._listing:
             self.addItem(f"{choice}{setting.unit if setting.unit else ''}")
@@ -33,20 +34,22 @@ class SelectionSettingGUI(QtWidgets.QComboBox):
     @Slot(int)
     def change_rotary(self, index: int):
         self.setting._value = index
+        self.rotary.changed()
         print(self.setting)
 
 
 class CurrentSettingGUI(QtWidgets.QComboBox):
-    def __init__(self, setting: CurrentSetting, signal: RedrawSettings):
+    def __init__(self, rotary: RotaryGUI, setting: CurrentSetting):
         super().__init__()
         self.setting = setting
+        self.rotary = rotary
 
         for i in range(len(setting)):
             self.addItem(f"{setting.print_setting(i)}")
         self.setCurrentIndex(setting._value)
         self.setEditable(False)
 
-        signal.changed.connect(self.redraw)
+        rotary.signal.changed.connect(self.redraw)
 
     @Slot()
     def redraw(self):
@@ -56,9 +59,10 @@ class CurrentSettingGUI(QtWidgets.QComboBox):
 
 
 class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
-    def __init__(self, setting: IncrSetting):
+    def __init__(self, rotary: LiveRotary, setting: IncrSetting):
         super().__init__()
         self.setting = setting
+        self.rotary = rotary
 
         self.setRange(setting._min, setting._max)
         self.setSingleStep(setting._incr)
@@ -71,11 +75,14 @@ class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
     @Slot(float)
     def change_rotary(self, value: float):
         self.setting._value = value
+        self.rotary.changed()
 
 
 class DisplaySettingGUI(QtWidgets.QLabel):
-    def __init__(self, setting: Setting):
+    def __init__(self, rotary: LiveRotary, setting: Setting):
         super().__init__(f"{setting.value}")
+        self.setting = setting
+        self.rotary = rotary
 
 
 class UpdatingDisplay(QtWidgets.QTextEdit):
@@ -124,13 +131,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for setting in rotary.values():
             if isinstance(setting, CurrentSetting):
-                widget = CurrentSettingGUI(setting, rotary.signal)
+                widget = CurrentSettingGUI(rotary, setting)
             elif isinstance(setting, IncrSetting):
-                widget = IncrSettingGUI(setting)
+                widget = IncrSettingGUI(rotary, setting)
             elif isinstance(setting, SelectionSetting):
-                widget = SelectionSettingGUI(setting)
+                widget = SelectionSettingGUI(rotary, setting)
             else:
-                widget = DisplaySettingGUI(setting)
+                widget = DisplaySettingGUI(rotary, setting)
 
             widget.setMinimumWidth(250)
             form_layout.addRow(setting.name, widget)

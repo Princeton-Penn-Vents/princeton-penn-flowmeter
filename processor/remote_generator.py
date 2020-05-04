@@ -108,14 +108,18 @@ class RemoteThread(threading.Thread):
             elif self.parent.status == Status.DISCON:
                 self.parent.status = Status.OK
 
-            self.parent.mac = self.mac
+            if self.parent.mac != self.mac:
+                self.parent.mac = self.mac
+                self.parent.logger.info(f"Mac Address: {self.mac}")
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]
 
             for k, v in self.rotary_dict.items():
                 if k in self.parent.rotary:
-                    self.parent.rotary[k].value = v["value"]
+                    if self.parent.rotary[k].value != v["value"]:
+                        self.parent.rotary[k].value = v["value"]
+                        self.parent.logger.info(f"rotary: {k} set to {v['value']}")
 
 
 class RemoteGenerator(Generator):

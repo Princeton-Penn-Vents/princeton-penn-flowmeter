@@ -31,7 +31,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self.type = type
 
-    def _prepare(self, args):
+    def parse_known_args(
+        self, *pargs, **kwargs
+    ) -> Tuple[argparse.Namespace, List[str]]:
+        # Note: This gets called by parse_args, so we don't need
+        # to override both
+
+        args, unparsed_args = super().parse_known_args(*pargs, **kwargs)
+
         if args.config:
             config.set_file(args.config)
 
@@ -40,16 +47,4 @@ class ArgumentParser(argparse.ArgumentParser):
 
         init_logger(self.type)
 
-    def parse_known_args(
-        self, *pargs, **kwargs
-    ) -> Tuple[argparse.Namespace, List[str]]:
-        args, unparsed_args = super().parse_known_args(*pargs, **kwargs)
-        self._prepare(args)
-
         return args, unparsed_args
-
-    def parse_args(self, *pargs, **kwargs):
-        args = super().parse_args(*pargs, **kwargs)
-        self._prepare(args)
-
-        return args

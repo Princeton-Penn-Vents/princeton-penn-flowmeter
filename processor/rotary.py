@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import List, Dict, Any, ValuesView, TypeVar, Iterable
+from typing import List, Dict, Any, ValuesView, TypeVar, Iterable, ItemsView
 
 from processor.setting import Setting
 import threading
@@ -49,6 +49,9 @@ class LocalRotary:
 
     def values(self) -> ValuesView[Setting]:
         return self.config.values()
+
+    def items(self) -> ItemsView[str, Setting]:
+        return self.config.items()
 
     def __repr__(self) -> str:
         out = f"{self.__class__.__name__}(\n"

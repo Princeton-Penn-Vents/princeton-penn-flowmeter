@@ -214,6 +214,10 @@ class Generator(abc.ABC):
         """
 
         self.stop.clear()
+        self.logger.info("Starting run")
+        for k, v in self.rotary.to_dict().items():
+            self.logger.info(f"rotary: {k} set to {v['value']} (inital value)")
+
         self._run_thread = threading.Thread(target=self._run)
         self._run_thread.start()
 
@@ -504,6 +508,7 @@ class Generator(abc.ABC):
         """
         Always close or use a context manager if running threads!
         """
+        self.logger.info("Stopping run")
         self.stop.set()
         if self._run_thread is not None:
             self._run_thread.join()

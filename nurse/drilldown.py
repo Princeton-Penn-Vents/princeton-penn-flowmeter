@@ -23,7 +23,7 @@ from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 
 
-MAC_MSG = "Patient MAC Address: {mac} - Edits above are recorded in logs"
+MAC_MSG = "MAC Address: {mac} - Title recorded in logs"
 
 
 class BoxHeader(QtWidgets.QLabel):
