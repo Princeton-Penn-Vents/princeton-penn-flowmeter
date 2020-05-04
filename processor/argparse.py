@@ -45,6 +45,6 @@ class ArgumentParser(argparse.ArgumentParser):
         if "debug" in args:
             config.set_args({"global": {"debug": args.debug}})
 
-        init_logger(self.type)
+        init_logger(f"{self.type}_log/{self.type}.log")
 
         return args, unparsed_args
