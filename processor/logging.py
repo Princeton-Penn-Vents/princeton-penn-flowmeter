@@ -42,7 +42,7 @@ def init_logger(logstr: Optional[str] = None) -> None:
         file_path = DIR.parent / logstr
         file_path.parent.mkdir(exist_ok=True)
         logfile_incr = open_next(file_path)
-        fh = logging.FileHandler(logfile_incr)
+        fh = logging.FileHandler(str(logfile_incr))
         fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         logger.addHandler(fh)

@@ -2,7 +2,7 @@
 
 from processor.argparse import ArgumentParser
 
-parser = ArgumentParser(type=None)
+parser = ArgumentParser(log_dir=None, log_stem=None)
 parser.add_argument("-n", default=2.0, type=float, help="Timeout between reporting")
 parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
 parser.add_argument(

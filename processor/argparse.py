@@ -12,7 +12,7 @@ DIR = Path(__file__).parent.resolve()
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def __init__(self, *args, type=Optional[str], **kwargs):
+    def __init__(self, *args, log_dir=Optional[str], log_stem=Optional[str], **kwargs):
         super().__init__(
             *args, formatter_class=argparse.ArgumentDefaultsHelpFormatter, **kwargs
         )
@@ -29,7 +29,8 @@ class ArgumentParser(argparse.ArgumentParser):
             help="Start up in debug mode (log to screen)",
         )
 
-        self.type = type
+        self.log_dir = log_dir
+        self.log_stem = log_stem
 
     def parse_known_args(
         self, *pargs, **kwargs
@@ -45,6 +46,9 @@ class ArgumentParser(argparse.ArgumentParser):
         if "debug" in args:
             config.set_args({"global": {"debug": args.debug}})
 
-        init_logger(f"{self.type}_log/{self.type}.log")
+        if self.log_dir is not None and self.log_dir is not None:
+            init_logger(f"{self.log_dir}/{self.log_stem}.log")
+        else:
+            init_logger(None)
 
         return args, unparsed_args

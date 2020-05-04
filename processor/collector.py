@@ -101,14 +101,11 @@ class CollectorThread(threading.Thread):
 
 class Collector(Generator):
     def __init__(self, *, rotary: Optional[LocalRotary] = None, port: int = 8100):
-        super().__init__(rotary=rotary)
+        # Collectors never log data
+        super().__init__(rotary=rotary, no_save=True)
 
         self._collect_thread: Optional[CollectorThread] = None
         self.port = port
-
-        # Collectors never log data
-        self.saver_cml = None
-        self.saver_ts = None
 
     def _get_data(self) -> None:
         if self._collect_thread is not None:
