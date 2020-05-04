@@ -71,7 +71,7 @@ class DragDropGridMixin:
         drag.setHotSpot(hot_spot)
 
         self.setVisible(False)
-        drag.exec_()
+        drag.exec()
 
         if drag.target() and drag.source() != drag.target():
             parent = self.parent()

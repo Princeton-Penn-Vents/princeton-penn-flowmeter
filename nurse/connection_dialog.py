@@ -5,6 +5,7 @@ from nurse.qt import (
     QtWidgets,
     QtGui,
     Qt,
+    Slot,
 )
 
 from processor.generator import Generator
@@ -68,9 +69,12 @@ class ConnectionDialog(QtWidgets.QDialog):
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
+
+        self.ok, cancel = buttons.buttons()
+
         layout.addWidget(buttons)
 
-    def exec_(self):
+    def exec(self):
 
         self.setWindowTitle(f"Patient box {self.i} connection")
 
@@ -78,9 +82,14 @@ class ConnectionDialog(QtWidgets.QDialog):
         self.tabbed.manual_tab.ip_address.setText(parsed.hostname)
         self.tabbed.manual_tab.port.setText(str(parsed.port))
 
-        self.tabbed.detected_tab.detected.addItems(sorted(self.listener.detected))
+        items = sorted(self.listener.detected)
+        self.tabbed.detected_tab.detected.addItems(items)
 
-        return super().exec_()
+        if not items:
+            self.tabbed.setCurrentIndex(1)
+            self.tabbed.setTabEnabled(0, False)
+
+        return super().exec()
 
     @property
     def connection_address(self) -> str:

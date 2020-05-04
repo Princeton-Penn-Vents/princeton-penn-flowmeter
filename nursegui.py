@@ -139,7 +139,7 @@ class MainStack(QtWidgets.QWidget):
         dialog = ConnectionDialog(
             self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
         )
-        if dialog.exec_():
+        if dialog.exec():
             self.add_new_by_address(dialog.connection_address)
 
     def add_new_by_address(self, addr: str):
@@ -314,7 +314,7 @@ def main(argv, *, window: bool, debug: bool, **kwargs):
             main.close()
 
         signal.signal(signal.SIGINT, ctrl_c)
-        sys.exit(app.exec_())
+        sys.exit(app.exec())
 
 
 if __name__ == "__main__":
