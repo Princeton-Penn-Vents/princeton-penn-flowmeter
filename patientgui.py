@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-from processor.config import ArgumentParser, init_logger
+from processor.argparse import ArgumentParser
 
-parser = ArgumentParser()
+parser = ArgumentParser(log_dir="patient_log", log_stem="patientgui")
 parser.add_argument("--port", "-p", type=int, default=8100, help="Select a port")
 args = parser.parse_args()
-
-init_logger()
 
 import sys
 import signal
@@ -22,7 +20,7 @@ DIR = Path(__file__).parent.resolve()
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port
-) as collector, Broadcast("patientgui", port=args.port):
+) as collector, Broadcast("patientgui", port=args.port, live=4):
 
     rotary.live_load(DIR / "povm-live.yml")
     rotary.live_save(DIR / "povm-live.yml", every=10)
@@ -36,4 +34,4 @@ with RotaryGUI(get_live_settings()) as rotary, Collector(
     signal.signal(signal.SIGINT, ctrl_c)
 
     main.showNormal()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 import numpy as np
+import logging
 
 from sim.start_sims import start_sims
 from processor.rolling import Rolling, new_elements
@@ -8,14 +9,10 @@ from processor.generator import Generator, Status
 
 
 class LocalGenerator(Generator):
-    def __init__(self, *, i: int):
-        super().__init__()
+    def __init__(self, *, i: int, logger: logging.Logger):
+        super().__init__(logger=logger)
         self.rotary["Sensor ID"].value = i
         self.status = Status.OK
-
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
 
         self._start_time = int(1000 * time.monotonic())
         (self._sim,) = start_sims(1, self._start_time, 12000000)

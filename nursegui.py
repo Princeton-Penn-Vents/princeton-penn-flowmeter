@@ -33,8 +33,9 @@ from nurse.connection_dialog import ConnectionDialog
 from processor.generator import Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
-from processor.config import init_logger, ArgumentParser
+from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
+from processor.logging import make_nested_logger
 
 DIR = Path(__file__).parent.resolve()
 
@@ -87,10 +88,13 @@ class MainStack(QtWidgets.QWidget):
                 range(displays or len(addresses)), addresses or []
             )
             for i, addr in disp_addr:
+                local_logger = make_nested_logger(i)
                 gen = (
-                    RemoteGenerator(address=addr or "tcp://127.0.0.1:8100")
+                    RemoteGenerator(
+                        address=addr or "tcp://127.0.0.1:8100", logger=local_logger
+                    )
                     if not sim
-                    else LocalGenerator(i=i + 1)
+                    else LocalGenerator(i=i + 1, logger=local_logger)
                 )
                 gen.run()  # Close must be called
 
@@ -135,11 +139,12 @@ class MainStack(QtWidgets.QWidget):
         dialog = ConnectionDialog(
             self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
         )
-        if dialog.exec_():
+        if dialog.exec():
             self.add_new_by_address(dialog.connection_address)
 
     def add_new_by_address(self, addr: str):
-        gen = RemoteGenerator(address=addr)
+        local_logger = make_nested_logger(len(self.graphs))
+        gen = RemoteGenerator(address=addr, logger=local_logger)
         gen.run()
         self.add_item(gen)
 
@@ -287,8 +292,6 @@ def main(argv, *, window: bool, debug: bool, **kwargs):
     else:
         print("Fusion style is not available, display may be platform dependent")
 
-    init_logger("nurse_log/nursegui.log")
-
     logger.info("Starting nursegui")
 
     app = QtWidgets.QApplication(argv)
@@ -311,13 +314,15 @@ def main(argv, *, window: bool, debug: bool, **kwargs):
             main.close()
 
         signal.signal(signal.SIGINT, ctrl_c)
-        sys.exit(app.exec_())
+        sys.exit(app.exec())
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(
         description="Princeton Open Vent Monitor, nurse station graphical interface.",
         allow_abbrev=False,
+        log_dir="nurse_log",
+        log_stem="nursegui",
     )
     parser.add_argument("addresses", nargs="*", help="IP addresses to include")
     parser.add_argument(

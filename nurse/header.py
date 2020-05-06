@@ -1,5 +1,5 @@
 from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
-from nurse.common import GraphInfo
+from nurse.common import GraphInfo, dialog_style_path
 from datetime import datetime
 
 
@@ -58,39 +58,55 @@ class LimitButton(QtWidgets.QPushButton):
 
     @Slot()
     def click_graph_info(self):
-        b = self.limit.exec_()
+        b = self.limit.exec()
         if b:
             for graph in self.parent().parent().parent().graphs:
                 graph.graph[self.limit.key].setRange(
-                    yRange=[
-                        float(self.limit.lower.text()),
-                        float(self.limit.upper.text()),
-                    ]
+                    yRange=[self.limit.lower.value(), self.limit.upper.value(),]
                 )
+        else:
+            for graph in self.parent().parent().parent().graphs:
+                graph.graph[self.limit.key].setRange(
+                    yRange=[self.limit.orig_lower, self.limit.orig_upper,]
+                )
+
+
+class LimitSpinBox(QtWidgets.QDoubleSpinBox):
+    def __init__(self, key, is_upper):
+        super().__init__()
+        self.key = key
+        self.is_upper = is_upper
+        gis = GraphInfo()
+
+        self.setMaximum(gis.yMax[self.key])
+        self.setMinimum(gis.yMin[self.key])
+        self.setSingleStep(gis.yStep[self.key])
+        self.setSuffix(" " + gis.units[self.key])
 
 
 class LimitDialog(QtWidgets.QDialog):
     def __init__(self, name, parent):
         super().__init__()
+        gis = GraphInfo()
         self.p = parent
         self.key = name
         self.setWindowTitle(f"Change {name} limits")
         self.setWindowModality(Qt.ApplicationModal)
+        self.orig_lower: float = gis.yLims[self.key][0]
+        self.orig_upper: float = gis.yLims[self.key][1]
 
         layout = QtWidgets.QVBoxLayout(self)
 
         form_layout = QtWidgets.QFormLayout()
         layout.addLayout(form_layout)
 
-        self.upper = QtWidgets.QLineEdit()
-        validator = QtGui.QDoubleValidator()
-        self.upper.setValidator(validator)
+        self.upper = LimitSpinBox(self.key, True)
         form_layout.addRow("Upper:", self.upper)
+        self.upper.valueChanged.connect(self.change_value)
 
-        self.lower = QtWidgets.QLineEdit()
-        validator = QtGui.QDoubleValidator()
-        self.lower.setValidator(validator)
+        self.lower = LimitSpinBox(self.key, False)
         form_layout.addRow("Lower:", self.lower)
+        self.lower.valueChanged.connect(self.change_value)
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
@@ -99,12 +115,30 @@ class LimitDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
-    def exec_(self):
-        graph = self.p.parent().parent().parent().graphs[0]
-        l, u = graph.graph[self.key].viewRange()[1]
-        self.upper.setText(format(u, "g"))
-        self.lower.setText(format(l, "g"))
-        return super().exec_()
+        with open(dialog_style_path) as f:
+            self.setStyleSheet(f.read())
+
+    def exec(self):
+        graphs = self.p.parent().parent().parent().graphs
+        if not graphs:
+            return QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                "No sensors connected",
+                "No sensors are connected, use the + button on the top right or plug in a sensor.",
+            ).exec()
+
+        graph = graphs[0]
+        self.orig_lower, self.orig_upper = graph.graph[self.key].viewRange()[1]
+        self.lower.setValue(self.orig_lower)
+        self.upper.setValue(self.orig_upper)
+        return super().exec()
+
+    @Slot()
+    def change_value(self):
+        for graph in self.p.parent().parent().parent().graphs:
+            graph.graph[self.key].setRange(
+                yRange=[self.lower.value(), self.upper.value(),]
+            )
 
 
 class GraphLabelWidget(QtWidgets.QWidget):

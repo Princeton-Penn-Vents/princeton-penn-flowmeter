@@ -15,8 +15,6 @@ import logging
 from processor.rolling import Rolling, new_elements
 from processor.generator import Status, Generator
 
-logger = logging.getLogger("povm")
-
 
 class RemoteThread(threading.Thread):
     def __init__(self, parent: RemoteGenerator):
@@ -25,9 +23,9 @@ class RemoteThread(threading.Thread):
         self._address_change = threading.Event()
         self.status = Status.DISCON
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
+        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
+        self._flow = Rolling(window_size=parent.window_size)
+        self._pressure = Rolling(window_size=parent.window_size)
 
         self._remote_lock = threading.Lock()
         self._last_update: Optional[datetime] = None
@@ -85,12 +83,15 @@ class RemoteThread(threading.Thread):
                         self._last_get = time.monotonic()
 
                         if self.status == Status.DISCON:
-                            logger.info("(Re)Connecting successful")
+                            self.parent.logger.info(
+                                f"(Re)Connecting to {self._address} successful"
+                            )
                             self.status = Status.OK
 
             if number_events == 0 and self.status != Status.DISCON:
                 with self._remote_lock:
                     self.status = Status.DISCON
+                    self.parent.logger.info(f"Dropped connection to {self._address}")
 
     def access_collected_data(self) -> None:
         with self.parent.lock, self._remote_lock:
@@ -99,28 +100,35 @@ class RemoteThread(threading.Thread):
 
             newel = new_elements(self.parent._time, self._time)
 
-            self.parent._time.inject(self._time[-newel:])
-            self.parent._flow.inject(self._flow[-newel:])
-            self.parent._pressure.inject(self._pressure[-newel:])
+            if newel:
+                self.parent._time.inject(self._time[-newel:])
+                self.parent._flow.inject(self._flow[-newel:])
+                self.parent._pressure.inject(self._pressure[-newel:])
 
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON
             elif self.parent.status == Status.DISCON:
                 self.parent.status = Status.OK
 
-            self.parent.mac = self.mac
+            if self.parent.mac != self.mac:
+                self.parent.mac = self.mac
+                self.parent.logger.info(f"Mac Address: {self.mac}")
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]
 
             for k, v in self.rotary_dict.items():
                 if k in self.parent.rotary:
-                    self.parent.rotary[k].value = v["value"]
+                    if self.parent.rotary[k].value != v["value"]:
+                        self.parent.rotary[k].value = v["value"]
+                        self.parent.logger.info(f"rotary: {k} set to {v['value']}")
 
 
 class RemoteGenerator(Generator):
-    def __init__(self, *, address: str = "tcp://127.0.0.1:8100"):
-        super().__init__()
+    def __init__(
+        self, *, address: str = "tcp://127.0.0.1:8100", logger: logging.Logger
+    ):
+        super().__init__(logger=logger)
         self._address = address
         self.rotary["Sensor ID"].value = 0
 
@@ -143,6 +151,11 @@ class RemoteGenerator(Generator):
     def _get_data(self) -> None:
         if self._remote_thread is not None:
             self._remote_thread.access_collected_data()
+
+        if self._debug:
+            with self.lock:
+                if np.any(self._time[:-1] > self._time[1:]):
+                    self.logger.error("Time array is not sorted!")
 
     @property
     def address(self) -> str:

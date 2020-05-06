@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from processor.config import ArgumentParser, init_logger
+from processor.argparse import ArgumentParser
 
-parser = ArgumentParser()
+parser = ArgumentParser(log_dir="patient_log", log_stem="patient_loop")
 parser.add_argument("--port", "-p", type=int, default=8100, help="Select a port")
 args = parser.parse_args()
 
-init_logger()
 
 import signal
 import threading
@@ -22,7 +21,7 @@ DIR = Path(__file__).parent.resolve()
 # Initialize LCD
 with RotaryLCD(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port
-) as collector, Broadcast("patient_loop", port=args.port):
+) as collector, Broadcast("patient_loop", port=args.port, live=4):
     rotary.live_load(DIR / "povm-live.yml")
     rotary.live_save(DIR / "povm-live.yml", every=10)
 

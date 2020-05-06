@@ -78,13 +78,13 @@ class LiveRotary(LocalRotary):
             logger.warning(f"Empty {filename}")
             return
 
-        if keys == set(self.config):
+        if not keys - set(self.config):
             for group in ("rotary-live", "rotary"):
                 for key in conf[group]:
                     self[key].default = conf[group][key]["default"]
         else:
             logger.warning(
-                f"Was unable to load {filename} due to mismatch {keys} {set(self.config)}"
+                f"Was unable to load {filename} due to extra keys: {keys - set(self.config)}"
             )
 
     def __enter__(self: T) -> T:

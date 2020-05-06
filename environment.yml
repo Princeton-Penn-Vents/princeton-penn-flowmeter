@@ -13,3 +13,4 @@ dependencies:
   - pyzmq
   - scipy
   - confuse
+  - zeroconf

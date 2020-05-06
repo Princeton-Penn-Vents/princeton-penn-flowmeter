@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from processor.config import ArgumentParser
+from processor.argparse import ArgumentParser
 
-parser = ArgumentParser()
+parser = ArgumentParser(log_dir=None, log_stem=None)
 parser.add_argument("-n", default=2.0, type=float, help="Timeout between reporting")
 parser.add_argument("--ip", default="127.0.0.1", help="Select an ip address")
 parser.add_argument(
@@ -13,20 +13,24 @@ arg = parser.parse_args()
 
 import time
 import numpy as np
+import logging
 
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
 from processor.generator import Generator
+
+logger = logging.getLogger("povm")
+
 
 gen: Generator
 
 if arg.port is not None:
     address = f"tcp://{arg.ip}:{arg.port}"
     print(f"Remote: {address}")
-    gen = RemoteGenerator(address=address)
+    gen = RemoteGenerator(address=address, logger=logger)
 else:
     print("Local Generator")
-    gen = LocalGenerator(i=1)
+    gen = LocalGenerator(i=0, logger=logger)
 
 print(f"Reporting every {arg.n} seconds, use Ctrl-C to exit.")
 

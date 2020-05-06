@@ -10,7 +10,7 @@ from typing import Iterator
 import signal
 
 from sim.start_sims import start_sims
-from processor.config import ArgumentParser, init_logger
+from processor.argparse import ArgumentParser
 from processor.broadcast import Broadcast
 
 
@@ -53,14 +53,16 @@ class SimGenerator:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Serve values on network as JSON")
+    parser = ArgumentParser(
+        description="Serve values on network as JSON",
+        log_dir="patient_log",
+        log_stem="patient_sim",
+    )
     parser.add_argument("--port", type=int, default=8100, help="First port to serve on")
     parser.add_argument("-n", type=int, default=1, help="How many ports to serve on")
 
     args = parser.parse_args()
     print(args)
-
-    init_logger()
 
     sim_gen = SimGenerator()
 

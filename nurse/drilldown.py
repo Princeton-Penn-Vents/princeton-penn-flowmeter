@@ -23,7 +23,7 @@ from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 
 
-MAC_MSG = "Patient MAC Address: {mac} - Edits above are recorded in logs"
+MAC_MSG = "MAC Address: {mac} - Title recorded in logs"
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -138,7 +138,7 @@ class DisplayBox(QtWidgets.QFrame):
                 self.upper_limit.setText(format(gen.rotary[max_key].value, self.fmt))
 
             if hasattr(self, "avg_time"):
-                self.avg_time.setText(f"({gen.rotary['AvgWindow']}s)")
+                self.avg_time.setText(f"({gen.rotary['AvgWindow']})")
 
 
 class AllDisplays(QtWidgets.QWidget):

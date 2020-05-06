@@ -24,9 +24,9 @@ class CollectorThread(threading.Thread):
     def __init__(self, parent: Collector):
         self.parent = parent
 
-        self._time = Rolling(window_size=Generator.WINDOW_SIZE, dtype=np.int64)
-        self._flow = Rolling(window_size=Generator.WINDOW_SIZE)
-        self._pressure = Rolling(window_size=Generator.WINDOW_SIZE)
+        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
+        self._flow = Rolling(window_size=parent.window_size)
+        self._pressure = Rolling(window_size=parent.window_size)
 
         self._flow_scale = config["device"]["flow"]["scale"].as_number()
         self._flow_offset = config["device"]["flow"]["offset"].as_number()
@@ -93,14 +93,16 @@ class CollectorThread(threading.Thread):
         with self.parent.lock, self._collector_lock:
             newel = new_elements(self.parent._time, self._time)
 
-            self.parent._time.inject(self._time[-newel:])
-            self.parent._flow.inject(self._flow[-newel:])
-            self.parent._pressure.inject(self._pressure[-newel:])
+            if newel:
+                self.parent._time.inject(self._time[-newel:])
+                self.parent._flow.inject(self._flow[-newel:])
+                self.parent._pressure.inject(self._pressure[-newel:])
 
 
 class Collector(Generator):
     def __init__(self, *, rotary: Optional[LocalRotary] = None, port: int = 8100):
-        super().__init__(rotary=rotary)
+        # Collectors never log data
+        super().__init__(rotary=rotary, no_save=True)
 
         self._collect_thread: Optional[CollectorThread] = None
         self.port = port

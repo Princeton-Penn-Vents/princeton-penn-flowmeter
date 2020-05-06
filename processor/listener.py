@@ -7,7 +7,7 @@ import queue
 import logging
 import ipaddress
 from typing import Set, Callable
-from processor.config import init_logger
+from processor.argparse import init_logger
 
 logger = logging.getLogger("povm")
 
@@ -49,8 +49,8 @@ class Listener(ServiceListener):
                 f"tcp://{ipaddress.ip_address(ip)}:{info.port}" for ip in info.addresses
             }
 
-            macaddr = info.properties.get(b"mac_addr")
-            service = info.properties.get(b"service")
+            macaddr = info.properties.get(b"mac_addr", b"<unknown>").decode()
+            service = info.properties.get(b"service", b"<unknown>").decode()
 
             logger.info(f"Service {name} {status}: {addresses} - {macaddr} - {service}")
             return addresses

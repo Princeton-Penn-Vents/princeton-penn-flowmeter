@@ -5,6 +5,7 @@ from nurse.qt import QtGui
 # Replace with proper importlib.resources if made a package
 DIR = Path(__file__).parent.absolute()
 style_path = DIR / "style.css"
+dialog_style_path = DIR / "dialogs.css"
 
 guicolors = {
     "ALERT": QtGui.QColor(0, 0, 100),
@@ -46,6 +47,10 @@ class GraphInfo:
             "pressure": (255, 120, 50),
             "volume": (255, 128, 255),
         }
+
+        self.yMax = {"flow": 300, "pressure": 100, "volume": 5000}
+        self.yMin = {"flow": -300, "pressure": -100, "volume": 0}
+        self.yStep = {"flow": 10, "pressure": 2, "volume": 100}
 
         self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
 
