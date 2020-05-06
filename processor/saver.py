@@ -68,3 +68,20 @@ class CSVSaverCML(Saver):
         self.file.write(json.dumps(self.parent.cumulative))
         self.file.write("\n")
         super().save()
+
+
+class JSONSSaverBreaths(Saver):
+    def __init__(self, gen: Generator, filepath: Path):
+        super().__init__(gen, filepath, 0.0)
+
+    def __bool__(self) -> bool:
+        return False
+
+    def save(self, breaths) -> None:
+        for breath in breaths:
+            self.file.write(json.dumps(breath))
+            self.file.write("\n")
+        super().save()
+
+    def header(self) -> None:
+        pass

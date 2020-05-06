@@ -17,7 +17,7 @@ from processor.rotary import LocalRotary
 from processor.settings import get_remote_settings
 from processor.config import config
 from processor.rolling import Rolling
-from processor.saver import CSVSaverTS, CSVSaverCML
+from processor.saver import CSVSaverTS, CSVSaverCML, JSONSSaverBreaths
 
 
 class Status(enum.Enum):
@@ -142,6 +142,7 @@ class Generator(abc.ABC):
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
         self.saver_cml: Optional[CSVSaverCML] = None
+        self.saver_breaths: Optional[JSONSSaverBreaths] = None
 
         if no_save:
             return
@@ -161,6 +162,10 @@ class Generator(abc.ABC):
                 self,
                 log_path / "cml.csv",
                 config["global"]["cumulative-every"].as_number(),
+            )
+            self.saver_breaths = JSONSSaverBreaths(
+                self,
+                log_path / "breaths.jsons",
             )
         else:
             self.logger.info(
@@ -222,6 +227,8 @@ class Generator(abc.ABC):
             self.saver_ts.enter()
         if self.saver_cml is not None:
             self.saver_cml.enter()
+        if self.saver_breaths is not None:
+            self.saver_breaths.enter()
 
         for k, v in self.rotary.to_dict().items():
             self.logger.info(f"rotary: {k} set to {v['value']} (initial value)")
@@ -376,6 +383,8 @@ class Generator(abc.ABC):
                     new_breaths,
                 ) = processor.analysis.combine_breaths(self._breaths, breaths)
 
+                if self.saver_breaths is not None:
+                    self.saver_breaths.save(all_breaths[:-30])
                 self._breaths = all_breaths[-30:]
 
                 self._cumulative, updated_fields = processor.analysis.cumulative(
@@ -525,6 +534,8 @@ class Generator(abc.ABC):
             self.saver_ts.close()
         if self.saver_cml is not None:
             self.saver_cml.close()
+        if self.saver_breaths is not None:
+            self.saver_breaths.close()
 
     def __enter__(self: T) -> T:
         self.run()
