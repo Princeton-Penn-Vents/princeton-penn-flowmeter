@@ -257,16 +257,18 @@ class VentSim:
         self, t: int, nMilliSeconds: int
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
-        fbinT= 0
+        fbinT = 0
         nbins = int(nMilliSeconds / self.sample_length)
         if lbin == len(self.times):
-            fbinT = np.searchsorted(self.times, t - nMilliSeconds - self.curr_time, side="left")
+            fbinT = np.searchsorted(
+                self.times, t - nMilliSeconds - self.curr_time, side="left"
+            )
             if fbinT != len(self.times):
                 lbinT = np.searchsorted(self.times, self.sim_time, side="left")
                 saveTimes = self.times[fbinT:lbinT]
                 saveFlow = self.flow[fbinT:lbinT]
                 savePressure = self.pressure[fbinT:lbinT]
-                
+
             self.extend()
             lbin = np.searchsorted(self.times, t - self.curr_time, side="left")
             assert lbin != len(
@@ -288,13 +290,19 @@ class VentSim:
                 )
             else:
                 return (
-                    (self.curr_time + np.append(saveTimes,self.times[:lbin])).astype(int),
-                    np.append(saveFlow,self.flow[:lbin])
-                    + np.random.normal(0, self.measurement_error_flow, lbin + lbinT - fbinT ),
-                    np.append(savePressure,self.pressure[:lbin])
-                    + np.random.normal(0, self.measurement_error_pressure, lbin + lbinT - fbinT),
+                    (self.curr_time + np.append(saveTimes, self.times[:lbin])).astype(
+                        int
+                    ),
+                    np.append(saveFlow, self.flow[:lbin])
+                    + np.random.normal(
+                        0, self.measurement_error_flow, lbin + lbinT - fbinT
+                    ),
+                    np.append(savePressure, self.pressure[:lbin])
+                    + np.random.normal(
+                        0, self.measurement_error_pressure, lbin + lbinT - fbinT
+                    ),
                 )
-            
+
         else:
             if lbin < nbins:
                 fbin = 0

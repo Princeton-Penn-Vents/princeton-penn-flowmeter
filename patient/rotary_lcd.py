@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, CurrentSetting
-from processor.collector import MAC_STR
+from patient.mac_address import get_mac_addr
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -43,8 +43,9 @@ class RotaryLCD(Rotary):
 
         self.backlight.white()
         self.lcd.upper("Princeton Open Vent ")
-        self.lcd.lower(MAC_STR)
-        time.sleep(13.5)
+        self.lcd.lower("Getting address...")
+        self.lcd.lower(get_mac_addr() + " ")
+        time.sleep(3.5)
         return self
 
     def __exit__(self, *exc) -> None:

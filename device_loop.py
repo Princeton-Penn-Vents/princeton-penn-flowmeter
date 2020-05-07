@@ -132,7 +132,7 @@ def read_loop(
     snlsw = int.from_bytes(bdataSDP3[12:14], byteorder="big", signed=False)
     snllsw = int.from_bytes(bdataSDP3[15:17], byteorder="big", signed=False)
     sn = (snmmsw << 48) | (snmsw << 32) | (snlsw << 16) | snllsw
-    print(hex(pn), hex(sn))
+    print("pn", hex(pn), "sn", hex(sn))
 
     # start continuous readout with averaging with differential pressure temperature compensation
     pi.i2c_write_device(hSDP3, [0x36, 0x15])
@@ -145,13 +145,17 @@ def read_loop(
     dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
     temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
     dpsf = float((bdataSDP3[6] << 8) | bdataSDP3[7])
-    print(time.time(), dp, temp, dpsf)
+    print("Time", time.time(), "dp", dp, "temp", temp, "dpsf", dpsf)
 
     curTEMP = temp / 200.0
     pi.set_PWM_range(pinPWM, dcRANGE)
     pi.set_PWM_dutycycle(pinPWM, dcTEMP)
     dcFREQ = pi.get_PWM_frequency(pinPWM)
-    print("{} {:.4f} {:.4f}".format(time.time() * 1000, dp / dpsf, temp / 200.0))
+    print(
+        "time: {} dp / dpsf: {:.4f} temp: {:.4f}".format(
+            time.time() * 1000, dp / dpsf, temp / 200.0
+        )
+    )
     print(
         "PWM settings: Range = {} Freq = {} Step = {} Strobe = {}".format(
             dcRANGE, dcFREQ, dcSTEP, dcSTROBE
@@ -221,7 +225,7 @@ def read_loop(
 
             curTEMP = tmptemp
 
-            d.update({"C": curTEMP, "D": dcTEMP})
+            d.update({"C": curTEMP, "D": dcTEMP, "sn": sn})
 
         ds = json.dumps(d)
         pub_socket.send_string(ds)
