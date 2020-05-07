@@ -13,6 +13,7 @@ global:
   cumulative-every: 10 # seconds
   run-every: 0.5 # seconds
   window-size: 1500 # 30 seconds @ 50 hertz
+  broadcast-ifaces: [en0, eth0, wlan0]
 
 rotary-live:
   Log Filename:
