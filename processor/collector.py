@@ -15,14 +15,13 @@ from datetime import datetime
 from typing import Optional
 import math
 import uuid
-
-_mac_addr = uuid.getnode()
-MAC_STR = ":".join(f"{(_mac_addr >> ele) & 0xff :02x}" for ele in range(40, -8, -8))
+from patient.mac_address import get_mac_addr
 
 
 class CollectorThread(threading.Thread):
     def __init__(self, parent: Collector):
         self.parent = parent
+        self._sn: Optional[int] = None
 
         self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
         self._flow = Rolling(window_size=parent.window_size)
@@ -71,6 +70,9 @@ class CollectorThread(threading.Thread):
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})
 
+                if "sn" in j:
+                    self._sn = j["sn"]
+
                 with self._collector_lock:
                     self._time.inject_value(t)
                     self._flow.inject_value(f)
@@ -79,13 +81,17 @@ class CollectorThread(threading.Thread):
             # Send rotary every ~1 second, regardless of status of input
             if time.monotonic() > (last + 1) or self.parent.rotary._changed.is_set():
                 with self.parent.lock:
-                    pub_socket.send_json(
-                        {
-                            "rotary": self.parent.rotary.to_dict(),
-                            "date": datetime.now().timestamp(),
-                            "mac": MAC_STR,
-                        }
-                    )
+                    extra_dict = {
+                        "rotary": self.parent.rotary.to_dict(),
+                        "date": datetime.now().timestamp(),
+                        "mac": get_mac_addr(),
+                    }
+
+                    if self._sn is not None:
+                        extra_dict["sid"] = self._sn
+
+                    pub_socket.send_json(extra_dict)
+
                 last = time.monotonic()
                 self.parent.rotary._changed.clear()
 
