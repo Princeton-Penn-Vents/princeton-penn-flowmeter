@@ -48,13 +48,15 @@ class Broadcast:
     def register(self):
         addrs = set(get_ip())
         if addrs != self.addrs:
-            for addr in addrs - self.addrs:
-                logger.info(f"Starting broadcast on {addr}")
             for addr in self.addrs - addrs:
                 logger.info(f"Ending broadcast on {addr}")
+            logger.info(f"Starting broadcast on {', '.join(addrs)}")
 
             if self.info is not None:
                 self.zeroconf.unregister_service(self.info)
+
+            self.zeroconf.close()
+            self.zeroconf = Zeroconf()
 
             self.info = ServiceInfo(
                 "_http._tcp.local.",
