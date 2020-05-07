@@ -5,7 +5,7 @@ nouns      = [x.strip() for x in open("nouns.txt")]
 assert len(adjectives) == 4096
 assert len(nouns) == 4096
 
-def lcg_generator(state, multiplier=1366, addend=150889, pmod=714025):
+def lcg_generator(state, multiplier=1140671485, addend=12820163, pmod=2**24):
     state = (multiplier*state + addend) % pmod
     return state
 
