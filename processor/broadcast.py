@@ -36,8 +36,6 @@ class Broadcast:
         Set a timeout for live to have this poll for new IP address assignments at this rate.
         """
 
-        ifaces = config["global"]["broadcast-ifaces"].as_str_seq()
-
         self.zeroconf = Zeroconf()
         self.port = port
         self.addrs: Set[str] = set()
@@ -45,6 +43,7 @@ class Broadcast:
         self.live = live
         self.stop = threading.Event()
         self.thread: Optional[threading.Thread] = None
+        self.info: Optional[ServiceInfo] = None
 
     def register(self):
         addrs = set(get_ip())
@@ -53,6 +52,9 @@ class Broadcast:
                 logger.info(f"Starting broadcast on {addr}")
             for addr in self.addrs - addrs:
                 logger.info(f"Ending broadcast on {addr}")
+
+            if self.info is not None:
+                self.zeroconf.unregister_service(self.info)
 
             self.info = ServiceInfo(
                 "_http._tcp.local.",
@@ -73,6 +75,8 @@ class Broadcast:
         while not self.stop.is_set():
             self.register()
             self.stop.wait(self.live)
+        if self.info is not None:
+            self.zeroconf.unregister_service(self.info)
 
     def __enter__(self) -> Broadcast:
         if self.live > 0:
@@ -86,7 +90,7 @@ class Broadcast:
         self.stop.set()
         if self.thread is not None:
             self.thread.join()
-        else:
+        elif self.info is not None:
             self.zeroconf.unregister_service(self.info)
 
         self.zeroconf.close()
