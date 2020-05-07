@@ -39,6 +39,7 @@ def address_to_word(address):
         noun = nouns[state & noun_mask]
         if adjective != "" and noun != "" and len(adjective) + len(noun) < 20:
             return adjective + " " + noun
+        state = lcg_generator(state)
 
 addresses = [
     "dc:a6:32:8f:67:58",
@@ -63,4 +64,4 @@ addresses = [
     "dc:a6:32:82:99:ba"]
 
 for address in addresses:
-    print(address_to_word(address))
+    print(address, "->", address_to_word(address))
