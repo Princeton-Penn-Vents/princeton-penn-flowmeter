@@ -10,7 +10,6 @@ from typing import Dict, Any, Optional
 from nurse.qt import (
     QtWidgets,
     QtGui,
-    QtCore,
     Qt,
     Slot,
     HBoxLayout,
@@ -18,23 +17,12 @@ from nurse.qt import (
     FormLayout,
 )
 
-from nurse.common import GraphInfo
+from nurse.common import GraphInfo, INFO_STRINGS
 from nurse.dragdrop import DragDropGridMixin
 
 from processor.generator import Status, Generator
 from processor.remote_generator import RemoteGenerator
 from nurse.connection_dialog import ConnectionDialog
-
-
-INFO_STRINGS = {
-    "Avg Flow": ".0f",
-    "Avg Pressure": ".0f",
-    "RR": ".0f",  # (breaths/min)
-    "TVe": ".0f",  # (mL)
-    "PIP": ".0f",  # (cm H2O)
-    "PEEP": ".0f",  # (cm H2O)
-    "I:E time ratio": ".1f",
-}
 
 
 class NumberLabel(QtWidgets.QLabel):

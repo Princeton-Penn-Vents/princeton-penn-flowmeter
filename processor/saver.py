@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 from datetime import datetime
 import numpy as np
 import json
@@ -77,11 +77,11 @@ class JSONSSaverBreaths(Saver):
     def __bool__(self) -> bool:
         return False
 
-    def save(self, breaths) -> None:
+    def save_breaths(self, breaths: List[Dict[str, float]]) -> None:
         for breath in breaths:
             self.file.write(json.dumps(breath))
             self.file.write("\n")
-        super().save()
+        self.save()
 
     def header(self) -> None:
         pass

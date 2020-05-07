@@ -163,10 +163,7 @@ class Generator(abc.ABC):
                 log_path / "cml.csv",
                 config["global"]["cumulative-every"].as_number(),
             )
-            self.saver_breaths = JSONSSaverBreaths(
-                self,
-                log_path / "breaths.jsons",
-            )
+            self.saver_breaths = JSONSSaverBreaths(self, log_path / "breaths.jsons",)
         else:
             self.logger.info(
                 "No file-based logging attached, not saving time series or cumulatives"
@@ -384,7 +381,7 @@ class Generator(abc.ABC):
                 ) = processor.analysis.combine_breaths(self._breaths, breaths)
 
                 if self.saver_breaths is not None:
-                    self.saver_breaths.save(all_breaths[:-30])
+                    self.saver_breaths.save_breaths(all_breaths[:-30])
                 self._breaths = all_breaths[-30:]
 
                 self._cumulative, updated_fields = processor.analysis.cumulative(
