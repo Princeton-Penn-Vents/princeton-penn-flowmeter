@@ -82,7 +82,7 @@ def reorder(indict: Dict[str, Setting], ordering: Dict[str, int]) -> Dict[str, S
     # Values that have a positive order go first (0, then 1, etc.)
     for value in above_values:
         keys = {k for k, v in ordering.items() if v == value}
-        master.update({k: v for k, v in indict.items() if k not in keys})
+        master.update({k: v for k, v in indict.items() if k in keys})
 
     # Values that have no order go in the middle
     master.update({k: v for k, v in indict.items() if k not in ordering})
@@ -90,7 +90,7 @@ def reorder(indict: Dict[str, Setting], ordering: Dict[str, int]) -> Dict[str, S
     # Values with a negative order go at the end (-3, -2, -1)
     for value in below_values:
         keys = {k for k, v in ordering.items() if v == value}
-        master.update({k: v for k, v in indict.items() if k not in keys})
+        master.update({k: v for k, v in indict.items() if k in keys})
 
     return master
 

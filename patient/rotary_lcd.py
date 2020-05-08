@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from processor.setting import Setting
-from processor.display_settings import ResetSetting, CurrentSetting
+from processor.display_settings import ResetSetting, CurrentSetting, NameSetting
 from patient.mac_address import get_mac_addr
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
@@ -89,8 +89,8 @@ class RotaryLCD(Rotary):
 
     def turn(self, dir: Dir) -> None:
         super().turn(dir)
-        self.upper_display()
         self.lower_display()
+        self.upper_display()
 
     def alert(self) -> None:
         if self.alarms and self.alarm_level == AlarmLevel.OFF:
@@ -102,7 +102,11 @@ class RotaryLCD(Rotary):
             self.buzzer.clear()
             self.alarm_level = AlarmLevel.OFF
 
-        self.lower_display()
+        if isinstance(self.value(), NameSetting):
+            self.upper_display()
+        else:
+            self.lower_display()
+
         super().alert()
 
     def upper_display(self) -> None:
@@ -111,6 +115,14 @@ class RotaryLCD(Rotary):
             print(f"Warning: Truncating {current_name!r}")
             current_name = current_name[:16]
         string = f"{self._current + 1:>2}: {current_name:<16}"
+
+        if self.alarms and isinstance(self.value(), NameSetting):
+            n = len(self.alarms)
+            if n == 1:
+                string = string[:14] + " ALARM"
+            else:
+                string = string[:13] + " ALARMS"
+
         self.lcd.upper(string)
 
     def lower_display(self) -> None:
@@ -119,7 +131,7 @@ class RotaryLCD(Rotary):
         if len(string) > 20:
             print(f"Warning: Truncating {string!r}")
             string = string[:20]
-        if self.alarms:
+        if self.alarms and not isinstance(self.value(), NameSetting):
             n = len(self.alarms)
             if n == 1:
                 string = string[:14] + " ALARM"
@@ -130,8 +142,8 @@ class RotaryLCD(Rotary):
 
     def display(self) -> None:
         self.lcd.clear()
-        self.upper_display()
         self.lower_display()
+        self.upper_display()
 
 
 if __name__ == "__main__":

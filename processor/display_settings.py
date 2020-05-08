@@ -39,7 +39,7 @@ class NameSetting(DisplaySetting):
 
     @property
     def value(self) -> str:
-        return address_to_name(get_mac_addr())
+        return address_to_name(get_mac_addr()).capitalize()
 
     # Currently does not work remotely
     @value.setter
