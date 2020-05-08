@@ -14,7 +14,6 @@ import time
 from datetime import datetime
 from typing import Optional
 import math
-import uuid
 from patient.mac_address import get_mac_addr
 
 

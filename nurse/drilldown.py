@@ -23,7 +23,7 @@ from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 
 
-MAC_MSG = "MAC Address: {mac} - Title recorded in logs"
+MAC_MSG = "MAC Address: {mac}  Sensor ID: {sid}"
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -335,7 +335,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.title = PatientTitle()
         left_layout.addWidget(self.title)
 
-        self.title_warning = QtWidgets.QLabel(MAC_MSG.format(mac="<unknown>"))
+        self.title_warning = QtWidgets.QLabel(
+            MAC_MSG.format(mac="<unknown>", sid="<unknown>")
+        )
         self.title_warning.setObjectName("TitleWarning")
         left_layout.addWidget(self.title_warning, 0, Qt.AlignHCenter)
 
@@ -496,7 +498,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         self.sensor_id = sensor_id
                         self.title.name_lbl.setText(f"{sensor_id}:")
 
-                    text = MAC_MSG.format(mac=self.gen.mac or "<unknown>")
+                    text = MAC_MSG.format(
+                        mac=self.gen.mac or "<unknown>", sid=self.gen.sid or "<unknown>"
+                    )
                     if text != self.title_warning.text():
                         self.title_warning.setText(text)
 

@@ -32,6 +32,7 @@ class RemoteThread(threading.Thread):
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
         self.mac = ""
+        self.sid = 0
 
         super().__init__()
 
@@ -71,6 +72,9 @@ class RemoteThread(threading.Thread):
                 if "mac" in root:
                     with self._remote_lock:
                         self.mac = root["mac"]
+                if "sid" in root:
+                    with self._remote_lock:
+                        self.sid = root["sid"]
                 if "rotary" in root:
                     with self._remote_lock:
                         self.rotary_dict = root["rotary"]
@@ -113,6 +117,10 @@ class RemoteThread(threading.Thread):
             if self.parent.mac != self.mac:
                 self.parent.mac = self.mac
                 self.parent.logger.info(f"Mac Address: {self.mac}")
+
+            if self.parent.sid != self.sid:
+                self.parent.sid = self.sid
+                self.parent.logger.info(f"Sensor ID: {self.sid}")
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]

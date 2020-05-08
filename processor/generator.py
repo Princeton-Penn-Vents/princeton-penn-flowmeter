@@ -136,6 +136,9 @@ class Generator(abc.ABC):
         # The mac address if known
         self.mac = ""
 
+        # The Sensor ID if known (0 otherwise)
+        self.sid = 0
+
         # The logger instance
         self.logger: logging.Logger = logger or logging.getLogger("povm")
 
