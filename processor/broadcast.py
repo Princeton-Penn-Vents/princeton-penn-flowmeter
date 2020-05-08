@@ -44,9 +44,13 @@ class Broadcast:
         self.thread: Optional[threading.Thread] = None
         self.info: Optional[ServiceInfo] = None
 
+        # Workaround for this not always coming online when you start from a service
+        self.times = 0
+
     def register(self):
+        self.times += 1
         addrs = set(get_ip())
-        if addrs != self.addrs:
+        if addrs != self.addrs or self.times in [1, 5, 25]:
             for addr in self.addrs - addrs:
                 logger.info(f"Ending broadcast on {addr}")
             logger.info(f"Starting broadcast on {', '.join(addrs)}")

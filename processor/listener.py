@@ -125,5 +125,5 @@ if __name__ == "__main__":
             forever = threading.Event()
             forever.wait()
     except KeyboardInterrupt:
-        print("\nDuring run, detected:", *fb.detected, sep="\n  ")
+        print(f"\nDuring run, detected {len(fb.detected)}:", *fb.detected, sep="\n  ")
         print("\n\nIPs:", *(x.address for x in fb.detected))
