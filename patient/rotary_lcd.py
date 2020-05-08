@@ -4,6 +4,7 @@ from __future__ import annotations
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, CurrentSetting, NameSetting
 from patient.mac_address import get_mac_addr
+from processor.device_names import address_to_name
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -43,9 +44,9 @@ class RotaryLCD(Rotary):
         super().__enter__()
 
         self.backlight.white()
-        self.lcd.upper("Princeton Open Vent ")
-        self.lcd.lower("Getting address...")
-        self.lcd.lower(get_mac_addr() + " ")
+        self.lcd.upper("POVM Box name:")
+        self.lcd.lower("Getting name...")
+        self.lcd.lower(address_to_name(get_mac_addr()).title() + " ")
         time.sleep(3.5)
         return self
 

@@ -10,9 +10,6 @@ DIR = Path(__file__).parent.resolve()
 
 
 class FilenameSetting(DisplaySetting):
-    def __init__(self, name: str):
-        super().__init__(name=name)
-
     @property
     def value(self) -> str:
         files = sorted(Path(DIR.parent / "device_log").glob("*"))
@@ -24,35 +21,27 @@ class FilenameSetting(DisplaySetting):
     def value(self, value: str):
         self._value = value
 
-    @property
-    def default(self) -> float:
-        return 0.0
-
-    @default.setter
-    def default(self, val: float):
-        pass
-
 
 class NameSetting(DisplaySetting):
-    def __init__(self, name: str):
-        super().__init__(name=name)
-
     @property
     def value(self) -> str:
-        return address_to_name(get_mac_addr()).capitalize()
+        return address_to_name(get_mac_addr()).title()
 
     # Currently does not work remotely
     @value.setter
     def value(self, value: str):
         self._value = value
 
-    @property
-    def default(self) -> float:
-        return 0.0
 
-    @default.setter
-    def default(self, val: float):
-        pass
+class MACSetting(NameSetting):
+    @property
+    def value(self) -> str:
+        return get_mac_addr()
+
+    # Currently does not work remotely
+    @value.setter
+    def value(self, value: str):
+        self._value = value
 
 
 class CurrentSetting(SelectionSetting):
