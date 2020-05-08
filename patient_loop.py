@@ -18,6 +18,7 @@ from processor.broadcast import Broadcast
 
 DIR = Path(__file__).parent.resolve()
 
+
 # Initialize LCD
 with RotaryLCD(get_live_settings()) as rotary, Collector(
     rotary=rotary, port=args.port

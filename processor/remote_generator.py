@@ -20,7 +20,6 @@ class RemoteThread(threading.Thread):
     def __init__(self, parent: RemoteGenerator):
         self.parent = parent
         self._address = self.parent.address
-        self._address_change = threading.Event()
         self.status = Status.DISCON
 
         self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
@@ -36,14 +35,6 @@ class RemoteThread(threading.Thread):
 
         super().__init__()
 
-    def clear(self) -> None:
-        self._time.clear()
-        self._flow.clear()
-        self._pressure.clear()
-        self._last_get = None
-        self._last_update = None
-        self.mac = ""
-
     @context()
     @socket(zmq.SUB)
     def run(self, _ctx: zmq.Context, sub_socket: zmq.Socket) -> None:
@@ -52,19 +43,6 @@ class RemoteThread(threading.Thread):
         sub_socket.subscribe(b"")
 
         while not self.parent.stop.is_set():
-            # Allow changing connections
-            if self._address_change.is_set():
-                with self._remote_lock, self.parent.lock:
-                    sub_socket.disconnect(self._address)
-                    sub_socket.connect(self.parent._address)
-                    self._address = self.parent._address
-                    self._address_change.clear()
-
-                    self.clear()
-                    self.parent.clear()
-
-                    self.status = self.parent.status = Status.DISCON
-
             number_events = sub_socket.poll(1 * 1000)
             for _ in range(number_events):
                 self._last_update = datetime.now()
@@ -144,12 +122,6 @@ class RemoteGenerator(Generator):
 
         self._remote_thread: Optional[RemoteThread] = None
 
-    def clear(self) -> None:
-        super().clear()
-
-        self.status = Status.DISCON
-        self._last_ts = 0
-
     def run(self) -> None:
         super().run()
         self._remote_thread = RemoteThread(self)
@@ -167,12 +139,6 @@ class RemoteGenerator(Generator):
     @property
     def address(self) -> str:
         return self._address
-
-    @address.setter
-    def address(self, value: str) -> None:
-        self._address = value
-        if self._remote_thread is not None:
-            self._remote_thread._address_change.set()
 
     @property
     def pressure(self) -> np.ndarray:
