@@ -13,25 +13,32 @@ global:
   cumulative-every: 10 # seconds
   run-every: 0.5 # seconds
   window-size: 1500 # 30 seconds @ 50 hertz
-  broadcast-ifaces: [en0, eth0, wlan0]
 
 patient:
   buzzer-volume: 0
 
 rotary-live:
+  Name:
+    type: Name
+    name: Box name
+    order: -1
+
   Log Filename:
     type: Filename
     name: Log filename
+    order: -3
 
   Reset Setting:
     type: Reset
     name: Turn to Reset
+    order: -2
 
   Current Setting:
     type: Current
     default: 3
     items: [1, 3, 5, 10, 20, 30]
     rate: 3
+    order: 0
 
 rotary:
   AvgWindow:
@@ -42,11 +49,5 @@ rotary:
     items: [1, 3, 5, 10, 20, 30]
     unit: s
     rate: 3
+    order: 1
 
-  Sensor ID:
-    type: Incr
-    name: Sensor ID
-    default: 1
-    min: 1
-    max: 24
-    incr: 1

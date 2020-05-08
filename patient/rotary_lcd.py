@@ -37,7 +37,6 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def __enter__(self) -> RotaryLCD:
-        self._current = 3  # Current Setting
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()
@@ -67,8 +66,7 @@ class RotaryLCD(Rotary):
 
     def reset(self):
         for key, item in self.config.items():
-            if key != "Sensor ID":
-                item.reset()
+            item.reset()
 
     def push(self) -> None:
         if self.alarm_level == AlarmLevel.LOUD and self.alarms:
@@ -90,7 +88,6 @@ class RotaryLCD(Rotary):
         self.lower_display()
 
     def turn(self, dir: Dir) -> None:
-        # Top display keeps ID number!
         super().turn(dir)
         self.upper_display()
         self.lower_display()
@@ -109,13 +106,11 @@ class RotaryLCD(Rotary):
         super().alert()
 
     def upper_display(self) -> None:
-        ID = self["Sensor ID"].value
-        ID_string = f"#{ID}"
         current_name = self.value().lcd_name
-        if len(current_name) > 17:
+        if len(current_name) > 16:
             print(f"Warning: Truncating {current_name!r}")
-            current_name = current_name[:17]
-        string = f"{current_name:<17}{ID_string:>3}"
+            current_name = current_name[:16]
+        string = f"{self._current + 1:>2}: {current_name:<16}"
         self.lcd.upper(string)
 
     def lower_display(self) -> None:
