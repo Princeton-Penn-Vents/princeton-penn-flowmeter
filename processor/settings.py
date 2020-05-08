@@ -19,6 +19,7 @@ def get_setting(c: ConfigView) -> Setting:
             incr=c["incr"].as_number(),
             name=c["name"].get(),
             unit=c["unit"].get() if "unit" in c else None,
+            rate=c["rate"].get(int) if "rate" in c else 1,
             zero=c["zero"].get() if "zero" in c else None,
             lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
         )
@@ -29,16 +30,20 @@ def get_setting(c: ConfigView) -> Setting:
             name=c["name"].get(),
             unit=c["unit"].get() if "unit" in c else None,
             zero=c["zero"].get() if "zero" in c else None,
+            rate=c["rate"].get(int) if "rate" in c else 2,
             lcd_name=c["lcd_name"].get() if "lcd_name" in c else None,
         )
     elif type_name == "Current":
         return CurrentSetting(
             default=c["default"].get(int),
             listing=[v.as_number() for v in c["items"]],
+            rate=c["rate"].get(int) if "rate" in c else 2,
             name="Current:",
         )
     elif type_name == "Reset":
-        return ResetSetting(name=c["name"].get(),)
+        return ResetSetting(
+            name=c["name"].get(), rate=c["rate"].get(int) if "rate" in c else 1,
+        )
     elif type_name == "Filename":
         return FilenameSetting("Log filename")
     else:

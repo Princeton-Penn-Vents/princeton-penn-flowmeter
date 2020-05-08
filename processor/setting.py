@@ -9,7 +9,13 @@ Number = Union[float, int]
 
 class Setting(abc.ABC):
     def __init__(
-        self, *, name: str, unit: str = None, lcd_name: str = None, zero: str = None
+        self,
+        *,
+        name: str,
+        unit: str = None,
+        lcd_name: str = None,
+        zero: str = None,
+        rate: int = 1,
     ):
         self._name = name
         self._lcd_name: Optional[str] = lcd_name or name
@@ -21,6 +27,12 @@ class Setting(abc.ABC):
         self._value: Any = None
         self._original_value: Any = None
         self._zero = zero
+
+        # Rate at which settings change
+        self._rate = rate
+
+        # Buffer for computing above rate
+        self._buffer = 0
 
     @property
     def name(self) -> str:
@@ -74,12 +86,24 @@ class Setting(abc.ABC):
     def __format__(self, format_spec: str) -> str:
         return str(self).__format__(format_spec)
 
+    def up(self) -> None:
+        self._buffer += 1
+        self._buffer %= self._rate
+        if self._buffer == 0:
+            self._up_()
+
+    def down(self) -> None:
+        self._buffer -= 1
+        self._buffer %= self._rate
+        if self._buffer == 0:
+            self._down_()
+
     @abc.abstractmethod
-    def up(self) -> bool:
+    def _up_(self) -> None:
         pass
 
     @abc.abstractmethod
-    def down(self) -> bool:
+    def _down_(self) -> None:
         pass
 
     def active(self) -> None:
@@ -90,18 +114,24 @@ class Setting(abc.ABC):
 
 class DisplaySetting(Setting):
     def __init__(
-        self, value: Any, *, name: str, unit: str = None, lcd_name: str = None
+        self,
+        value: Any,
+        *,
+        name: str,
+        unit: str = None,
+        lcd_name: str = None,
+        rate: int = 1,
     ):
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, rate=rate)
 
         self._value = value
         self._original_value = value
 
-    def up(self) -> bool:
-        return False
+    def _up_(self) -> None:
+        pass
 
-    def down(self) -> bool:
-        return False
+    def _down_(self) -> None:
+        pass
 
 
 class IncrSetting(Setting):
@@ -116,10 +146,11 @@ class IncrSetting(Setting):
         unit: str = None,
         lcd_name: str = None,
         zero: str = None,
+        rate: int = 1,
     ):
         "Note: incr should be a nice floating point number"
 
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero, rate=rate)
 
         self._min = min
         self._max = max
@@ -127,23 +158,17 @@ class IncrSetting(Setting):
         self._original_value = default
         self._incr = incr
 
-    def up(self) -> bool:
+    def _up_(self) -> None:
         "Return true if not at limit"
         with self._lock:
             if self._value < self._max:
                 self._value += self._incr
-                return True
-            else:
-                return False
 
-    def down(self) -> bool:
+    def _down_(self) -> None:
         "Return true if not at limit"
         with self._lock:
             if self._value > self._min:
                 self._value -= self._incr
-                return True
-            else:
-                return False
 
 
 class SelectionSetting(Setting):
@@ -156,9 +181,10 @@ class SelectionSetting(Setting):
         unit: str = None,
         lcd_name: str = None,
         zero: str = None,
+        rate: int = 2,
     ):
 
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero)
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero, rate=rate)
 
         assert (
             0 <= default < len(listing)
@@ -169,23 +195,17 @@ class SelectionSetting(Setting):
         self._listing = listing
         self._zero = zero
 
-    def up(self) -> bool:
+    def _up_(self) -> None:
         "Return true if not at limit"
         with self._lock:
             if self._value < len(self._listing) - 1:
                 self._value += 1
-                return True
-            else:
-                return False
 
-    def down(self) -> bool:
+    def _down_(self) -> None:
         "Return true if not at limit"
         with self._lock:
             if self._value > 0:
                 self._value -= 1
-                return True
-            else:
-                return False
 
     def __len__(self) -> int:
         return len(self._listing)
