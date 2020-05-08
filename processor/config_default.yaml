@@ -15,6 +15,9 @@ global:
   window-size: 1500 # 30 seconds @ 50 hertz
   broadcast-ifaces: [en0, eth0, wlan0]
 
+patient:
+  buzzer-volume: 0
+
 rotary-live:
   Log Filename:
     type: Filename
