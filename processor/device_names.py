@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -100,3 +102,15 @@ def address_to_name(address: str) -> str:
         if adjective != "" and noun != "" and len(adjective) + len(noun) < 20:
             return adjective + " " + noun
         state = lcg_generator(state)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Convert a MAC address to a device name"
+    )
+    parser.add_argument("mac_address", nargs="+", help="MAC address(es) to convert")
+    args = parser.parse_args()
+    for addr in args.mac_address:
+        print(f"{addr}: {address_to_name(addr)}")
