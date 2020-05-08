@@ -19,10 +19,9 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo, INFO_STRINGS
 from nurse.dragdrop import DragDropGridMixin
+from nurse.generator_dialog import GeneratorDialog
 
 from processor.generator import Status, Generator
-from processor.remote_generator import RemoteGenerator
-from nurse.connection_dialog import ConnectionDialog
 
 
 class NumberLabel(QtWidgets.QLabel):
@@ -124,7 +123,6 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.gen: Generator = gen
         self.current_alarms: Dict[str, Any] = {}
-        self.sensor_id = -1
         self.i = i
 
         layout = HBoxLayout(self)
@@ -160,23 +158,10 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
 
     @Slot()
     def click_number(self):
-        if isinstance(self.gen, RemoteGenerator):
-            dialog = ConnectionDialog(
-                self.parent().listener, self.sensor_id, self.gen.address
-            )
-            if dialog.exec():
-                self.gen.address = dialog.connection_address()
-        else:
-            dialog = ConnectionDialog(
-                self.parent().listener, self.sensor_id, "tcp://127.0.0.1:8100"
-            )
-            if dialog.exec():
-                logger = self.gen.logger
-                self.gen.close()
-                self.gen = RemoteGenerator(
-                    address=dialog.connection_address(), logger=logger
-                )
-                self.gen.run()
+        print("Not implemented")
+        dialog = GeneratorDialog()
+        if dialog.exec():
+            pass
 
     def set_plot(self):
         assert len(self.curves) == 0
@@ -219,11 +204,6 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
 
             # Change of status requires a background color change
             self.status = self.gen.status
-
-            sensor_id = self.gen.sensor_id
-            if self.sensor_id != sensor_id:
-                self.title_widget.name_btn.setText(f"{sensor_id}:")
-                self.sensor_id = sensor_id
 
             alarming_quanities = {key.rsplit(maxsplit=1)[0] for key in self.gen.alarms}
 

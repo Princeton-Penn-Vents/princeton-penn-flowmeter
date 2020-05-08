@@ -138,7 +138,6 @@ class RemoteGenerator(Generator):
     ):
         super().__init__(logger=logger)
         self._address = address
-        self.rotary["Sensor ID"].value = 0
 
         self.status = Status.DISCON
         self._last_ts: int = 0
