@@ -146,8 +146,8 @@ class AllDisplays(QtWidgets.QWidget):
         super().__init__()
 
         self.boxes = [
-            DisplayBox(key="Avg Flow", label="avF", fmt=".0f"),
-            DisplayBox(key="Avg Pressure", label="avP", fmt=".0f"),
+            DisplayBox(key="Avg Flow", label="Flow", fmt=".0f"),
+            DisplayBox(key="Avg Pressure", label="P", fmt=".0f"),
             DisplayBox(key="RR", label="RR", fmt=".0f"),
             DisplayBox(key="I:E time ratio", label="I:E", fmt=".2f"),
             DisplayBox(key="PIP", label="PIP", fmt=".0f"),
