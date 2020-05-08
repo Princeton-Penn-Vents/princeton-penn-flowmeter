@@ -3,6 +3,7 @@ import pigpio
 from patient.rotary_live import LiveRotary
 from processor.setting import Setting
 import enum
+import threading
 from typing import Callable, Dict, Any, Optional, TypeVar
 
 pinA = 17  # terminal A
@@ -143,5 +144,18 @@ class Rotary(LiveRotary):
         return super().__exit__(*exc)
 
 
-# from processor.settings import get_live_settings
-# with Rotary(get_live_settings()) as rotary:
+if __name__ == "__main__":
+
+    class SimpleRotary(Rotary):
+        def turn(self, dir: Dir) -> None:
+            print("Turned", dir)
+
+        def pushed_turn(self, dir: Dir) -> None:
+            print("Pushed turn", dir)
+
+        def push(self) -> None:
+            print("Pushed")
+
+    with SimpleRotary({}):
+        forever = threading.Event()
+        forever.wait()

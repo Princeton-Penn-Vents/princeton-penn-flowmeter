@@ -8,10 +8,11 @@ from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
 from patient.buzzer import Buzzer
+from processor.config import config as _config
+
 import pigpio
 from typing import Dict
 import enum
-
 import time
 
 
@@ -29,6 +30,7 @@ class RotaryLCD(Rotary):
         self.backlight = Backlight(pi=pi)
         self.buzzer = Buzzer(pi=pi)
         self.alarm_level: AlarmLevel = AlarmLevel.OFF
+        self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
 
     def external_update(self) -> None:
         self.upper_display()
@@ -96,7 +98,7 @@ class RotaryLCD(Rotary):
     def alert(self) -> None:
         if self.alarms and self.alarm_level == AlarmLevel.OFF:
             self.backlight.red()
-            self.buzzer.buzz(200)
+            self.buzzer.buzz(self.buzzer_volume)
             self.alarm_level = AlarmLevel.LOUD
         elif not self.alarms:
             self.backlight.white()
