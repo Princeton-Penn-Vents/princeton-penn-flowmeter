@@ -25,10 +25,12 @@ class AlarmLevel(enum.Enum):
 
 class RotaryLCD(Rotary):
     def __init__(self, config: Dict[str, Setting], pi: pigpio.pi = None):
-
         super().__init__(config, pi=pi)
+
+        shade = _config["patient"]["brightness"].get(int)
+
         self.lcd = LCD(pi=pi)
-        self.backlight = Backlight(pi=pi)
+        self.backlight = Backlight(shade=shade, pi=pi)
         self.buzzer = Buzzer(pi=pi)
         self.alarm_level: AlarmLevel = AlarmLevel.OFF
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)

@@ -8,7 +8,7 @@ import warnings
 import logging
 
 import numpy as np
-from typing import Dict, Any, List, Optional, TypeVar
+from typing import Dict, Any, List, Optional, TypeVar, TYPE_CHECKING
 from pathlib import Path
 from datetime import datetime
 
@@ -18,6 +18,10 @@ from processor.settings import get_remote_settings
 from processor.config import config
 from processor.rolling import Rolling
 from processor.saver import CSVSaverTS, CSVSaverCML, JSONSSaverBreaths
+from processor.gen_record import GenRecord
+
+if TYPE_CHECKING:
+    from typing_extensions import Final
 
 
 class Status(enum.Enum):
@@ -30,6 +34,10 @@ T = TypeVar("T", bound="Generator")
 
 
 class Generator(abc.ABC):
+    # Keeps track of how many generators have been created; each gets a unique ID
+    # that lasts for the session.
+    _total_generators: int = 0
+
     def __init__(
         self,
         *,
@@ -38,6 +46,7 @@ class Generator(abc.ABC):
         no_save: bool = False,
     ) -> None:
 
+        # The size of the rolling window
         self.window_size = config["global"]["window-size"].get(int)  # seconds
 
         # The raw timestamps
@@ -139,8 +148,15 @@ class Generator(abc.ABC):
         # The Sensor ID if known (0 otherwise)
         self.sid = 0
 
+        # An incrementing unique ID (for logging, perhaps)
+        self.gen_id: Final[int] = self._total_generators
+        self._total_generators += 1
+
         # The logger instance
         self.logger: logging.Logger = logger or logging.getLogger("povm")
+
+        # Used by GUI to bundle information
+        self.record = GenRecord(self.logger)
 
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
@@ -171,46 +187,6 @@ class Generator(abc.ABC):
             self.logger.info(
                 "No file-based logging attached, not saving time series or cumulatives"
             )
-
-    def clear(self) -> None:
-        """
-        Reset the generator to empty.
-        """
-
-        self.last_update = None
-        self._last_get = None
-        self._breaths = []
-        self._cumulative = {}
-        self._cumulative_timestamps = {}
-        self._alarms = {}
-        self._avg_alarms = {}
-
-        self._flow_cumulative = {
-            1: 0.0,
-            3: 0.0,
-            5: 0.0,
-            10: 0.0,
-            20: 0.0,
-            30: 0.0,
-        }
-
-        self._pressure_cumulative = {
-            1: 0.0,
-            3: 0.0,
-            5: 0.0,
-            10: 0.0,
-            20: 0.0,
-            30: 0.0,
-        }
-
-        self._volume = np.array([], dtype=np.double)
-        self._old_realtime = None
-        self._volume_unshifted_min = None
-        self._volume_shift = 0.0
-
-        self._time.clear()
-        self._flow.clear()
-        self._pressure.clear()
 
     def run(self) -> None:
         """

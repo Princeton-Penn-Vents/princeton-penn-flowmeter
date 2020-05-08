@@ -15,7 +15,8 @@ global:
   window-size: 1500 # 30 seconds @ 50 hertz
 
 patient:
-  buzzer-volume: 0
+  buzzer-volume: 0 # max 255 (200 ideal)
+  brightness: 200 # max 255
 
 rotary-live:
   Log Filename:

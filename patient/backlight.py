@@ -23,36 +23,39 @@ class Backlight:
         self.pi.set_PWM_dutycycle(self.PIN_BLUE, blue)
 
     def white(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(shade, shade, shade)
 
     def red(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(shade, 0, 0)
 
     def green(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(0, shade, 0)
 
     def blue(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(0, 0, shade)
 
     def cyan(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(0, shade, shade)
 
     def magenta(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(shade, 0, shade)
 
     def yellow(self, shade: int = None) -> None:
-        shade = shade or self.shade
+        shade = self.shade if shade is None else shade
         self.color(shade, shade, 0)
 
     def orange(self, shade: int = None) -> None:
-        shade = shade or self.shade
-        self.color(shade, shade // 2, 0)
+        shade = self.shade if shade is None else shade
+        self.color(shade, shade // 4, 0)
+
+    def black(self):
+        self.color(0, 0, 0)
 
     def __exit__(self, *exc):
         pass
