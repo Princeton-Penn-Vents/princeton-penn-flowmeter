@@ -8,7 +8,6 @@ from typing import Iterator, Set, Optional
 import threading
 import ipaddress
 import logging
-from processor.config import config
 
 logger = logging.getLogger("povm")
 

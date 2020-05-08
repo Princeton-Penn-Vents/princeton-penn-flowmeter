@@ -1,14 +1,14 @@
+from __future__ import annotations
+
 from urllib.parse import urlparse
-from processor.listener import FindBroadcasts
+from processor.listener import FindBroadcasts, Detector
+from typing import List
 
 from nurse.qt import (
     QtWidgets,
     QtGui,
     Qt,
-    Slot,
 )
-
-from processor.generator import Generator
 
 
 class ManualTab(QtWidgets.QWidget):
@@ -56,6 +56,7 @@ class ConnectionDialog(QtWidgets.QDialog):
         self.i = i
         self.listener = listener
         self.address = address
+        self.items: List[Detector] = []
 
         self.setWindowModality(Qt.ApplicationModal)
 
@@ -75,14 +76,14 @@ class ConnectionDialog(QtWidgets.QDialog):
         layout.addWidget(buttons)
 
     def exec(self):
-
         self.setWindowTitle(f"Patient box {self.i} connection")
 
         parsed = urlparse(self.address)
         self.tabbed.manual_tab.ip_address.setText(parsed.hostname)
         self.tabbed.manual_tab.port.setText(str(parsed.port))
 
-        items = sorted(self.listener.detected)
+        self.items = list(self.listener.detected)
+        items = [str(d) for d in self.items]
         self.tabbed.detected_tab.detected.addItems(items)
 
         if not items:
@@ -91,10 +92,9 @@ class ConnectionDialog(QtWidgets.QDialog):
 
         return super().exec()
 
-    @property
     def connection_address(self) -> str:
         if self.tabbed.currentIndex() == 0:
-            return self.tabbed.detected_tab.detected.currentText()
+            return self.items[self.tabbed.detected_tab.detected.currentIndex()].url
         else:
             port = int(self.tabbed.manual_tab.port.text())
             ip_address = self.tabbed.manual_tab.ip_address.text()

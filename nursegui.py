@@ -132,7 +132,7 @@ class MainStack(QtWidgets.QWidget):
         with self.queue_lock:
             while not self.listener.queue.empty():
                 address = self.listener.queue.get()
-                self.add_new_by_address(address)
+                self.add_new_by_address(address.url)
 
     @Slot()
     def add_item_dialog(self):
@@ -140,7 +140,7 @@ class MainStack(QtWidgets.QWidget):
             self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
         )
         if dialog.exec():
-            self.add_new_by_address(dialog.connection_address)
+            self.add_new_by_address(dialog.connection_address())
 
     def add_new_by_address(self, addr: str):
         local_logger = make_nested_logger(len(self.graphs))

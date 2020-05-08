@@ -8,17 +8,36 @@ import logging
 import ipaddress
 from typing import Set, Callable
 from processor.argparse import init_logger
+from dataclasses import dataclass
 
 logger = logging.getLogger("povm")
 
 
+@dataclass
+class Detector:
+    address: ipaddress.IPv4Address
+    port: int
+    mac: str
+    service: str
+
+    @property
+    def url(self):
+        return f"tcp://{ipaddress.ip_address(self.address)}:{self.port}"
+
+    def __str__(self):
+        return f"{self.mac} @ {ipaddress.ip_address(self.address)}:{self.port}"
+
+    def __hash__(self):
+        return hash((self.address, self.port))
+
+
 class Listener(ServiceListener):
     def __init__(self):
-        self.detected: Set[str] = set()
+        self.detected: Set[Detector] = set()
         self.inject: Callable[[], None] = lambda: None
         self.queue = queue.Queue()
 
-    def _injects(self, addrs: Set[str]):
+    def _injects(self, addrs: Set[Detector]):
         new = addrs - self.detected
         self.detected |= addrs
         for item in new:
@@ -38,25 +57,26 @@ class Listener(ServiceListener):
 
     def _add_if_unseen(
         self, status: str, zeroconf: Zeroconf, service_type: str, name: str
-    ) -> Set[str]:
+    ) -> Set[Detector]:
         if "Princeton Open Vent Monitor" in name:
             info = zeroconf.get_service_info(service_type, name)
             if not info:
                 logger.info(f"Service {name} not {status}, missing info!")
                 return set()
 
-            addresses = {
-                f"tcp://{ipaddress.ip_address(ip)}:{info.port}" for ip in info.addresses
-            }
-
             macaddr = info.properties.get(b"mac_addr", b"<unknown>").decode()
             service = info.properties.get(b"service", b"<unknown>").decode()
 
-            logger.info(f"Service {name} {status}: {addresses} - {macaddr} - {service}")
+            addresses = {
+                Detector(ipaddress.ip_address(ip), info.port or 0, macaddr, service)
+                for ip in info.addresses
+            }
+
+            logger.info(f"Service {name} {status}: {addresses}")
             return addresses
 
         else:
-            logger.info(f"Service {name} not {status}")
+            logger.debug(f"Service {name} not {status}")
             return set()
 
 
@@ -73,7 +93,7 @@ class FindBroadcasts:
         self.zeroconf.close()
 
     @property
-    def detected(self) -> Set[str]:
+    def detected(self) -> Set[Detector]:
         return self.listener.detected
 
     @property
@@ -90,8 +110,20 @@ class FindBroadcasts:
 
 
 if __name__ == "__main__":
-    init_logger()
+    # init_logger()
 
-    with FindBroadcasts():
-        forever = threading.Event()
-        forever.wait()
+    fb = FindBroadcasts()
+
+    def proc():
+        while not fb.queue.empty():
+            print("Detected:", fb.queue.get())
+
+    fb.inject = proc
+
+    try:
+        with fb:
+            forever = threading.Event()
+            forever.wait()
+    except KeyboardInterrupt:
+        print("\nDuring run, detected:", *fb.detected, sep="\n  ")
+        print("\n\nIPs:", *(x.address for x in fb.detected))

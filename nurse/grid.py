@@ -165,7 +165,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
                 self.parent().listener, self.sensor_id, self.gen.address
             )
             if dialog.exec():
-                self.gen.address = dialog.connection_address
+                self.gen.address = dialog.connection_address()
         else:
             dialog = ConnectionDialog(
                 self.parent().listener, self.sensor_id, "tcp://127.0.0.1:8100"
@@ -174,7 +174,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
                 logger = self.gen.logger
                 self.gen.close()
                 self.gen = RemoteGenerator(
-                    address=dialog.connection_address, logger=logger
+                    address=dialog.connection_address(), logger=logger
                 )
                 self.gen.run()
 
