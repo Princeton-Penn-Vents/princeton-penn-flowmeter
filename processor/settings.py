@@ -7,6 +7,7 @@ from processor.display_settings import (
     CurrentSetting,
     ResetSetting,
     NameSetting,
+    MACSetting,
 )
 from processor.config import config
 
@@ -67,6 +68,8 @@ def get_setting(c: ConfigView) -> Tuple[Optional[int], Setting]:
         return order, FilenameSetting("Log filename")
     elif type_name == "Name":
         return order, NameSetting(c["name"].get())
+    elif type_name == "MAC":
+        return order, MACSetting(c["name"].get())
     else:
         raise RuntimeError(
             f"Invalid type {type_name!r}, needs to be defined in setting.py/settings.py"

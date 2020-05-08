@@ -18,20 +18,25 @@ patient:
   buzzer-volume: 0
 
 rotary-live:
-  Name:
-    type: Name
-    name: Box name
-    order: -1
-
   Log Filename:
     type: Filename
     name: Log filename
-    order: -3
+    order: -4
 
   Reset Setting:
     type: Reset
     name: Turn to Reset
+    order: -3
+
+  MAC:
+    type: MAC
+    name: MAC Addr
     order: -2
+
+  Name:
+    type: Name
+    name: Box name
+    order: -1
 
   Current Setting:
     type: Current
