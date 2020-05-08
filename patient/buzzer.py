@@ -28,9 +28,7 @@ class Buzzer:
         assert self.pi is not None, 'Must use "with" to use'
 
         with self._lock:
-            self.pi.set_PWM_dutycycle(self.PIN, 0)
-
-    # CGT            self.pi.set_PWM_dutycycle(self.PIN, volume)
+            self.pi.set_PWM_dutycycle(self.PIN, volume)
 
     def _thread_pattern(
         self, volume: int, time_on: float, time_off: float, timer: Optional[float]
