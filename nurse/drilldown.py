@@ -21,9 +21,8 @@ from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
 from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
-
-
-MAC_MSG = "MAC Address: {mac}  Sensor ID: {sid}"
+from nurse.generator_dialog import GeneratorDialog
+from processor.device_names import address_to_name
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -192,7 +191,8 @@ class PatientTitle(QtWidgets.QWidget):
         super().__init__()
         layout = HBoxLayout(self)
 
-        self.name_lbl = QtWidgets.QLabel("X")
+        self.name_lbl = QtWidgets.QPushButton("X")
+        self.name_lbl.clicked.connect(self.click_number)
         layout.addWidget(self.name_lbl)
 
         self.name_edit = QtWidgets.QLineEdit()
@@ -207,6 +207,13 @@ class PatientTitle(QtWidgets.QWidget):
         self.name_lbl.setText(number)
         self.name_edit.setText(mirror.text())
         self.name_edit.textChanged.connect(mirror.setText)
+
+    @Slot()
+    def click_number(self):
+        print("Not implemented")
+        dialog = GeneratorDialog()
+        if dialog.exec():
+            pass
 
 
 class DrilldownWidget(QtWidgets.QWidget):
@@ -273,17 +280,7 @@ class AlarmBox(QtWidgets.QPushButton, DragDropGridMixin):
     def __init__(self, i: int):
         super().__init__(str(i + 1))
         self.i = i
-        self._sensor_id = i + 1
         self.active = False
-
-    @property
-    def sensor_id(self):
-        return self._sensor_id
-
-    @sensor_id.setter
-    def sensor_id(self, value):
-        self._sensor_id = value
-        self.setText(str(value))
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == Qt.LeftButton:
@@ -322,7 +319,6 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.lower = {}
         self.current = {}
         self.gen: Optional[Generator] = None
-        self.sensor_id = -1
 
         layout = HBoxLayout(self)
 
@@ -335,9 +331,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.title = PatientTitle()
         left_layout.addWidget(self.title)
 
-        self.title_warning = QtWidgets.QLabel(
-            MAC_MSG.format(mac="<unknown>", sid="<unknown>")
-        )
+        self.title_warning = QtWidgets.QLabel("Box name: not yet known")
         self.title_warning.setObjectName("TitleWarning")
         left_layout.addWidget(self.title_warning, 0, Qt.AlignHCenter)
 
@@ -493,14 +487,14 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
                     time_avg = self.gen.rotary["AvgWindow"].value
-                    sensor_id = self.gen.sensor_id
-                    if self.sensor_id != sensor_id:
-                        self.sensor_id = sensor_id
-                        self.title.name_lbl.setText(f"{sensor_id}:")
 
-                    text = MAC_MSG.format(
-                        mac=self.gen.mac or "<unknown>", sid=self.gen.sid or "<unknown>"
-                    )
+                    try:
+                        name = address_to_name(self.gen.mac).title()
+                    except ValueError:
+                        name = self.gen.mac or "<unknown>"
+                    sid = self.gen.sid or "<unknown>"
+                    text = f"Box name: {name}  Sensor ID: {sid}"
+
                     if text != self.title_warning.text():
                         self.title_warning.setText(text)
 
@@ -586,6 +580,5 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             for alarm_box, graph in zip(patient.alarm_boxes, main_stack.graphs):
                 alarm_box.status = graph.gen.status
-                alarm_box.sensor_id = graph.gen.sensor_id
 
         self.qTimer.start(50)

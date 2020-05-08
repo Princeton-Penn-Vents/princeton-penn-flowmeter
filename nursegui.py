@@ -109,12 +109,6 @@ class MainStack(QtWidgets.QWidget):
         self.qTimer.setSingleShot(True)
         self.qTimer.start()
 
-        self.matching_dialog = MatchingDialog()
-        self.matching_alert_timer = QtCore.QTimer()
-        self.matching_alert_timer.timeout.connect(self.check_for_matching)
-        self.matching_alert_timer.setInterval(1000)
-        self.matching_alert_timer.start(1000)
-
         self.header.add_btn.clicked.connect(self.add_item_dialog)
 
         self.injector = InjectDiscovery()
@@ -192,28 +186,6 @@ class MainStack(QtWidgets.QWidget):
             self.qTimer.start(50)
         else:
             self.qTimer.start(500)
-
-    @Slot()
-    def check_for_matching(self) -> None:
-        ids = Counter(graph.gen.sensor_id for graph in self.graphs)
-        too_many = {k: v for k, v in ids.items() if v > 1 and k != 0}
-        if too_many:
-            self.matching_dialog.setText(
-                "/n".join(
-                    f"Too many ({v}) sensors with ID: {k}" for k, v in too_many.items()
-                )
-            )
-            if not self.matching_dialog.isVisible():
-                self.matching_dialog.open()
-                self.matching_dialog.setWindowFlags(
-                    self.matching_dialog.windowFlags()
-                    | Qt.CustomizeWindowHint
-                    | Qt.WindowTitleHint
-                    | Qt.WindowStaysOnTopHint
-                )
-        else:
-            if self.matching_dialog.isVisible():
-                self.matching_dialog.close()
 
 
 class MatchingDialog(QtWidgets.QDialog):

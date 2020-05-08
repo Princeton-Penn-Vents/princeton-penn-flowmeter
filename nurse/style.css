@@ -99,26 +99,32 @@ PatientSensor > PatientTitleWidget > QLineEdit {
 
 /* Alert colors */
 
-PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton {
+/* Default */
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton,
+PatientDrilldownWidget[alert_status="OK"] > PatientTitle > QPushButton {
   background-color: 'transparent';
 }
 
-PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton:hover {
+/* Default hover */
+PatientSensor[alert_status="OK"] > PatientTitleWidget > QPushButton:hover,
+PatientDrilldownWidget[alert_status="OK"] > PatientTitle > QPushButton:hover {
   background-color: #303030;
 }
 
+/* Default main title */
 PatientSensor[alert_status="OK"] > PatientTitleWidget > QLineEdit,
 PatientDrilldownWidget[alert_status="OK"] > PatientTitle > QLineEdit {
   background-color: #32373C;
 }
 
 PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton,
-PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QLabel,
+PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QPushButton,
 AlarmBox[alert_status="ALERT"] {
   background-color: #ED4337;
 }
 
 PatientSensor[alert_status="ALERT"] > PatientTitleWidget > QPushButton:hover,
+PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QPushButton:hover,
 AlarmBox[alert_status="ALERT"]:hover,
 AlarmBox[alert_status="ALERT_ACTIVE"] {
   background-color: #AD2337;
@@ -131,12 +137,13 @@ PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QLineEdit {
 
 
 PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton,
-PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QLabel,
+PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QPushButton,
 AlarmBox[alert_status="DISCON"] {
   background-color: #4CB3EF;
 }
 
 PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton:hover,
+PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QPushButton:hover,
 AlarmBox[alert_status="DISCON"]:hover,
 AlarmBox[alert_status="DISCON_ACTIVE"] {
   background-color: #2C93AF;
@@ -203,7 +210,7 @@ PatientDrilldownWidget {
   background-color: black;
 }
 
-PatientDrilldownWidget > PatientTitle > QLabel,
+PatientDrilldownWidget > PatientTitle > QPushButton,
 PatientDrilldownWidget > PatientTitle > QLineEdit {
   margin: 5px;
   padding: 3px;
