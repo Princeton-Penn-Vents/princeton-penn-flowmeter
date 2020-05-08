@@ -13,7 +13,7 @@ rotary:
     default: 50
     min: -150
     max: 150
-    incr: 5
+    incr: 1
     unit: L/min
 
   Avg Flow Max:
@@ -22,7 +22,7 @@ rotary:
     default: 100
     min: -150
     max: 150
-    incr: 5
+    incr: 1
     unit: L/min
 
   Avg Pressure Min:
@@ -49,7 +49,7 @@ rotary:
     default: 40
     min: 5
     max: 180
-    incr: 5
+    incr: 1
     unit: 1/min
 
   Stale Data Timeout:
@@ -59,6 +59,6 @@ rotary:
     default: 10
     min: 0
     max: 60
-    incr: 2
+    incr: 1
     unit: sec
     zero: "OFF"

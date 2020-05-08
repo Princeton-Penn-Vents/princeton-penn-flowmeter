@@ -31,6 +31,7 @@ rotary-live:
     type: Current
     default: 3
     items: [1, 3, 5, 10, 20, 30]
+    rate: 3
 
 rotary:
   AvgWindow:
@@ -40,6 +41,7 @@ rotary:
     default: 3
     items: [1, 3, 5, 10, 20, 30]
     unit: s
+    rate: 3
 
   Sensor ID:
     type: Incr

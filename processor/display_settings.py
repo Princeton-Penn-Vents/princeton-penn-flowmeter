@@ -32,13 +32,15 @@ class FilenameSetting(DisplaySetting):
 
 
 class CurrentSetting(SelectionSetting):
-    def __init__(self, default: int, listing: Sequence[int], *, name: str):
+    def __init__(
+        self, default: int, listing: Sequence[int], *, name: str, rate: int = 2
+    ):
         string_listing = [f"{s}s" for s in listing]
 
         self._F: Optional[List[float]] = None
         self._P: Optional[List[float]] = None
 
-        super().__init__(default, string_listing, name=name)
+        super().__init__(default, string_listing, name=name, rate=rate)
 
     def from_processor(self, F: List[float], P: List[float]):
         self._F = F
@@ -70,8 +72,10 @@ class CurrentSetting(SelectionSetting):
 
 
 class ResetSetting(SelectionSetting):
-    def __init__(self, name: str):
-        super().__init__(0, [f"[{x*'x':8}]" for x in range(9)], name=name)
+    def __init__(self, name: str, rate: int = 1):
+        super().__init__(
+            0, [f"[{x*'x':8}]" for x in range(9)] + ["RESET"], name=name, rate=rate
+        )
 
     def active(self) -> None:
         self._value = 0
