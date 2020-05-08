@@ -1,6 +1,8 @@
 from processor.setting import DisplaySetting, SelectionSetting
 from pathlib import Path
 from typing import Optional, List, Sequence
+from patient.mac_address import get_mac_addr
+from processor.device_names import address_to_name
 
 
 DIR = Path(__file__).parent.resolve()
@@ -9,13 +11,35 @@ DIR = Path(__file__).parent.resolve()
 
 class FilenameSetting(DisplaySetting):
     def __init__(self, name: str):
-        super().__init__("", name=name)
+        super().__init__(name=name)
 
     @property
     def value(self) -> str:
         files = sorted(Path(DIR.parent / "device_log").glob("*"))
         string = str(files[-1].name) if files else "No file"
         return string
+
+    # Currently does not work remotely
+    @value.setter
+    def value(self, value: str):
+        self._value = value
+
+    @property
+    def default(self) -> float:
+        return 0.0
+
+    @default.setter
+    def default(self, val: float):
+        pass
+
+
+class NameSetting(DisplaySetting):
+    def __init__(self, name: str):
+        super().__init__(name=name)
+
+    @property
+    def value(self) -> str:
+        return address_to_name(get_mac_addr())
 
     # Currently does not work remotely
     @value.setter

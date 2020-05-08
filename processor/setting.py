@@ -114,18 +114,12 @@ class Setting(abc.ABC):
 
 class DisplaySetting(Setting):
     def __init__(
-        self,
-        value: Any,
-        *,
-        name: str,
-        unit: str = None,
-        lcd_name: str = None,
-        rate: int = 1,
+        self, *, name: str, unit: str = None, lcd_name: str = None, rate: int = 1,
     ):
         super().__init__(unit=unit, name=name, lcd_name=lcd_name, rate=rate)
 
-        self._value = value
-        self._original_value = value
+        self._value = ""
+        self._original_value = ""
 
     def _up_(self) -> None:
         pass
