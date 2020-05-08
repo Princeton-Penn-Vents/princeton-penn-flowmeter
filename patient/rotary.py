@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import pigpio
 from patient.rotary_live import LiveRotary
 from processor.setting import Setting
 import enum
 import threading
-from typing import Callable, Dict, Any, Optional, TypeVar
+from typing import Callable, Dict, Any, Optional, TypeVar, TYPE_CHECKING
+import time
 
-pinA = 17  # terminal A
-pinB = 27  # terminal B
-pinSW = 18  # switch
+if TYPE_CHECKING:
+    from typing_extensions import Final
+
+pinA: Final[int] = 17  # terminal A
+pinB: Final[int] = 27  # terminal B
+pinSW: Final[int] = 18  # switch
 
 
 class Mode(enum.Enum):
@@ -21,23 +27,121 @@ class Dir(enum.Enum):
     COUNTERCLOCKWISE = -1
 
 
+MT = TypeVar("MT", bound="MechanicalRotary")
+
+
+class MechanicalRotary:
+    def __init__(self, *, pi: Optional[pigpio.pi] = None):
+        self.pi = pi
+        self.pushed_in = False
+        self.turns = 0
+        self.levA = 0
+        self.levB = 0
+        self._last: Optional[int] = None
+        self._ts = time.monotonic()
+        self._filter = 0.02
+
+    def __enter__(self: MT) -> MT:
+        # Filter button pushes the normal way
+        glitchFilter = 300
+
+        # Get pigio connection
+        if self.pi is None:
+            self.pi = pigpio.pi()
+
+        self.pi.set_mode(pinA, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
+
+        self.pi.set_mode(pinB, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinB, pigpio.PUD_UP)
+
+        self.pi.set_mode(pinSW, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinSW, glitchFilter)
+
+        self._rotary_turnedA = self.pi.callback(
+            pinA, pigpio.EITHER_EDGE, self.rotary_turned
+        )
+        self._rotary_turnedB = self.pi.callback(
+            pinB, pigpio.EITHER_EDGE, self.rotary_turned
+        )
+        self._rotary_switch = self.pi.callback(
+            pinSW, pigpio.EITHER_EDGE, self.rotary_switch
+        )
+
+        return self
+
+    def __exit__(self, *exc) -> None:
+        assert self.pi is not None, 'Must use "with" to use'
+        self._rotary_turnedA.cancel()
+        self._rotary_turnedB.cancel()
+        self._rotary_switch.cancel()
+
+    def rotary_turned(self, ch: int, level: int, _tick: int) -> None:
+        # Store last reading
+        if ch == pinA:
+            self.levA = level
+        elif ch == pinB:
+            self.levB = level
+
+        # Debounce
+        if self._last == ch:
+            return
+        self._last = ch
+
+        # Pick the correct function to call
+        if self.pushed_in:
+            function = self.pushed_turn
+        else:
+            function = self.turn
+
+        ts = time.monotonic()
+        if level == 1 and ts > (self._ts + self._filter):
+            if ch == pinA and self.levB == 1:
+                self._ts = ts
+                function(Dir.COUNTERCLOCKWISE)
+            elif ch == pinB and self.levA == 1:
+                self._ts = ts
+                function(Dir.CLOCKWISE)
+
+    def rotary_switch(self, ch: int, level: int, _tick: int) -> None:
+        # Allow rotations to tell if this is pushed in or out
+        self.pushed_in = level == 0
+
+        if ch == pinSW and level == 0:  # falling edge
+            self.push()
+
+    def pushed_turn(self, dir: Dir) -> None:
+        pass
+
+    def turn(self, dir: Dir) -> None:
+        pass
+
+    def push(self) -> None:
+        pass
+
+
 T = TypeVar("T", bound="Rotary")
 
 
-class Rotary(LiveRotary):
+class Rotary(LiveRotary, MechanicalRotary):
     def __init__(self, config: Dict[str, Setting], *, pi: pigpio.pi = None):
-        super().__init__(config)
+        LiveRotary.__init__(self, config)
+        MechanicalRotary.__init__(self, pi=pi)
+
         self.alarm_filter: Callable[[str], bool] = lambda x: True
 
-        self.pi: Optional[pigpio.pi] = pi
-
-        self.pushed_in = False
-        self.turns: int = 0
-
         self._current: int = 0
+        self._slow_turn: int = 0
+
+        # Rate of changing screens on the display
+        self._change_rate: Final[int] = 4
 
     def turn(self, dir: Dir) -> None:
-        self._current = (self._current + dir.value) % len(self.config)
+        self._slow_turn = (self._slow_turn + dir.value) % (
+            len(self.config) * self._change_rate
+        )
+        self._current = self._slow_turn // self._change_rate
         self.value().active()
 
     def pushed_turn(self, dir: Dir) -> None:
@@ -71,91 +175,36 @@ class Rotary(LiveRotary):
         pass
 
     def __enter__(self: T) -> T:
-        glitchFilter = 100  # ms
-
         # Get pigio connection
         if self.pi is None:
             self.pi = pigpio.pi()
 
-        self.pi.set_mode(pinA, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinA, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinA, glitchFilter)
-
-        self.pi.set_mode(pinB, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinB, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinB, glitchFilter)
-
-        self.pi.set_mode(pinSW, pigpio.INPUT)
-        self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinSW, glitchFilter)
-
-        pi = self.pi
-
-        def rotary_turned(ch: int, _level: int, _tick: int) -> None:
-            if ch == pinA:
-                levelB = pi.read(pinB)
-                clockwise = 1 if levelB else -1
-
-                # If this is the first turn or we change directions, just mark direction
-                if self.turns == 0 or (clockwise * self.turns < 0):
-                    self.turns = clockwise
-                    return
-
-                # Same direction - increment
-                self.turns += clockwise
-
-                # If we have ticked 3 (+1 initial) notches, trigger a turn
-                if abs(self.turns) > 3:
-
-                    # Reset to same-direction beginning point
-                    self.turns = clockwise
-
-                    if self.pushed_in:
-                        if levelB:
-                            self.pushed_turn(Dir.CLOCKWISE)
-                        else:
-                            self.pushed_turn(Dir.COUNTERCLOCKWISE)
-                    else:
-                        if levelB:
-                            self.turn(Dir.CLOCKWISE)
-                        else:
-                            self.turn(Dir.COUNTERCLOCKWISE)
-
-        def rotary_switch(ch: int, level: int, _tick: int) -> None:
-            # Allow rotations to tell if this is pushed in or out
-            self.pushed_in = level == 0
-
-            # Reset the rotary turns
-            self.turns = 0
-
-            if ch == pinSW and level == 0:  # falling edge
-                self.push()
-
-        self._rotary_turned = self.pi.callback(pinA, pigpio.FALLING_EDGE, rotary_turned)
-        self._rotary_switch = self.pi.callback(pinSW, pigpio.EITHER_EDGE, rotary_switch)
-
-        return super().__enter__()
+        LiveRotary.__enter__(self)
+        MechanicalRotary.__enter__(self)
+        return self
 
     def __exit__(self, *exc) -> None:
-        assert self.pi is not None, 'Must use "with" to use'
-        self._rotary_turned.cancel()
-        self._rotary_switch.cancel()
-
-        return super().__exit__(*exc)
+        LiveRotary.__exit__(self, *exc)
+        MechanicalRotary.__exit__(self, *exc)
 
 
 if __name__ == "__main__":
 
-    class SimpleRotary(Rotary):
-        def turn(self, dir: Dir) -> None:
-            print("Turned", dir)
+    class TestRotary(MechanicalRotary):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.turns = 0
 
         def pushed_turn(self, dir: Dir) -> None:
-            print("Pushed turn", dir)
+            print("PUSHED:", dir)
+
+        def turn(self, dir: Dir) -> None:
+            self.turns += dir.value
+            print(self.turns)
 
         def push(self) -> None:
             print("Pushed")
 
-    with SimpleRotary({}):
+    with TestRotary():
         forever = threading.Event()
         forever.wait()
