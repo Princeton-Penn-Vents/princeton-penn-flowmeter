@@ -209,8 +209,7 @@ class PatientTitle(QtWidgets.QWidget):
 
     @Slot()
     def click_number(self):
-        print("Not implemented")
-        dialog = GeneratorDialog()
+        dialog = GeneratorDialog(self.parent().gen)
         if dialog.exec():
             pass
 
