@@ -1,3 +1,5 @@
+/* Colors: http://www.colors.commutercreative.com/grid/ */
+
 * {
   background-color: transparent;
   margin: 0px;
@@ -41,9 +43,24 @@ HeaderWidget > PrincetonLogoWidget > QLabel {
   font-family: Times;
 }
 
-HeaderWidget > QPushButton#exit_btn {
-  background-color: red;
-  min-width: 26px;
+HeaderButton {
+  min-width: 28px;
+}
+
+HeaderButton#exit_btn {
+  background-color: Crimson;
+}
+
+HeaderButton#exit_btn:hover {
+  background-color: Crimson;
+}
+
+HeaderButton#help_btn {
+  background-color: MediumOrchid;
+}
+
+HeaderButton#help_btn:hover {
+  background-color: DarkOrchid;
 }
 
 DrilldownHeaderWidget QPushButton, DrilldownHeaderWidget QCheckBox {
