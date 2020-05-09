@@ -168,7 +168,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
 
     @Slot()
     def click_number(self):
-        dialog = GeneratorDialog()
+        dialog = GeneratorDialog(self.gen)
         if dialog.exec():
             pass
 
