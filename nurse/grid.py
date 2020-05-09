@@ -70,19 +70,25 @@ class NumbersWidget(QtWidgets.QWidget):
 
 
 class PatientTitleWidget(QtWidgets.QWidget):
-    def __init__(self, i: int):
+    def __init__(self, gen: Generator):
         super().__init__()
-        self.i = i
+        self.gen = gen
 
         layout = HBoxLayout(self)
 
-        # Temporary setting - i is the grid #, not Sensor ID
-        self.name_btn = QtWidgets.QPushButton(f"{i+1}:")
+        # Temporary setting - filled in later
+        self.name_btn = QtWidgets.QPushButton(f"{self.gen.record.sid}:")
         layout.addWidget(self.name_btn)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setText(f"Patient {i+1}")
+        self.name_edit.setText(self.gen.record.title)
+        self.name_edit.setPlaceholderText(self.gen.record.box_name)
+        self.name_edit.editingFinished.connect(self.update_title)
         layout.addWidget(self.name_edit)
+
+    @Slot()
+    def update_title(self):
+        self.gen.record.title = self.name_edit.text()
 
     def repolish(self):
         self.name_btn.style().unpolish(self.name_btn)
@@ -93,6 +99,11 @@ class PatientTitleWidget(QtWidgets.QWidget):
 
 
 class GraphicsView(pg.GraphicsView):
+    """
+    Don't worry about clicks - they'll be ignored so the parent can implement click-in
+    and drag n' drop.
+    """
+
     def mousePressEvent(self, ev: QtGui.QMouseEvent):
         ev.ignore()
 
@@ -118,7 +129,6 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
             self.style().polish(self)
 
     def __init__(self, *, i: int, gen: Generator):
-
         super().__init__()
         self.last_status_change = int(1000 * datetime.now().timestamp())
         self.gen: Generator = gen
@@ -130,7 +140,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         layout_left = VBoxLayout()
         layout.addLayout(layout_left)
 
-        self.title_widget = PatientTitleWidget(i=i)
+        self.title_widget = PatientTitleWidget(gen)
         layout_left.addWidget(self.title_widget)
 
         self.graphview = GraphicsView()

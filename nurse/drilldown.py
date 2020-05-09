@@ -22,7 +22,6 @@ from nurse.header import DrilldownHeaderWidget
 from nurse.dragdrop import DragDropGridMixin
 from processor.generator import Status, Generator
 from nurse.generator_dialog import GeneratorDialog
-from processor.device_names import address_to_name
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -241,9 +240,8 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         self.alarm_boxes: List[AlarmBox] = []
 
-    def add_alarm_box(self):
-        i = len(self.alarm_boxes)
-        alarm_box = AlarmBox(i)
+    def add_alarm_box(self, gen: Generator, i: int):
+        alarm_box = AlarmBox(gen)
         self.alarm_boxes.append(alarm_box)
         self.grid_layout.addWidget(alarm_box, *divmod(i, 2))
         alarm_box.clicked.connect(self.click_alarm)
@@ -277,9 +275,9 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 
 class AlarmBox(QtWidgets.QPushButton, DragDropGridMixin):
-    def __init__(self, i: int):
-        super().__init__(str(i + 1))
-        self.i = i
+    def __init__(self, gen: Generator):
+        super().__init__(gen.record.nurse_id)
+        self.gen = gen
         self.active = False
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -430,6 +428,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.setText(rotary_text)
         box.exec()
 
+    def update_addr(self):
+        text = f"Box name: {self.gen.record.box_name}  Sensor ID: {self.gen.record.sid}"
+        if self.title_warning.text() != text:
+            self.title_warning.setText(text)
+
     def set_plot(self, graph_layout, phase_layout):
         gis = GraphInfo()
 
@@ -486,17 +489,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
+                    self.update_addr()
                     time_avg = self.gen.rotary["AvgWindow"].value
-
-                    try:
-                        name = address_to_name(self.gen.mac).title()
-                    except ValueError:
-                        name = self.gen.mac or "<unknown>"
-                    sid = self.gen.sid or "<unknown>"
-                    text = f"Box name: {name}  Sensor ID: {sid}"
-
-                    if text != self.title_warning.text():
-                        self.title_warning.setText(text)
 
                     for key in gis.graph_labels:
                         if scroll:

@@ -92,13 +92,9 @@ class RemoteThread(threading.Thread):
             elif self.parent.status == Status.DISCON:
                 self.parent.status = Status.OK
 
-            if self.parent.mac != self.mac:
-                self.parent.mac = self.mac
-                self.parent.logger.info(f"Mac Address: {self.mac}")
-
-            if self.parent.sid != self.sid:
-                self.parent.sid = self.sid
-                self.parent.logger.info(f"Sensor ID: {self.sid}")
+            # These log and perform (simple, please!) callbacks
+            self.parent.record.mac = self.mac
+            self.parent.record.sid = self.sid
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]

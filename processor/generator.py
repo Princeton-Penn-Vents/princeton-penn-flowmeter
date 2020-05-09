@@ -142,12 +142,6 @@ class Generator(abc.ABC):
         # A quick way to get the debug status
         self._debug = config["global"]["debug"].get(bool)
 
-        # The mac address if known
-        self.mac = ""
-
-        # The Sensor ID if known (0 otherwise)
-        self.sid = 0
-
         # An incrementing unique ID (for logging, perhaps)
         self.gen_id: Final[int] = self._total_generators
         self._total_generators += 1
