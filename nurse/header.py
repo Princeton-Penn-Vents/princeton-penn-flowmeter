@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
 from nurse.common import GraphInfo
 from datetime import datetime
 
 from nurse.limits_dialog import LimitDialog
+from nurse.help_dialog import HelpDialog
+
+
+class HeaderButton(QtWidgets.QPushButton):
+    pass
 
 
 class PrincetonLogoWidget(QtWidgets.QWidget):
@@ -99,7 +106,9 @@ class GraphLabelWidget(QtWidgets.QWidget):
 
 
 class HeaderWidget(QtWidgets.QWidget):
-    pass
+    @Slot()
+    def call_for_help(self):
+        HelpDialog().exec()
 
 
 class MainHeaderWidget(HeaderWidget):
@@ -115,13 +124,18 @@ class MainHeaderWidget(HeaderWidget):
         graph_info = GraphLabelWidget()
         layout.addWidget(graph_info)
 
-        self.add_btn = QtWidgets.QPushButton("+")
+        self.add_btn = HeaderButton("+")
         layout.addWidget(self.add_btn)
+
+        self.help_btn = HeaderButton("?")
+        self.help_btn.setObjectName("help_btn")
+        self.help_btn.clicked.connect(self.call_for_help)
+        layout.addWidget(self.help_btn)
 
         nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo)
 
-        self.fs_exit = QtWidgets.QPushButton("X")
+        self.fs_exit = HeaderButton("X")
         self.fs_exit.setObjectName("exit_btn")
         self.fs_exit.setVisible(False)
         layout.addWidget(self.fs_exit)
@@ -149,6 +163,11 @@ class DrilldownHeaderWidget(HeaderWidget):
         self.return_btn = QtWidgets.QPushButton("Return to main view")
         self.return_btn.setObjectName("return_btn")
         layout.addWidget(self.return_btn, 0, Qt.AlignVCenter)
+
+        self.help_btn = HeaderButton("?")
+        self.help_btn.setObjectName("help_btn")
+        self.help_btn.clicked.connect(self.call_for_help)
+        layout.addWidget(self.help_btn)
 
         nsf_logo = NSFLogoWidget()
         layout.addWidget(nsf_logo)
