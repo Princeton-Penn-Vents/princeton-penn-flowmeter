@@ -25,7 +25,10 @@ class FilenameSetting(DisplaySetting):
 class NameSetting(DisplaySetting):
     @property
     def value(self) -> str:
-        return address_to_name(get_mac_addr()).title()
+        try:
+            return address_to_name(get_mac_addr()).title()
+        except ValueError:
+            return "<Unknown>"
 
     # Currently does not work remotely
     @value.setter

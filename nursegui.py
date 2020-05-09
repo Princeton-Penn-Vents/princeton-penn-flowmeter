@@ -170,7 +170,7 @@ class MainStack(QtWidgets.QWidget):
         i, j = self._get_next_empty()
 
         drilldown: DrilldownWidget = self.parent().parent().drilldown
-        drilldown.add_alarm_box()
+        drilldown.add_alarm_box(gen, i)
 
         graph = PatientSensor(i=ind, gen=gen)
         self.graphs.append(graph)
