@@ -1,6 +1,7 @@
 from functools import lru_cache
 import time
 from pathlib import Path
+from processor.device_names import address_to_name
 
 import logging
 
@@ -22,3 +23,11 @@ def get_mac_addr() -> str:
             return mac
         except IOError:
             time.sleep(1)
+
+
+@lru_cache(1)
+def get_box_name() -> str:
+    try:
+        return address_to_name(get_mac_addr()).title()
+    except ValueError:
+        return "<unknown>"

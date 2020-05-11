@@ -88,6 +88,9 @@ class CollectorThread(threading.Thread):
 
                     if self._sn is not None:
                         extra_dict["sid"] = self._sn
+                        if "Advanced" in self.parent.rotary:
+                            setting = self.parent.rotary["Advanced"]
+                            setting.sid = self._sn
 
                     pub_socket.send_json(extra_dict)
 

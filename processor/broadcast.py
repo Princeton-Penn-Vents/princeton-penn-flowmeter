@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from zeroconf import ServiceInfo, Zeroconf
 from ifaddr import get_adapters  # type: ignore
-from patient.mac_address import get_mac_addr
-from processor.device_names import address_to_name
+from patient.mac_address import get_mac_addr, get_box_name
 from typing import Iterator, Set, Optional
 import threading
 import ipaddress
@@ -64,7 +63,7 @@ class Broadcast:
 
             self.info = ServiceInfo(
                 "_http._tcp.local.",
-                f"Princeton Open Vent Monitor - {address_to_name(get_mac_addr()).title()} - {self.port}._http._tcp.local.",
+                f"Princeton Open Vent Monitor - {get_box_name()} - {self.port}._http._tcp.local.",
                 addresses=[ipaddress.ip_address(ip).packed for ip in addrs],
                 port=self.port,
                 properties={

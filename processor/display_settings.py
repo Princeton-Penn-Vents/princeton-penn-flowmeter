@@ -9,45 +9,62 @@ DIR = Path(__file__).parent.resolve()
 (DIR.parent / "device_log").mkdir(exist_ok=True)
 
 
-class FilenameSetting(DisplaySetting):
+class AdvancedSetting(SelectionSetting):
+    STATIC_UPPER = False
+
+    def __init__(self, *, rate: int = 2):
+
+        string_listing = ["Box name", "MAC addr", "SensorID", "Log file"]
+
+        # Sensor ID
+        self.sid: int = 0
+
+        super().__init__(0, string_listing, name="Advanced", rate=rate)
+
     @property
     def value(self) -> str:
-        files = sorted(Path(DIR.parent / "device_log").glob("*"))
-        string = str(files[-1].name) if files else "No file"
-        return string
+        if self._value == 0:
+            try:
+                return address_to_name(get_mac_addr()).title()
+            except ValueError:
+                return "<Unknown>"
+        elif self._value == 1:
+            try:
+                return get_mac_addr()
+            except ValueError:
+                return "<Unknown>"
+        elif self._value == 2:
+            return f"{self.sid:X}"
+        elif self._value == 3:
+            files = sorted(Path(DIR.parent / "device_log").glob("*"))
+            string = str(files[-1].name) if files else "No file"
+            return string
+        else:
+            raise NotImplementedError("Setting must be in range 0-3")
 
-    # Currently does not work remotely
     @value.setter
-    def value(self, value: str):
-        self._value = value
+    def value(self, value: int):
+        pass
 
+    def active(self) -> None:
+        self._value = 0
 
-class NameSetting(DisplaySetting):
     @property
-    def value(self) -> str:
-        try:
-            return address_to_name(get_mac_addr()).title()
-        except ValueError:
-            return "<Unknown>"
+    def lcd_name(self) -> str:
+        return self._listing[self._value]
 
-    # Currently does not work remotely
-    @value.setter
-    def value(self, value: str):
+    # For the GUI
+    def print_setting(self, value: int) -> str:
+        c = self._value
         self._value = value
-
-
-class MACSetting(NameSetting):
-    @property
-    def value(self) -> str:
-        return get_mac_addr()
-
-    # Currently does not work remotely
-    @value.setter
-    def value(self, value: str):
-        self._value = value
+        res = f"{self.lcd_name}: {self.value}"
+        self._value = c
+        return res
 
 
 class CurrentSetting(SelectionSetting):
+    STATIC_UPPER = False
+
     def __init__(
         self, default: int, listing: Sequence[int], *, name: str, rate: int = 2
     ):

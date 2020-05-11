@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from processor.setting import Setting
-from processor.display_settings import ResetSetting, CurrentSetting, NameSetting
+from processor.display_settings import ResetSetting, AdvancedSetting
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
 from patient.rotary import Rotary, Dir
@@ -86,7 +86,7 @@ class RotaryLCD(Rotary):
         value = self.value()
         if isinstance(value, ResetSetting) and value.at_maximum():
             self.reset()
-        if isinstance(value, CurrentSetting):
+        if value.STATIC_UPPER:
             self.upper_display()
         self.lower_display()
 
@@ -105,7 +105,7 @@ class RotaryLCD(Rotary):
             self.buzzer.clear()
             self.alarm_level = AlarmLevel.OFF
 
-        if isinstance(self.value(), NameSetting):
+        if isinstance(self.value(), AdvancedSetting):
             self.upper_display()
         else:
             self.lower_display()
@@ -114,12 +114,17 @@ class RotaryLCD(Rotary):
 
     def upper_display(self) -> None:
         current_name = self.value().lcd_name
-        if len(current_name) > 16:
+        current_number = f"{self._current + 1:>2}"
+        if isinstance(self.value(), AdvancedSetting):
+            current_number += chr(ord("a") + self.value()._value % 26)
+        length_available = 20 - len(current_number) - 2
+        if len(current_name) > length_available:
             print(f"Warning: Truncating {current_name!r}")
-            current_name = current_name[:16]
-        string = f"{self._current + 1:>2}: {current_name:<16}"
+            current_name = current_name[:length_available]
 
-        if self.alarms and isinstance(self.value(), NameSetting):
+        string = f"{current_number}: {current_name:<{length_available}}"
+
+        if self.alarms and isinstance(self.value(), AdvancedSetting):
             n = len(self.alarms)
             if n == 1:
                 string = string[:14] + " ALARM"
@@ -134,7 +139,7 @@ class RotaryLCD(Rotary):
         if len(string) > 20:
             print(f"Warning: Truncating {string!r}")
             string = string[:20]
-        if self.alarms and not isinstance(self.value(), NameSetting):
+        if self.alarms and not isinstance(self.value(), AdvancedSetting):
             n = len(self.alarms)
             if n == 1:
                 string = string[:14] + " ALARM"

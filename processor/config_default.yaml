@@ -19,24 +19,13 @@ patient:
   brightness: 200 # max 255
 
 rotary-live:
-  Log Filename:
-    type: Filename
-    name: Log filename
-    order: -4
-
   Reset Setting:
     type: Reset
     name: Turn to Reset
-    order: -3
-
-  MAC:
-    type: MAC
-    name: MAC Addr
     order: -2
 
-  Name:
-    type: Name
-    name: Box name
+  Advanced:
+    type: Advanced
     order: -1
 
   Current Setting:
