@@ -205,6 +205,7 @@ class PatientTitle(QtWidgets.QWidget):
         self.name_edit.disconnect()
         self.name_lbl.setText(number)
         self.name_edit.setText(mirror.text())
+        self.name_edit.setPlaceholderText(mirror.placeholderText())
         self.name_edit.textChanged.connect(mirror.setText)
 
     @Slot()
@@ -428,7 +429,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.exec()
 
     def update_addr(self):
-        text = f"Box name: {self.gen.record.box_name}  Sensor ID: {self.gen.record.sid}"
+        text = (
+            f"Box name: {self.gen.record.box_name}  Sensor ID: {self.gen.record.sid:X}"
+        )
         if self.title_warning.text() != text:
             self.title_warning.setText(text)
 
