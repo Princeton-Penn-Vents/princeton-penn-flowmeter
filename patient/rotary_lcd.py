@@ -50,10 +50,6 @@ class RotaryLCD(Rotary):
         super().__enter__()
 
         self.backlight.white()
-        self.lcd.upper("POVM Box name:")
-        self.lcd.lower("Getting name...")
-        self.lcd.lower(address_to_name(get_mac_addr()).title() + " ")
-        time.sleep(3.5)
         return self
 
     def __exit__(self, *exc) -> None:
