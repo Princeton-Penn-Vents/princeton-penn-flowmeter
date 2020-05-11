@@ -49,7 +49,6 @@ class RotaryLCD(Rotary):
         self.buzzer.__enter__()
         super().__enter__()
 
-        self.backlight.white()
         return self
 
     def __exit__(self, *exc) -> None:
