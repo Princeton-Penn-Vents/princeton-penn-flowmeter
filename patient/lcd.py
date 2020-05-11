@@ -108,3 +108,5 @@ if __name__ == "__main__":
     with LCD() as lcd:
         lcd.upper("HELLO", Align.CENTER)
         lcd.lower("WORLD", Align.CENTER)
+        time.sleep(1)
+        lcd.clear()

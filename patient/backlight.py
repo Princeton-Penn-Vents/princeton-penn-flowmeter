@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pigpio
 from typing import Optional
 
@@ -65,3 +67,8 @@ class Backlight:
 
     def __exit__(self, *exc):
         pass
+
+
+if __name__ == "__main__":
+    with Backlight() as b:
+        b.black()
