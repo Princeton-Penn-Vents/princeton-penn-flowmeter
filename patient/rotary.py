@@ -141,8 +141,13 @@ class Rotary(LiveRotary, MechanicalRotary):
         self._slow_turn = (self._slow_turn + dir.value) % (
             len(self.config) * self._change_rate
         )
+
+        old_current = self._current
         self._current = self._slow_turn // self._change_rate
-        self.value().active()
+
+        # This resets "auto-reset" settings (reset, advanced) when they are selected
+        if self._current != old_current:
+            self.value().active()
 
     def pushed_turn(self, dir: Dir) -> None:
         if dir == Dir.CLOCKWISE:
