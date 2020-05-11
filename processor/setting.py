@@ -8,6 +8,8 @@ Number = Union[float, int]
 
 
 class Setting(abc.ABC):
+    STATIC_UPPER = True
+
     def __init__(
         self,
         *,
@@ -19,9 +21,6 @@ class Setting(abc.ABC):
     ):
         self._name = name
         self._lcd_name: Optional[str] = lcd_name or name
-        assert (
-            len(self.lcd_name) <= 16
-        ), f"Length of LCD names must be less than 16 chars: {self.lcd_name!r}"
         self.unit = unit
         self._lock = threading.Lock()
         self._value: Any = None
@@ -186,16 +185,16 @@ class SelectionSetting(Setting):
         rate: int = 2,
     ):
 
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero, rate=rate)
-
         assert (
             0 <= default < len(listing)
         ), "Default must be an index into the list given"
 
-        self._value = default
-        self._original_value = default
-        self._listing = listing
-        self._zero = zero
+        super().__init__(unit=unit, name=name, lcd_name=lcd_name, zero=zero, rate=rate)
+
+        self._value: int = default
+        self._original_value: int = default
+        self._listing: List[Any] = listing
+        self._zero: Optional[str] = zero
 
     def _up_(self) -> None:
         "Return true if not at limit"

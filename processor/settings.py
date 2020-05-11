@@ -3,11 +3,9 @@ from __future__ import annotations
 
 from processor.setting import IncrSetting, SelectionSetting, Setting
 from processor.display_settings import (
-    FilenameSetting,
+    AdvancedSetting,
     CurrentSetting,
     ResetSetting,
-    NameSetting,
-    MACSetting,
 )
 from processor.config import config
 
@@ -64,12 +62,8 @@ def get_setting(c: ConfigView) -> Tuple[Optional[int], Setting]:
                 name=c["name"].get(), rate=c["rate"].get(int) if "rate" in c else 1,
             ),
         )
-    elif type_name == "Filename":
-        return order, FilenameSetting("Log filename")
-    elif type_name == "Name":
-        return order, NameSetting(c["name"].get())
-    elif type_name == "MAC":
-        return order, MACSetting(c["name"].get())
+    elif type_name == "Advanced":
+        return order, AdvancedSetting(rate=c["rate"].get(int) if "rate" in c else 2)
     else:
         raise RuntimeError(
             f"Invalid type {type_name!r}, needs to be defined in setting.py/settings.py"
