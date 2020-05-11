@@ -91,7 +91,7 @@ class RotaryLCD(Rotary):
             value = self.value()
             if isinstance(value, ResetSetting) and value.at_maximum():
                 self.reset()
-            if value.STATIC_UPPER:
+            if not value.STATIC_UPPER:
                 self.upper_display()
             self.lower_display()
 
