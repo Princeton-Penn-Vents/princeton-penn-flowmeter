@@ -15,6 +15,7 @@ import pigpio
 from typing import Dict
 import enum
 import time
+import threading
 
 
 class AlarmLevel(enum.Enum):
@@ -34,10 +35,12 @@ class RotaryLCD(Rotary):
         self.buzzer = Buzzer(pi=pi)
         self.alarm_level: AlarmLevel = AlarmLevel.OFF
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
+        self.lock = threading.Lock()
 
     def external_update(self) -> None:
-        self.upper_display()
-        self.lower_display()
+        with self.lock:
+            self.upper_display()
+            self.lower_display()
 
     def __enter__(self) -> RotaryLCD:
         self.lcd.__enter__()
@@ -81,34 +84,37 @@ class RotaryLCD(Rotary):
             super().push()
 
     def pushed_turn(self, dir: Dir) -> None:
-        # Top display keeps ID number!
-        super().pushed_turn(dir)
-        value = self.value()
-        if isinstance(value, ResetSetting) and value.at_maximum():
-            self.reset()
-        if value.STATIC_UPPER:
-            self.upper_display()
-        self.lower_display()
+        with self.lock:
+            # Top display keeps ID number!
+            super().pushed_turn(dir)
+            value = self.value()
+            if isinstance(value, ResetSetting) and value.at_maximum():
+                self.reset()
+            if value.STATIC_UPPER:
+                self.upper_display()
+            self.lower_display()
 
     def turn(self, dir: Dir) -> None:
         super().turn(dir)
-        self.lower_display()
-        self.upper_display()
+        with self.lock:
+            self.lower_display()
+            self.upper_display()
 
     def alert(self) -> None:
-        if self.alarms and self.alarm_level == AlarmLevel.OFF:
-            self.backlight.red()
-            self.buzzer.buzz(self.buzzer_volume)
-            self.alarm_level = AlarmLevel.LOUD
-        elif not self.alarms:
-            self.backlight.white()
-            self.buzzer.clear()
-            self.alarm_level = AlarmLevel.OFF
+        with self.lock:
+            if self.alarms and self.alarm_level == AlarmLevel.OFF:
+                self.backlight.red()
+                self.buzzer.buzz(self.buzzer_volume)
+                self.alarm_level = AlarmLevel.LOUD
+            elif not self.alarms:
+                self.backlight.white()
+                self.buzzer.clear()
+                self.alarm_level = AlarmLevel.OFF
 
-        if isinstance(self.value(), AdvancedSetting):
-            self.upper_display()
-        else:
-            self.lower_display()
+            if isinstance(self.value(), AdvancedSetting):
+                self.upper_display()
+            else:
+                self.lower_display()
 
         super().alert()
 
@@ -149,9 +155,10 @@ class RotaryLCD(Rotary):
         self.lcd.lower(string)
 
     def display(self) -> None:
-        self.lcd.clear()
-        self.lower_display()
-        self.upper_display()
+        with self.lock:
+            self.lcd.clear()
+            self.lower_display()
+            self.upper_display()
 
 
 if __name__ == "__main__":
