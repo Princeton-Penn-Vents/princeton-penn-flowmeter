@@ -26,29 +26,35 @@ class Backlight:
         shade = self.shade if shade is None else shade
         self.color(shade, shade, shade)
 
-    def red(self, shade: int = None) -> None:
+    def red(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(shade, 0, 0)
+        self.color(shade, zero, zero)
 
-    def green(self, shade: int = None) -> None:
+    def green(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(0, shade, 0)
+        self.color(zero, shade, zero)
 
-    def blue(self, shade: int = None) -> None:
+    def blue(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(0, 0, shade)
+        self.color(zero, zero, shade)
 
-    def cyan(self, shade: int = None) -> None:
+    def cyan(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(0, shade, shade)
+        self.color(zero, shade, shade)
 
-    def magenta(self, shade: int = None) -> None:
+    def magenta(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(shade, 0, shade)
+        self.color(shade, zero, shade)
 
-    def yellow(self, shade: int = None) -> None:
+    def yellow(self, shade: int = None, *, light=False) -> None:
+        zero = self.shade // 3 if light else 0
         shade = self.shade if shade is None else shade
-        self.color(shade, shade, 0)
+        self.color(shade, shade, zero)
 
     def orange(self, shade: int = None) -> None:
         shade = self.shade if shade is None else shade

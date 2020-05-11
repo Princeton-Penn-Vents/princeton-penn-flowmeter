@@ -34,13 +34,18 @@ with ExitStack() as stack:
         signal.signal(signal.SIGTERM, signal.SIG_DFL)
         forever.set()
 
+    rotary.backlight.magenta()
     rotary.lcd.upper("POVM Box name:")
     rotary.lcd.lower("Getting name...")
     rotary.lcd.lower(f"{get_box_name():<20}")
     forever.wait(3)
+
+    rotary.backlight.green(light=True)
     rotary.lcd.upper("Turn to select alarm ")
     rotary.lcd.lower("Push and turn to set ")
     forever.wait(2)
+
+    rotary.backlight.white()
 
     collector = stack.enter_context(Collector(rotary=rotary, port=args.port))
     stack.enter_context(Broadcast("patient_loop", port=args.port, live=5))
