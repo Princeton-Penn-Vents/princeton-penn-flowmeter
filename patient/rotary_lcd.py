@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from processor.setting import Setting
-from processor.display_settings import ResetSetting, AdvancedSetting
+from processor.display_settings import ResetSetting, AdvancedSetting, CurrentSetting
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
 from patient.rotary import Rotary, Dir
@@ -38,9 +38,10 @@ class RotaryLCD(Rotary):
         self.lock = threading.Lock()
 
     def external_update(self) -> None:
-        with self.lock:
-            self.upper_display()
-            self.lower_display()
+        if isinstance(self.value(), CurrentSetting):
+            with self.lock:
+                self.upper_display()
+                self.lower_display()
 
     def __enter__(self) -> RotaryLCD:
         self.lcd.__enter__()
