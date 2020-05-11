@@ -125,10 +125,12 @@ class MainHeaderWidget(HeaderWidget):
         layout.addWidget(graph_info)
 
         self.add_btn = HeaderButton("+")
+        self.add_btn.setToolTip("Add a device")
         layout.addWidget(self.add_btn)
 
         self.help_btn = HeaderButton("?")
         self.help_btn.setObjectName("help_btn")
+        self.help_btn.setToolTip("Get help")
         self.help_btn.clicked.connect(self.call_for_help)
         layout.addWidget(self.help_btn)
 
@@ -137,6 +139,7 @@ class MainHeaderWidget(HeaderWidget):
 
         self.fs_exit = HeaderButton("X")
         self.fs_exit.setObjectName("exit_btn")
+        self.fs_exit.setToolTip("Exit")
         self.fs_exit.setVisible(False)
         layout.addWidget(self.fs_exit)
 
@@ -166,6 +169,7 @@ class DrilldownHeaderWidget(HeaderWidget):
 
         self.help_btn = HeaderButton("?")
         self.help_btn.setObjectName("help_btn")
+        self.help_btn.setToolTip("Get help")
         self.help_btn.clicked.connect(self.call_for_help)
         layout.addWidget(self.help_btn)
 
