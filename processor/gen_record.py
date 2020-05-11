@@ -13,15 +13,13 @@ class GenRecord:
     _mac: Optional[str] = None
     _sid: int = 0
 
-    _nurse_name: Optional[str] = None
-    _nurse_id: Optional[str] = None
+    _nurse_name: str = ""
 
     log: str = ""
 
     # Change these to add your own callbacks
     # These *only* run if you set a new value or the first time you set the value!
     title_changed: Callable[[], None] = lambda: None
-    nid_changed: Callable[[], None] = lambda: None
     sid_changed: Callable[[], None] = lambda: None
     mac_changed: Callable[[], None] = lambda: None
 
@@ -39,10 +37,7 @@ class GenRecord:
         """
         The title to show in the dialog box. Will show box_name if unset.
         """
-        if self._nurse_name is None:
-            return self.box_name
-        else:
-            return self._nurse_name
+        return self._nurse_name
 
     @title.setter
     def title(self, value: str):
@@ -53,14 +48,12 @@ class GenRecord:
 
     @property
     def nurse_id(self) -> str:
-        return "?" if self._nurse_id is None else self._nurse_id
-
-    @nurse_id.setter
-    def nurse_id(self, value: str):
-        if self._nurse_id is None or self._nurse_id != value:
-            self.logger.info(f"Changed short name to {self._nurse_id!r}")
-            self._nurse_id = value
-            self.nid_changed()  # type: ignore
+        if self._nurse_name:
+            return self._nurse_name[:4]
+        elif self.mac is not None:
+            return "".join(name[:2] for name in self.box_name.split())
+        else:
+            return "?"
 
     @property
     def mac(self) -> str:
@@ -80,6 +73,6 @@ class GenRecord:
     @sid.setter
     def sid(self, value: int):
         if self._sid != value:
-            self.logger.info(f"Sensor ID: {self._sid}")
+            self.logger.info(f"Sensor ID: {self._sid:X}")
             self._sid = value
             self.sid_changed()  # type: ignore

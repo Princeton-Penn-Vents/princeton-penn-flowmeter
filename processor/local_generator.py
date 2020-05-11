@@ -13,6 +13,8 @@ class LocalGenerator(Generator):
         super().__init__(logger=logger)
         self.status = Status.OK
 
+        self.record.mac = f"dc:a6:32:00:00:{i:02x}"
+
         self._start_time = int(1000 * time.monotonic())
         (self._sim,) = start_sims(1, self._start_time, 12000000)
 

@@ -31,7 +31,7 @@ class DetailsTab(QtWidgets.QWidget):
         layout = QtWidgets.QFormLayout(self)
 
         layout.addRow("MAC Addr:", QtWidgets.QLabel(gen.record.mac))
-        layout.addRow("Sensor:", QtWidgets.QLabel(str(gen.record.sid)))
+        layout.addRow("Sensor:", QtWidgets.QLabel(format(gen.record.sid, "X")))
         layout.addRow(
             "IP Address:", QtWidgets.QLabel(getattr(gen, "address", "Simulation"))
         )

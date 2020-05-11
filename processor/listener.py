@@ -7,7 +7,6 @@ import queue
 import logging
 import ipaddress
 from typing import Set, Callable
-from processor.argparse import init_logger
 from dataclasses import dataclass
 
 logger = logging.getLogger("povm")
@@ -110,8 +109,6 @@ class FindBroadcasts:
 
 
 if __name__ == "__main__":
-    # init_logger()
-
     fb = FindBroadcasts()
 
     def proc():
