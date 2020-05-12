@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, AdvancedSetting, CurrentSetting
-from patient.mac_address import get_mac_addr
-from processor.device_names import address_to_name
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD
 from patient.backlight import Backlight
@@ -79,13 +77,18 @@ class RotaryLCD(Rotary):
             self.alert()
             super().push()
 
+    def release(self) -> None:
+        value = self.value()
+        if isinstance(value, ResetSetting) and value.at_maximum():
+            self.reset()
+            self.lcd.lower("Reset complete")
+        super().release()
+
     def pushed_turn(self, dir: Dir) -> None:
         with self.lock:
             # Top display keeps ID number!
             super().pushed_turn(dir)
             value = self.value()
-            if isinstance(value, ResetSetting) and value.at_maximum():
-                self.reset()
             if not value.STATIC_UPPER:
                 self.upper_display()
             self.lower_display()

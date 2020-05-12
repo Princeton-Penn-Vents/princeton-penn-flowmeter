@@ -110,6 +110,8 @@ class MechanicalRotary:
 
         if ch == pinSW and level == 0:  # falling edge
             self.push()
+        elif ch == pinSW and level == 1:  # rising edge
+            self.release()
 
     def pushed_turn(self, dir: Dir) -> None:
         pass
@@ -118,6 +120,9 @@ class MechanicalRotary:
         pass
 
     def push(self) -> None:
+        pass
+
+    def release(self) -> None:
         pass
 
 
@@ -158,6 +163,9 @@ class Rotary(LiveRotary, MechanicalRotary):
         self.changed()
 
     def push(self) -> None:
+        pass
+
+    def release(self) -> None:
         pass
 
     def key(self) -> str:
