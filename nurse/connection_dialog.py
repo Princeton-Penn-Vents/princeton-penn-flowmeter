@@ -75,7 +75,7 @@ class ConnectionDialog(QtWidgets.QDialog):
 
         layout.addWidget(buttons)
 
-    def exec(self):
+    def exec(self) -> int:
         self.setWindowTitle(f"Patient box {self.i} connection")
 
         parsed = urlparse(self.address)

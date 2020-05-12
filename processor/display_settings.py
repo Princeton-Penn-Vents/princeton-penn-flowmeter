@@ -1,4 +1,4 @@
-from processor.setting import DisplaySetting, SelectionSetting
+from processor.setting import SelectionSetting
 from pathlib import Path
 from typing import Optional, List, Sequence
 from patient.mac_address import get_mac_addr

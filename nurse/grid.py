@@ -70,6 +70,10 @@ class NumbersWidget(QtWidgets.QWidget):
         return iter(self.val_widgets)
 
 
+class TinyBoxName(QtWidgets.QLabel):
+    pass
+
+
 class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, gen: Generator):
         super().__init__()
@@ -84,10 +88,17 @@ class PatientTitleWidget(QtWidgets.QWidget):
 
         self.name_edit = QtWidgets.QLineEdit()
         self.name_edit.setText(self.gen.record.title)
-        self.name_edit.setPlaceholderText(self.gen.record.box_name)
+        self.name_edit.setPlaceholderText("Please enter title")
         self.name_edit.editingFinished.connect(self.update_title)
         record.master_signal.title_changed.connect(self.external_update_title)
-        layout.addWidget(self.name_edit)
+        layout.addWidget(self.name_edit, 1)
+
+        self.box_name = TinyBoxName(
+            "Box Name:\nUnknown"
+            if gen.record.mac is None
+            else "\n".join(gen.record.box_name.split())
+        )
+        layout.addWidget(self.box_name)
 
     @Slot()
     def external_update_title(self):

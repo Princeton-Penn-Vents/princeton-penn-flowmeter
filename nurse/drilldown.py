@@ -195,6 +195,7 @@ class PatientTitle(QtWidgets.QWidget):
         layout.addWidget(self.name_lbl)
 
         self.name_edit = QtWidgets.QLineEdit()
+        self.name_edit.setPlaceholderText("Please add title")
         layout.addWidget(self.name_edit)
 
         self.name_edit.editingFinished.connect(self.update_title)
@@ -209,7 +210,6 @@ class PatientTitle(QtWidgets.QWidget):
 
     def activate(self) -> None:
         self.name_edit.setText(self.record.title)
-        self.name_edit.setPlaceholderText(self.record.box_name)
         self.record.master_signal.title_changed.connect(self.external_update_title)
 
     def deactivate(self) -> None:
@@ -368,9 +368,21 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.title = PatientTitle()
         left_layout.addWidget(self.title)
 
-        self.title_warning = QtWidgets.QLabel("Box name: not yet known")
-        self.title_warning.setObjectName("TitleWarning")
-        left_layout.addWidget(self.title_warning, 0, Qt.AlignHCenter)
+        warning_layout = QtWidgets.QHBoxLayout()
+        left_layout.addLayout(warning_layout)
+
+        warning_layout.addStretch()
+
+        self.box_name = QtWidgets.QLabel("Box name: not yet known")
+        self.box_name.setObjectName("TitleWarning")
+        warning_layout.addWidget(self.box_name)
+
+        warning_layout.addStretch()
+
+        self.sensor_id = QtWidgets.QLabel("Sensor ID: not yet known")
+        warning_layout.addWidget(self.sensor_id)
+
+        warning_layout.addStretch()
 
         self.graphview = pg.GraphicsView(parent=self)
         graph_layout = pg.GraphicsLayout()
@@ -471,11 +483,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.exec()
 
     def update_addr(self):
-        text = (
-            f"Box name: {self.gen.record.box_name}  Sensor ID: {self.gen.record.sid:X}"
-        )
-        if self.title_warning.text() != text:
-            self.title_warning.setText(text)
+        text = rf'Box name: <span style="font-style:italic;font-size:16pt;font-weight:bold;color:floralwhite;">{self.gen.record.box_name}</span>'
+        if self.box_name.text() != text:
+            self.box_name.setText(text)
+
+        text = f"Sensor ID: {self.gen.record.sid:X}"
+        if self.sensor_id.text() != text:
+            self.sensor_id.setText(text)
 
     def set_plot(self, graph_layout, phase_layout):
         gis = GraphInfo()

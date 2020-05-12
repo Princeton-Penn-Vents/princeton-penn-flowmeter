@@ -1,4 +1,4 @@
-from nurse.qt import QtWidgets, Qt, Slot
+from nurse.qt import QtWidgets
 from processor.generator import Generator
 
 
@@ -8,16 +8,20 @@ class BasicTab(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout(self)
 
-        self.title = QtWidgets.QLineEdit()
-        self.title.setPlaceholderText(gen.record.box_name)
-        layout.addWidget(self.title)
+        layout.addWidget(
+            QtWidgets.QLabel(
+                "Please make sure a title is set to make box identification easier.\n"
+                "The first few characters will be shown in the drilldown alarm screen."
+            )
+        )
 
         form_layout = QtWidgets.QFormLayout()
         layout.addLayout(form_layout)
 
-        view_layout = QtWidgets.QFormLayout()
-        layout.addLayout(view_layout)
+        self.title = QtWidgets.QLineEdit()
+        self.title.setPlaceholderText("Please add title")
 
+        form_layout.addRow("Title:", self.title)
         form_layout.addRow("Box Name:", QtWidgets.QLabel(gen.record.box_name))
 
 
