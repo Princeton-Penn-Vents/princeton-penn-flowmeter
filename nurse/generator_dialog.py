@@ -42,6 +42,8 @@ class DetailsTab(QtWidgets.QWidget):
 class GeneratorDialog(QtWidgets.QDialog):
     def __init__(self, gen: Generator):
         super().__init__()
+        self.setWindowTitle(f"Info for {gen.record.box_name}")
+
         self.gen = gen
         layout = QtWidgets.QVBoxLayout(self)
 

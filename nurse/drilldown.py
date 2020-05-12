@@ -472,8 +472,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             )
         else:
             cumulative = "Disconnected"
+        if not cumulative:
+            cumulative = "No computed values yet"
 
         box = QtWidgets.QMessageBox()
+        box.setWindowTitle("Computed values")
         box.setTextFormat(Qt.RichText)
         box.setText(cumulative)
         box.exec()
@@ -489,6 +492,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             active_alarms = "No alarms currently."
 
         box = QtWidgets.QMessageBox()
+        box.setWindowTitle("Active alarms")
         box.setTextFormat(Qt.RichText)
         box.setText(active_alarms)
         box.exec()
@@ -500,6 +504,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         )
 
         box = QtWidgets.QMessageBox()
+        box.setWindowTitle("Currently set alarm limits")
         box.setTextFormat(Qt.RichText)
         box.setText(rotary_text)
         box.exec()
