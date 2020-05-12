@@ -106,9 +106,7 @@ class GraphLabelWidget(QtWidgets.QWidget):
 
 
 class HeaderWidget(QtWidgets.QWidget):
-    @Slot()
-    def call_for_help(self):
-        HelpDialog().exec()
+    pass
 
 
 class MainHeaderWidget(HeaderWidget):
@@ -145,6 +143,10 @@ class MainHeaderWidget(HeaderWidget):
 
         # dt_info = DateTimeWidget()
         # layout.addWidget(dt_info, 6) # Would need to be updated periodically
+
+    @Slot()
+    def call_for_help(self):
+        HelpDialog(0).exec()
 
 
 class DrilldownHeaderWidget(HeaderWidget):
@@ -186,3 +188,7 @@ class DrilldownHeaderWidget(HeaderWidget):
             self.mode_btn.setText("Mode: Overwrite")
         else:
             self.mode_btn.setText("Mode: Scroll")
+
+    @Slot()
+    def call_for_help(self):
+        HelpDialog(1).exec()

@@ -26,8 +26,8 @@ class GenRecord:
     @mac.setter
     def mac(self, value: str):
         if self._mac is None or self._mac != value:
-            self.logger.info(f"MAC addr: {self._mac}")
             self._mac = value
+            self.logger.info(f"MAC addr: {self._mac}")
             self.mac_changed()
 
     @property
@@ -40,8 +40,8 @@ class GenRecord:
     @sid.setter
     def sid(self, value: int):
         if self._sid != value:
-            self.logger.info(f"Sensor ID: {self._sid:X}")
             self._sid = value
+            self.logger.info(f"Sensor ID: {self._sid:X}")
             self.sid_changed()
 
     @property
@@ -80,8 +80,8 @@ class GenRecord:
     @title.setter
     def title(self, value: str):
         if self._nurse_name is None or self._nurse_name != value:
-            self.logger.info(f"Changed title to {value!r}")
             self._nurse_name = value
+            self.logger.info(f"Changed title to {self._nurse_name!r}")
             self.title_changed()
 
     def title_changed(self) -> None:
