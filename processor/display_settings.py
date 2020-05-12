@@ -14,7 +14,7 @@ class AdvancedSetting(SelectionSetting):
 
     def __init__(self, *, rate: int = 2):
 
-        string_listing = ["Box name", "MAC addr", "SensorID", "Log file"]
+        string_listing = ["Box name", "MAC addr", "SensorID", "Log file", "Version"]
 
         # Sensor ID
         self.sid: int = 0
@@ -39,6 +39,8 @@ class AdvancedSetting(SelectionSetting):
             files = sorted(Path(DIR.parent / "device_log").glob("*"))
             string = str(files[-1].name) if files else "No file"
             return string
+        elif self._value == 4:
+            return "Classic: v0.3+"
         else:
             raise NotImplementedError("Setting must be in range 0-3")
 
