@@ -44,6 +44,7 @@ class Generator(abc.ABC):
         rotary: processor.rotary.LocalRotary = None,
         logger: logging.Logger = None,
         no_save: bool = False,
+        gen_record: GenRecord = None,
     ) -> None:
 
         # The size of the rolling window
@@ -150,7 +151,7 @@ class Generator(abc.ABC):
         self.logger: logging.Logger = logger or logging.getLogger("povm")
 
         # Used by GUI to bundle information
-        self.record = GenRecord(self.logger)
+        self.record = GenRecord(self.logger) if gen_record is None else gen_record
 
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None

@@ -19,7 +19,7 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
-from nurse.dragdrop import DragDropGridMixin
+from nurse.gen_record_gui import GenRecordGUI
 from processor.generator import Status, Generator
 from nurse.generator_dialog import GeneratorDialog
 
@@ -280,15 +280,19 @@ class AlarmBox(QtWidgets.QPushButton):
             super().__init__("\n".join(gen.record.box_name.split()))
             self.setProperty("nurse_id", "auto")
         self.gen = gen
+        record: GenRecordGUI
+        record = self.gen.record  # type: ignore
+        record.master_signal.title_changed.connect(self.update_gen)
         self.active = False
         self.i = i
 
+    @Slot()
     def update_gen(self):
         if self.gen.record.title:
-            super().__init__(self.gen.record.title)
+            self.setText(self.gen.record.title)
             self.auto = False
         else:
-            super().__init__("\n".join(self.gen.record.box_name.split()))
+            self.setText("\n".join(self.gen.record.box_name.split()))
             self.auto = True
 
     @property

@@ -13,15 +13,28 @@ class GenRecord:
     _mac: Optional[str] = None
     _sid: int = 0
 
+    # Nurse only, but in master class to make simpler
     _nurse_name: str = ""
 
-    log: str = ""
+    @property
+    def mac(self) -> str:
+        return "<unknown>" if self._mac is None else self._mac
 
-    # Change these to add your own callbacks
-    # These *only* run if you set a new value or the first time you set the value!
-    title_changed: Callable[[], None] = lambda: None
-    sid_changed: Callable[[], None] = lambda: None
-    mac_changed: Callable[[], None] = lambda: None
+    @mac.setter
+    def mac(self, value: str):
+        if self._mac is None or self._mac != value:
+            self.logger.info(f"MAC addr: {self._mac}")
+            self._mac = value
+
+    @property
+    def sid(self) -> int:
+        return self._sid
+
+    @sid.setter
+    def sid(self, value: int):
+        if self._sid != value:
+            self.logger.info(f"Sensor ID: {self._sid:X}")
+            self._sid = value
 
     @property
     def box_name(self) -> str:
@@ -44,35 +57,9 @@ class GenRecord:
         if self._nurse_name is None or self._nurse_name != value:
             self.logger.info(f"Changed title to {value!r}")
             self._nurse_name = value
-            self.title_changed()  # type: ignore
+            self.title_changed()
 
-    @property
-    def nurse_id(self) -> str:
-        if self._nurse_name:
-            return self._nurse_name[:4]
-        elif self.mac is not None:
-            return "".join(name[:2] for name in self.box_name.split())
-        else:
-            return "?"
-
-    @property
-    def mac(self) -> str:
-        return "<unknown>" if self._mac is None else self._mac
-
-    @mac.setter
-    def mac(self, value: str):
-        if self._mac is None or self._mac != value:
-            self.logger.info(f"MAC addr: {self._mac}")
-            self._mac = value
-            self.mac_changed()  # type: ignore
-
-    @property
-    def sid(self) -> int:
-        return self._sid
-
-    @sid.setter
-    def sid(self, value: int):
-        if self._sid != value:
-            self.logger.info(f"Sensor ID: {self._sid:X}")
-            self._sid = value
-            self.sid_changed()  # type: ignore
+    def title_changed(self) -> None:
+        """
+        Modify in subclasses to add special callbacks here.
+        """

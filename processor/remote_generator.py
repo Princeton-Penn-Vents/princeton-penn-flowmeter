@@ -14,6 +14,7 @@ import logging
 
 from processor.rolling import Rolling, new_elements
 from processor.generator import Status, Generator
+from processor.gen_record import GenRecord
 
 
 class RemoteThread(threading.Thread):
@@ -108,9 +109,13 @@ class RemoteThread(threading.Thread):
 
 class RemoteGenerator(Generator):
     def __init__(
-        self, *, address: str = "tcp://127.0.0.1:8100", logger: logging.Logger
+        self,
+        *,
+        address: str = "tcp://127.0.0.1:8100",
+        logger: logging.Logger,
+        gen_record: GenRecord = None,
     ):
-        super().__init__(logger=logger)
+        super().__init__(logger=logger, gen_record=gen_record)
         self._address = address
 
         self.status = Status.DISCON
