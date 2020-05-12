@@ -37,6 +37,7 @@ class DetailsTab(QtWidgets.QWidget):
 class GeneratorDialog(QtWidgets.QDialog):
     def __init__(self, gen: Generator):
         super().__init__()
+        self.gen = gen
         layout = QtWidgets.QVBoxLayout(self)
 
         self.basic = BasicTab(gen)
@@ -60,4 +61,7 @@ class GeneratorDialog(QtWidgets.QDialog):
         self.buttons.rejected.connect(self.reject)
 
     def exec(self) -> int:
-        return super().exec()
+        result = super().exec()
+        if result:
+            self.gen.record.title = self.basic.title.text()
+        return result

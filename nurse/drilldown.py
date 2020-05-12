@@ -197,19 +197,37 @@ class PatientTitle(QtWidgets.QWidget):
         self.name_edit = QtWidgets.QLineEdit()
         layout.addWidget(self.name_edit)
 
-    def repolish(self):
+        self.name_edit.editingFinished.connect(self.update_title)
+
+    @property
+    def record(self) -> GenRecordGUI:
+        return self.parent().gen.record
+
+    def repolish(self) -> None:
         self.name_lbl.style().unpolish(self.name_lbl)
         self.name_edit.style().polish(self.name_edit)
 
-    def activate(self, mirror: QtWidgets.QLineEdit):
-        self.name_edit.disconnect()
-        self.name_edit.setText(mirror.text())
-        self.name_edit.setPlaceholderText(mirror.placeholderText())
-        self.name_edit.textChanged.connect(mirror.setText)
-        self.name_edit.editingFinished.connect(mirror.parent().update_title)
+    def activate(self) -> None:
+        self.name_edit.setText(self.record.title)
+        self.name_edit.setPlaceholderText(self.record.box_name)
+        self.record.master_signal.title_changed.connect(self.external_update_title)
+
+    def deactivate(self) -> None:
+        if self.parent().gen is not None:
+            self.record.master_signal.title_changed.disconnect(
+                self.external_update_title
+            )
 
     @Slot()
-    def click_number(self):
+    def external_update_title(self) -> None:
+        self.name_edit.setText(self.record.title)
+
+    @Slot()
+    def update_title(self) -> None:
+        self.record.title = self.name_edit.text()
+
+    @Slot()
+    def click_number(self) -> None:
         dialog = GeneratorDialog(self.parent().gen)
         if dialog.exec():
             pass
@@ -260,14 +278,14 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         main_stack = self.parent().parent().main_stack
 
-        name_edit = main_stack.graphs[i].title_widget.name_edit
-
-        self.patient.title.activate(name_edit)
-
+        self.patient.title.deactivate()
         self.patient.gen = main_stack.graphs[i].gen
+        self.patient.title.activate()
+
         self.patient.update_plot(True)
 
     def deactivate(self):
+        self.patient.title.deactivate()
         self.patient.gen = None
         self.patient.qTimer.stop()
 
