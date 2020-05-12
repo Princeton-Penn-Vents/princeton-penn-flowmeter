@@ -15,3 +15,5 @@ class HelpDialog(QtWidgets.QDialog):
 
         self.button = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
         layout.addWidget(self.button)
+
+        self.button.accepted.connect(self.close)

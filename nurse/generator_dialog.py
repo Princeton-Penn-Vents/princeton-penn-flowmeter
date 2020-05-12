@@ -15,9 +15,6 @@ class BasicTab(QtWidgets.QWidget):
         form_layout = QtWidgets.QFormLayout()
         layout.addLayout(form_layout)
 
-        self.nid = QtWidgets.QLineEdit()
-        form_layout.addRow("Short ID:", self.nid)
-
         view_layout = QtWidgets.QFormLayout()
         layout.addLayout(view_layout)
 
@@ -52,8 +49,17 @@ class GeneratorDialog(QtWidgets.QDialog):
         self.buttons = QtWidgets.QDialogButtonBox()
         self.buttons.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.buttons.addButton("Disconnect", QtWidgets.QDialogButtonBox.DestructiveRole)
+        self.discon = self.buttons.addButton(
+            "Disconnect", QtWidgets.QDialogButtonBox.DestructiveRole
+        )
+        self.discon.setEnabled(False)
+        self.discon.setToolTip("You can only disconnect an unplugged sensor")
         layout.addWidget(self.buttons)
 
-    def exec(self):
-        return super().exec()
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+
+    def exec(self) -> int:
+        res = super().exec()
+        print(f"Accepted: {res}")
+        return res

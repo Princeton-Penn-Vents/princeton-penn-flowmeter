@@ -96,14 +96,13 @@ GraphLabelWidget > QPushButton[graph="volume"]{
 
 PatientSensor > PatientTitleWidget > QPushButton {
   color: white;
-  font: bold;
+  font: bold italic;
+  font-family: Times;
   font-size: 20px;
+  width: 20px;
+  height: 20px;
   border: none;
-  border-radius: 3px;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  padding-left: 5px;
-  padding-right: 5px;
+  border-radius: 10px;
   margin-right: 3px;
 }
 
@@ -227,7 +226,6 @@ PatientDrilldownWidget {
   background-color: black;
 }
 
-PatientDrilldownWidget > PatientTitle > QPushButton,
 PatientDrilldownWidget > PatientTitle > QLineEdit {
   margin: 5px;
   padding: 3px;
@@ -236,17 +234,27 @@ PatientDrilldownWidget > PatientTitle > QLineEdit {
   border-radius: 3px;
 }
 
+PatientDrilldownWidget > PatientTitle > QPushButton {
+  margin: 5px;
+  font-size: 36px;
+  font: bold italic;
+  font-family: Times;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+}
+
 /* Drilldown alarm grid (also see above in general colors) */
 
 AlarmBox {
   background-color: #606060;
   margin: 2px;
-  min-width: 50px;
-  min-height: 50px;
-  max-width: 50px;
-  max-height: 50px;
+  min-width: 100px;
+  max-width: 150px;
+  min-height: 30px;
+  max-height: 30px;
   font-weight: bold;
-  font-size: 24pt;
+  font-size: 14pt;
 }
 
 AlarmBox[alert_status="OK"]:hover,
