@@ -21,7 +21,7 @@ patient:
 rotary-live:
   Reset Setting:
     type: Reset
-    name: Turn to Reset
+    name: PushTurn to Reset
     order: -2
 
   Advanced:

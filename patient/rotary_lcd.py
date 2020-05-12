@@ -116,7 +116,7 @@ class RotaryLCD(Rotary):
 
     def upper_display(self) -> None:
         current_name = self.value().lcd_name
-        current_number = f"{self._current + 1:>2}"
+        current_number = f"{self._current + 1}"
         if isinstance(self.value(), AdvancedSetting):
             current_number += chr(ord("a") + self.value()._value % 26)
         length_available = 20 - len(current_number) - 2
