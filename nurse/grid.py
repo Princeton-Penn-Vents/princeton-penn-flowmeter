@@ -15,6 +15,7 @@ from nurse.qt import (
     HBoxLayout,
     VBoxLayout,
     FormLayout,
+    BoxName,
 )
 
 from nurse.common import GraphInfo, INFO_STRINGS
@@ -70,10 +71,6 @@ class NumbersWidget(QtWidgets.QWidget):
         return iter(self.val_widgets)
 
 
-class TinyBoxName(QtWidgets.QLabel):
-    pass
-
-
 class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, gen: Generator):
         super().__init__()
@@ -93,7 +90,7 @@ class PatientTitleWidget(QtWidgets.QWidget):
         record.master_signal.title_changed.connect(self.external_update_title)
         layout.addWidget(self.name_edit, 1)
 
-        self.box_name = TinyBoxName(gen.record.stacked_name)
+        self.box_name = BoxName(gen.record.stacked_name)
         layout.addWidget(self.box_name)
         record.master_signal.mac_changed.connect(self.external_update_mac)
 

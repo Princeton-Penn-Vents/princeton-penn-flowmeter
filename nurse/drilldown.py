@@ -9,12 +9,12 @@ import numpy as np
 from nurse.qt import (
     QtCore,
     QtWidgets,
-    QtGui,
     Qt,
     Slot,
     HBoxLayout,
     VBoxLayout,
     GridLayout,
+    BoxName,
 )
 
 from nurse.common import GraphInfo
@@ -317,17 +317,14 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, gen: Generator, i: int):
-        if gen.record.title:
-            super().__init__(gen.record.title)
-        else:
-            super().__init__("\n".join(gen.record.box_name.split()))
-            self.setProperty("nurse_id", "auto")
-        self.gen = gen
+        super().__init__()
+        self.gen: Generator = gen
         record: GenRecordGUI
         record = self.gen.record  # type: ignore
         record.master_signal.title_changed.connect(self.update_gen)
         self.active = False
         self.i = i
+        self.update_gen()
 
     @Slot()
     def update_gen(self):
@@ -335,7 +332,7 @@ class AlarmBox(QtWidgets.QPushButton):
             self.setText(self.gen.record.title)
             self.auto = False
         else:
-            self.setText("\n".join(self.gen.record.box_name.split()))
+            self.setText(self.gen.record.stacked_name)
             self.auto = True
 
     @property
@@ -388,8 +385,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         warning_layout.addStretch()
 
-        self.box_name = QtWidgets.QLabel("Box name: not yet known")
-        self.box_name.setObjectName("TitleWarning")
+        warning_layout.addWidget(QtWidgets.QLabel("Box name:"))
+        self.box_name = BoxName("<unknown>")
         warning_layout.addWidget(self.box_name)
 
         warning_layout.addStretch()
@@ -509,7 +506,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def external_update_boxname(self):
-        text = rf'Box name: <span style="font-style:italic;font-size:16pt;font-weight:bold;color:floralwhite;">{self.gen.record.box_name}</span>'
+        text = self.gen.record.box_name
         if self.box_name.text() != text:
             self.box_name.setText(text)
 

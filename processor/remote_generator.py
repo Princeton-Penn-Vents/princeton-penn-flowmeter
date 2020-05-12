@@ -31,7 +31,7 @@ class RemoteThread(threading.Thread):
         self._last_update: Optional[datetime] = None
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
-        self.mac = ""
+        self.mac: Optional[str] = None
         self.sid = 0
 
         super().__init__()
@@ -94,7 +94,8 @@ class RemoteThread(threading.Thread):
                 self.parent.status = Status.OK
 
             # These log and perform (simple, please!) callbacks
-            self.parent.record.mac = self.mac
+            if self.mac is not None:
+                self.parent.record.mac = self.mac
             self.parent.record.sid = self.sid
 
             if len(self._time) > 0:
