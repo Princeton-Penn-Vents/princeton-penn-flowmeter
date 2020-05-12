@@ -18,6 +18,9 @@ class GenRecord:
 
     @property
     def mac(self) -> str:
+        """
+        The mac address. Returns <unknown> if the address is not known.
+        """
         return "<unknown>" if self._mac is None else self._mac
 
     @mac.setter
@@ -25,9 +28,13 @@ class GenRecord:
         if self._mac is None or self._mac != value:
             self.logger.info(f"MAC addr: {self._mac}")
             self._mac = value
+            self.mac_changed()
 
     @property
     def sid(self) -> int:
+        """
+        Sensor ID, as an integer. Printout with "X" format.
+        """
         return self._sid
 
     @sid.setter
@@ -35,13 +42,31 @@ class GenRecord:
         if self._sid != value:
             self.logger.info(f"Sensor ID: {self._sid:X}")
             self._sid = value
+            self.sid_changed()
 
     @property
     def box_name(self) -> str:
+        """
+        The name of the box, or <unknown>.
+        """
         if self.mac is None:
             return "<unknown>"
         try:
             return address_to_name(self.mac).title()
+        except ValueError:
+            return self.mac
+
+    @property
+    def stacked_name(self) -> str:
+        """
+        Return the box name stacked using a newline
+        If unknown, return Box name: <unknown>.
+        """
+
+        if self.mac is None:
+            return "Box name:\n<unknown>"
+        try:
+            return "\n".join(address_to_name(self.mac).title().split())
         except ValueError:
             return self.mac
 
@@ -60,6 +85,16 @@ class GenRecord:
             self.title_changed()
 
     def title_changed(self) -> None:
+        """
+        Modify in subclasses to add special callbacks here.
+        """
+
+    def mac_changed(self) -> None:
+        """
+        Modify in subclasses to add special callbacks here.
+        """
+
+    def sid_changed(self) -> None:
         """
         Modify in subclasses to add special callbacks here.
         """
