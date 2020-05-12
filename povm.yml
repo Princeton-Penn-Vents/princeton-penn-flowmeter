@@ -29,7 +29,7 @@ rotary:
     type: Incr
     name: Avg Pressure Min
     default: 5
-    min: 0
+    min: -20
     max: 100
     incr: 1
     unit: cm H20
@@ -38,7 +38,7 @@ rotary:
     type: Incr
     name: Avg Pressure Max
     default: 12
-    min: 1
+    min: -20
     max: 100
     incr: 1
     unit: cm H2O
