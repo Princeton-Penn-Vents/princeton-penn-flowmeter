@@ -190,7 +190,7 @@ class PatientTitle(QtWidgets.QWidget):
         super().__init__()
         layout = HBoxLayout(self)
 
-        self.name_lbl = QtWidgets.QPushButton("X")
+        self.name_lbl = QtWidgets.QPushButton("i")
         self.name_lbl.clicked.connect(self.click_number)
         layout.addWidget(self.name_lbl)
 
@@ -201,9 +201,8 @@ class PatientTitle(QtWidgets.QWidget):
         self.name_lbl.style().unpolish(self.name_lbl)
         self.name_edit.style().polish(self.name_edit)
 
-    def activate(self, number: str, mirror: QtWidgets.QLineEdit):
+    def activate(self, mirror: QtWidgets.QLineEdit):
         self.name_edit.disconnect()
-        self.name_lbl.setText(number)
         self.name_edit.setText(mirror.text())
         self.name_edit.setPlaceholderText(mirror.placeholderText())
         self.name_edit.textChanged.connect(mirror.setText)
@@ -234,16 +233,16 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout = VBoxLayout()
         columns_layout.addLayout(side_layout)
 
-        self.grid_layout = GridLayout()
-        side_layout.addLayout(self.grid_layout)
+        self.alarms_layout = VBoxLayout()
+        side_layout.addLayout(self.alarms_layout)
         side_layout.addStretch()
 
         self.alarm_boxes: List[AlarmBox] = []
 
-    def add_alarm_box(self, gen: Generator, i: int):
+    def add_alarm_box(self, gen: Generator):
         alarm_box = AlarmBox(gen)
         self.alarm_boxes.append(alarm_box)
-        self.grid_layout.addWidget(alarm_box, *divmod(i, 2))
+        self.alarms_layout.addWidget(alarm_box)
         alarm_box.clicked.connect(self.click_alarm)
 
     @Slot()
@@ -264,7 +263,7 @@ class DrilldownWidget(QtWidgets.QWidget):
         name_btn = main_stack.graphs[i].title_widget.name_btn
         name_edit = main_stack.graphs[i].title_widget.name_edit
 
-        self.patient.title.activate(name_btn.text(), name_edit)
+        self.patient.title.activate(name_edit)
 
         self.patient.gen = main_stack.graphs[i].gen
         self.patient.update_plot(True)
@@ -274,16 +273,11 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.patient.qTimer.stop()
 
 
-class AlarmBox(QtWidgets.QPushButton, DragDropGridMixin):
+class AlarmBox(QtWidgets.QPushButton):
     def __init__(self, gen: Generator):
-        super().__init__(gen.record.nurse_id)
+        super().__init__("\n".join(gen.record.box_name.split()))
         self.gen = gen
         self.active = False
-
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
-            if self._start_pos is not None:
-                self.clicked.emit()
 
     @property
     def status(self) -> Status:
@@ -377,6 +371,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         buttons_layout.addWidget(all_alarms, 1)
         buttons_layout.addWidget(all_cumulative, 1)
         buttons_layout.addWidget(all_rotary, 1)
+
+        lim_help = QtWidgets.QLabel("All alarm limits are set on the device")
+        displays_layout.addWidget(lim_help)
 
         displays_layout.addStretch()
 
