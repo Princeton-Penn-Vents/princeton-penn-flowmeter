@@ -76,7 +76,6 @@ class PatientTitleWidget(QtWidgets.QWidget):
 
         layout = HBoxLayout(self)
 
-        # Temporary setting - filled in later
         self.name_btn = QtWidgets.QPushButton("i")
         layout.addWidget(self.name_btn)
 

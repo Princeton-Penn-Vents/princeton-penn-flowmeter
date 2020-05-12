@@ -206,6 +206,7 @@ class PatientTitle(QtWidgets.QWidget):
         self.name_edit.setText(mirror.text())
         self.name_edit.setPlaceholderText(mirror.placeholderText())
         self.name_edit.textChanged.connect(mirror.setText)
+        self.name_edit.editingFinished.connect(mirror.parent().update_title)
 
     @Slot()
     def click_number(self):
@@ -239,8 +240,8 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         self.alarm_boxes: List[AlarmBox] = []
 
-    def add_alarm_box(self, gen: Generator):
-        alarm_box = AlarmBox(gen)
+    def add_alarm_box(self, gen: Generator, i: int):
+        alarm_box = AlarmBox(gen, i)
         self.alarm_boxes.append(alarm_box)
         self.alarms_layout.addWidget(alarm_box)
         alarm_box.clicked.connect(self.click_alarm)
@@ -253,14 +254,12 @@ class DrilldownWidget(QtWidgets.QWidget):
     def activate(self, i: int):
         "Call this to activate or switch drilldown screens!"
 
-        for box in self.alarm_boxes:
-            box.active = False
-
-        self.alarm_boxes[i].active = True
+        for n, box in enumerate(self.alarm_boxes):
+            box.active = i == n
+            box.update_gen()
 
         main_stack = self.parent().parent().main_stack
 
-        name_btn = main_stack.graphs[i].title_widget.name_btn
         name_edit = main_stack.graphs[i].title_widget.name_edit
 
         self.patient.title.activate(name_edit)
@@ -274,10 +273,34 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 
 class AlarmBox(QtWidgets.QPushButton):
-    def __init__(self, gen: Generator):
-        super().__init__("\n".join(gen.record.box_name.split()))
+    def __init__(self, gen: Generator, i: int):
+        if gen.record.title:
+            super().__init__(gen.record.title)
+        else:
+            super().__init__("\n".join(gen.record.box_name.split()))
+            self.setProperty("nurse_id", "auto")
         self.gen = gen
         self.active = False
+        self.i = i
+
+    def update_gen(self):
+        if self.gen.record.title:
+            super().__init__(self.gen.record.title)
+            self.auto = False
+        else:
+            super().__init__("\n".join(self.gen.record.box_name.split()))
+            self.auto = True
+
+    @property
+    def auto(self) -> bool:
+        return self.property("nurse_id") == "auto"
+
+    @auto.setter
+    def auto(self, value: bool):
+        if value != self.auto:
+            self.setProperty("nurse_id", "auto" if value else "")
+            self.style().unpolish(self)
+            self.style().polish(self)
 
     @property
     def status(self) -> Status:

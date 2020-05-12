@@ -254,7 +254,11 @@ AlarmBox {
   min-height: 30px;
   max-height: 30px;
   font-weight: bold;
-  font-size: 14pt;
+  font-size: 20pt;
+}
+
+AlarmBox[nurse_id="auto"] {
+    font-size: 14px;
 }
 
 AlarmBox[alert_status="OK"]:hover,
