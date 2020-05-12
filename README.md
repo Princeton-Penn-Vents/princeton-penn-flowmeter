@@ -59,8 +59,8 @@ sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt install python3-scipy
 sudo apt install vim htop                  # For development, skip for production
-sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf
-python3 -m pip install black pytest mypy   # Useful for development, skip for production
+sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf getmac
+sudo python3 -m pip install black pytest mypy   # Useful for development, skip for production
 ```
 
 <details><summary>Networking for the nurse box: (click to expand)</summary>
