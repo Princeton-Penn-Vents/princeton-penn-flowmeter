@@ -42,7 +42,7 @@ class GenRecord:
     @title.setter
     def title(self, value: str):
         if self._nurse_name is None or self._nurse_name != value:
-            self.logger.info(f"Changed title to {self._nurse_name!r}")
+            self.logger.info(f"Changed title to {value!r}")
             self._nurse_name = value
             self.title_changed()  # type: ignore
 

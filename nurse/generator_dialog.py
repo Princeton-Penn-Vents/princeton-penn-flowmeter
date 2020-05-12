@@ -60,6 +60,4 @@ class GeneratorDialog(QtWidgets.QDialog):
         self.buttons.rejected.connect(self.reject)
 
     def exec(self) -> int:
-        res = super().exec()
-        print(f"Accepted: {res}")
-        return res
+        return super().exec()

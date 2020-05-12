@@ -170,7 +170,7 @@ class MainStack(QtWidgets.QWidget):
         i, j = self._get_next_empty()
 
         drilldown: DrilldownWidget = self.parent().parent().drilldown
-        drilldown.add_alarm_box(gen)
+        drilldown.add_alarm_box(gen, i=ind)
 
         graph = PatientSensor(i=ind, gen=gen)
         self.graphs.append(graph)
@@ -257,7 +257,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(evt)
 
 
-def main(argv, *, window: bool, debug: bool, **kwargs):
+def main(argv, *, window: bool, **kwargs):
 
     if "Fusion" in QtWidgets.QStyleFactory.keys():
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
@@ -333,5 +333,4 @@ if __name__ == "__main__":
         sim=args.sim,
         displays=args.displays,
         window=args.window,
-        debug=args.debug,
     )
