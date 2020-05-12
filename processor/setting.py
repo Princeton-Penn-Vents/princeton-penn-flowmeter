@@ -111,30 +111,6 @@ class Setting(abc.ABC):
         """
 
 
-class DisplaySetting(Setting):
-    def __init__(
-        self, name: str, *, unit: str = None, lcd_name: str = None, rate: int = 1,
-    ):
-        super().__init__(unit=unit, name=name, lcd_name=lcd_name, rate=rate)
-
-        self._value = ""
-        self._original_value = ""
-
-    def _up_(self) -> None:
-        pass
-
-    def _down_(self) -> None:
-        pass
-
-    @property
-    def default(self) -> float:
-        return 0.0
-
-    @default.setter
-    def default(self, val: float):
-        pass
-
-
 class IncrSetting(Setting):
     def __init__(
         self,

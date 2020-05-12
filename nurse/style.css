@@ -110,7 +110,14 @@ PatientSensor > PatientTitleWidget > QLineEdit {
   padding: 1px 3px;
   margin-right: 5px;
   font-weight: bold;
-  font-size: 14pt;
+  font-size: 16pt;
+}
+
+PatientSensor > PatientTitleWidget > TinyBoxName {
+  color: floralwhite;
+  font-size: 10pt;
+  font-style: italic;
+  min-width: 60px;
 }
 
 /* Alert colors */
@@ -244,6 +251,10 @@ PatientDrilldownWidget > PatientTitle > QPushButton {
   border-radius: 18px;
 }
 
+PatientDrilldownWidget QLabel#TitleWarning {
+  color: #AAA;
+}
+
 /* Drilldown alarm grid (also see above in general colors) */
 
 AlarmBox {
@@ -255,10 +266,13 @@ AlarmBox {
   max-height: 30px;
   font-weight: bold;
   font-size: 20pt;
+  color: white;
 }
 
 AlarmBox[nurse_id="auto"] {
-    font-size: 14px;
+    font-size: 13pt;
+    font-style: italic;
+    color: floralwhite;
 }
 
 AlarmBox[alert_status="OK"]:hover,
