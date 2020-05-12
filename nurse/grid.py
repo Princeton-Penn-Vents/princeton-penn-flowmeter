@@ -20,6 +20,7 @@ from nurse.qt import (
 from nurse.common import GraphInfo, INFO_STRINGS
 from nurse.dragdrop import DragDropGridMixin
 from nurse.generator_dialog import GeneratorDialog
+from nurse.gen_record_gui import GenRecordGUI
 
 from processor.generator import Status, Generator
 
@@ -73,6 +74,8 @@ class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, gen: Generator):
         super().__init__()
         self.gen = gen
+        record: GenRecordGUI
+        record = self.gen.record  # type: ignore
 
         layout = HBoxLayout(self)
 
@@ -83,7 +86,12 @@ class PatientTitleWidget(QtWidgets.QWidget):
         self.name_edit.setText(self.gen.record.title)
         self.name_edit.setPlaceholderText(self.gen.record.box_name)
         self.name_edit.editingFinished.connect(self.update_title)
+        record.master_signal.title_changed.connect(self.external_update_title)
         layout.addWidget(self.name_edit)
+
+    @Slot()
+    def external_update_title(self):
+        self.name_edit.setText(self.gen.record.title)
 
     @Slot()
     def update_title(self):
@@ -185,7 +193,7 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
 
             graph.getAxis("left").setStyle(
                 tickTextOffset=2,
-                textFillLimits=[(2, 1),],  ## Never have less than two ticks
+                textFillLimits=[(2, 1),],  # Never have less than two ticks
             )
 
             if i != len(gis.graph_labels) - 1:
