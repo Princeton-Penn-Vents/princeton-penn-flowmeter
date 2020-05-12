@@ -47,10 +47,11 @@ rotary:
     type: Incr
     name: RespRate Max
     default: 40
-    min: 5
+    min: 0
     max: 180
     incr: 1
     unit: 1/min
+    zero: "OFF"
 
   Stale Data Timeout:
     type: Incr

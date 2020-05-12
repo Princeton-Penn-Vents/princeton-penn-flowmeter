@@ -656,6 +656,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
     if "PIP" in cumulative:
         if (
             "RR Max" in rotary
+            and rotary["RR Max"].value > 0
             and "RR" in cumulative
             and cumulative["RR"] > rotary["RR Max"].value
         ):
