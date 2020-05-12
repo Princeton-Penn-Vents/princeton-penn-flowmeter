@@ -53,14 +53,22 @@ Click on terminal icon and execute:
 ```bash
 git clone https://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter
 # if a username is requested, then a typo has been made in the name, try again carefully
+
 cd princeton-penn-flowmeter
 sudo apt update
 sudo apt upgrade
+
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt install python3-scipy
-sudo apt install vim htop                  # For development, skip for production
-sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf getmac
-sudo python3 -m pip install black pytest mypy   # Useful for development, skip for production
+sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf
+sudo pytohn3 -m pip install "setuptools>=44" getmac setuptools_scm[toml]
+```
+
+For development, these quality-of-life additions help:
+
+```bash
+sudo apt install vim htop
+python3 -m pip install black pytest mypy
 ```
 
 <details><summary>Networking for the nurse box: (click to expand)</summary>
