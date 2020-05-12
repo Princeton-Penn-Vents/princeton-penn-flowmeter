@@ -16,6 +16,11 @@ except AttributeError:
     Slot = QtCore.pyqtSlot
     Signal = QtCore.pyqtSignal
 
+
+class BoxName(QtWidgets.QLabel):
+    pass
+
+
 # Layout factory functions
 def HBoxLayout(*args, **kwargs):
     layout = QtWidgets.QHBoxLayout(*args, **kwargs)
