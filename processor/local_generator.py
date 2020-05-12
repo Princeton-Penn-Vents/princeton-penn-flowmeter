@@ -6,11 +6,12 @@ import logging
 from sim.start_sims import start_sims
 from processor.rolling import new_elements
 from processor.generator import Generator, Status
+from processor.gen_record import GenRecord
 
 
 class LocalGenerator(Generator):
-    def __init__(self, *, i: int, logger: logging.Logger):
-        super().__init__(logger=logger)
+    def __init__(self, *, i: int, logger: logging.Logger, gen_record: GenRecord = None):
+        super().__init__(logger=logger, gen_record=gen_record)
         self.status = Status.OK
 
         self.record.mac = f"dc:a6:32:00:00:{i:02x}"

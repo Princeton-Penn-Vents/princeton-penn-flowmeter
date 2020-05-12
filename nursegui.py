@@ -33,6 +33,7 @@ from nurse.connection_dialog import ConnectionDialog
 from processor.generator import Generator
 from processor.local_generator import LocalGenerator
 from processor.remote_generator import RemoteGenerator
+from nurse.gen_record_gui import GenRecordGUI
 from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
 from processor.logging import make_nested_logger
@@ -91,10 +92,16 @@ class MainStack(QtWidgets.QWidget):
                 local_logger = make_nested_logger(i)
                 gen = (
                     RemoteGenerator(
-                        address=addr or "tcp://127.0.0.1:8100", logger=local_logger
+                        address=addr or "tcp://127.0.0.1:8100",
+                        logger=local_logger,
+                        gen_record=GenRecordGUI(local_logger),
                     )
                     if not sim
-                    else LocalGenerator(i=i + 1, logger=local_logger)
+                    else LocalGenerator(
+                        i=i + 1,
+                        logger=local_logger,
+                        gen_record=GenRecordGUI(local_logger),
+                    )
                 )
                 gen.run()  # Close must be called
 
@@ -138,7 +145,9 @@ class MainStack(QtWidgets.QWidget):
 
     def add_new_by_address(self, addr: str):
         local_logger = make_nested_logger(len(self.graphs))
-        gen = RemoteGenerator(address=addr, logger=local_logger)
+        gen = RemoteGenerator(
+            address=addr, logger=local_logger, gen_record=GenRecordGUI(local_logger)
+        )
         gen.run()
         self.add_item(gen)
 
