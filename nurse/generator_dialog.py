@@ -19,7 +19,8 @@ class BasicTab(QtWidgets.QWidget):
         layout.addLayout(form_layout)
 
         self.title = QtWidgets.QLineEdit()
-        self.title.setPlaceholderText("Please add title")
+        self.title.setPlaceholderText("Please enter title")
+        self.title.setText(gen.record.title)
 
         form_layout.addRow("Title:", self.title)
         form_layout.addRow("Box Name:", QtWidgets.QLabel(gen.record.box_name))

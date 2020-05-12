@@ -93,16 +93,17 @@ class PatientTitleWidget(QtWidgets.QWidget):
         record.master_signal.title_changed.connect(self.external_update_title)
         layout.addWidget(self.name_edit, 1)
 
-        self.box_name = TinyBoxName(
-            "Box Name:\nUnknown"
-            if gen.record.mac is None
-            else "\n".join(gen.record.box_name.split())
-        )
+        self.box_name = TinyBoxName(gen.record.stacked_name)
         layout.addWidget(self.box_name)
+        record.master_signal.mac_changed.connect(self.external_update_mac)
 
     @Slot()
     def external_update_title(self):
         self.name_edit.setText(self.gen.record.title)
+
+    @Slot()
+    def external_update_mac(self):
+        self.box_name.setText(self.gen.record.stacked_name)
 
     @Slot()
     def update_title(self):

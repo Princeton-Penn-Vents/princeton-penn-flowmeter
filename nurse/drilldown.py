@@ -195,7 +195,7 @@ class PatientTitle(QtWidgets.QWidget):
         layout.addWidget(self.name_lbl)
 
         self.name_edit = QtWidgets.QLineEdit()
-        self.name_edit.setPlaceholderText("Please add title")
+        self.name_edit.setPlaceholderText("Please enter title")
         layout.addWidget(self.name_edit)
 
         self.name_edit.editingFinished.connect(self.update_title)
@@ -278,13 +278,38 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         main_stack = self.parent().parent().main_stack
 
+        record: GenRecordGUI
+        if self.patient.gen is not None:
+            record = self.patient.gen.record
+            record.master_signal.mac_changed.disconnect(
+                self.patient.external_update_boxname
+            )
+            record.master_signal.sid_changed.disconnect(
+                self.patient.external_update_sid
+            )
+
         self.patient.title.deactivate()
         self.patient.gen = main_stack.graphs[i].gen
         self.patient.title.activate()
 
+        record = self.patient.gen.record
+        record.master_signal.mac_changed.connect(self.patient.external_update_boxname)
+        record.master_signal.sid_changed.connect(self.patient.external_update_sid)
+
+        self.patient.external_update_boxname()
+        self.patient.external_update_sid()
+
         self.patient.update_plot(True)
 
     def deactivate(self):
+        record: GenRecordGUI
+        record = self.patient.gen.record
+
+        record.master_signal.mac_changed.disconnect(
+            self.patient.external_update_boxname
+        )
+        record.master_signal.sid_changed.disconnect(self.patient.external_update_sid)
+
         self.patient.title.deactivate()
         self.patient.gen = None
         self.patient.qTimer.stop()
@@ -338,16 +363,6 @@ class AlarmBox(QtWidgets.QPushButton):
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
-    @property
-    def status(self):
-        return Status[self.property("alert_status")]
-
-    @status.setter
-    def status(self, value: Status):
-        if value.name != self.property("alert_status"):
-            self.setProperty("alert_status", value.name)
-            self.title.repolish()
-
     def __init__(self):
         super().__init__()
         self.curves: Dict[str, pg.PlotCurveItem] = {}
@@ -442,6 +457,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.qTimer.setSingleShot(True)
         self.qTimer.timeout.connect(self.update_plot)
 
+    @property
+    def status(self):
+        return Status[self.property("alert_status")]
+
+    @status.setter
+    def status(self, value: Status):
+        if value.name != self.property("alert_status"):
+            self.setProperty("alert_status", value.name)
+            self.title.repolish()
+
     @Slot()
     def display_cumulative(self):
         if self.gen is not None:
@@ -482,11 +507,14 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.setText(rotary_text)
         box.exec()
 
-    def update_addr(self):
+    @Slot()
+    def external_update_boxname(self):
         text = rf'Box name: <span style="font-style:italic;font-size:16pt;font-weight:bold;color:floralwhite;">{self.gen.record.box_name}</span>'
         if self.box_name.text() != text:
             self.box_name.setText(text)
 
+    @Slot()
+    def external_update_sid(self):
         text = f"Sensor ID: {self.gen.record.sid:X}"
         if self.sensor_id.text() != text:
             self.sensor_id.setText(text)
@@ -547,7 +575,6 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
-                    self.update_addr()
                     time_avg = self.gen.rotary["AvgWindow"].value
 
                     for key in gis.graph_labels:
