@@ -35,7 +35,7 @@ class DetectedTab(QtWidgets.QWidget):
         self.detected = QtWidgets.QComboBox()
         layout.addRow("Detected:", self.detected)
 
-        self.detected.setMinimumWidth(180)
+        self.detected.setMinimumWidth(290)
 
 
 class TabbedConnection(QtWidgets.QTabWidget):

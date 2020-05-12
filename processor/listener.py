@@ -8,6 +8,7 @@ import logging
 import ipaddress
 from typing import Set, Callable
 from dataclasses import dataclass
+from processor.device_names import address_to_name
 
 logger = logging.getLogger("povm")
 
@@ -23,8 +24,15 @@ class Detector:
     def url(self):
         return f"tcp://{ipaddress.ip_address(self.address)}:{self.port}"
 
+    @property
+    def name(self) -> str:
+        try:
+            return address_to_name(self.mac)
+        except ValueError:
+            return self.mac
+
     def __str__(self):
-        return f"{self.mac} @ {ipaddress.ip_address(self.address)}:{self.port}"
+        return f"{self.name} @ {ipaddress.ip_address(self.address)}:{self.port}"
 
     def __hash__(self):
         return hash((self.address, self.port))
