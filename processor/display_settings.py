@@ -109,7 +109,10 @@ class CurrentSetting(SelectionSetting):
 class ResetSetting(SelectionSetting):
     def __init__(self, name: str, rate: int = 1):
         super().__init__(
-            0, [f"[{x*'x':8}]" for x in range(9)] + ["RESET"], name=name, rate=rate
+            0,
+            [f"[{x*'x':9}]" for x in range(9)] + ["[  RESET  ]"],
+            name=name,
+            rate=rate,
         )
 
     def active(self) -> None:
