@@ -3,6 +3,7 @@ from typing import Optional, List, Sequence
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
 from pathlib import Path
+from processor.version import get_version
 
 
 class AdvancedSetting(SelectionSetting):
@@ -41,7 +42,7 @@ class AdvancedSetting(SelectionSetting):
             else:
                 return "Not recording"
         elif self._value == 4:
-            return "Classic: v0.3+"
+            return get_version() or "Unable to retrieve"
         else:
             raise NotImplementedError("Setting must be in range 0-3")
 
