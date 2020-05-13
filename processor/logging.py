@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TextIO, Optional
+from typing import Optional
 import logging
 
-from processor.config import config
-
-DIR = Path(__file__).parent.resolve()
+from processor.config import config, get_data_dir
 
 
 def open_next(mypath: Path) -> Path:
@@ -39,7 +37,7 @@ def init_logger(logstr: Optional[str] = None) -> None:
         ch.setFormatter(formatter)
         logger.addHandler(ch)
     else:
-        file_path = DIR.parent / logstr
+        file_path = get_data_dir() / logstr
         file_path.parent.mkdir(exist_ok=True)
         logfile_incr = open_next(file_path)
         fh = logging.FileHandler(str(logfile_incr))

@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from processor.config import get_internal_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing_extensions import Final
 
-DIR = Path(__file__).parent.resolve()
 
 vendors = ["dc:a6:32:00:00:00"]  # only append to this list
 
-adjectives = [x.strip() for x in open(DIR.parent / "data/adjectives.txt")]
-nouns = [x.strip() for x in open(DIR.parent / "data/nouns.txt")]
+adjectives = [x.strip() for x in open(get_internal_file("data/adjectives.txt"))]
+nouns = [x.strip() for x in open(get_internal_file("data/nouns.txt"))]
 
 assert len(adjectives) == 4096
 assert len(nouns) == 4096

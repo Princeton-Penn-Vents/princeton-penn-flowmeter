@@ -1,12 +1,9 @@
 from processor.setting import SelectionSetting
-from pathlib import Path
 from typing import Optional, List, Sequence
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
-
-
-DIR = Path(__file__).parent.resolve()
-(DIR.parent / "device_log").mkdir(exist_ok=True)
+from pathlib import Path
+from processor.version import get_version
 
 
 class AdvancedSetting(SelectionSetting):
@@ -18,6 +15,7 @@ class AdvancedSetting(SelectionSetting):
 
         # Sensor ID
         self.sid: int = 0
+        self.file: str = ""
 
         super().__init__(0, string_listing, name="Advanced", rate=rate)
 
@@ -34,13 +32,17 @@ class AdvancedSetting(SelectionSetting):
             except ValueError:
                 return "<Unknown>"
         elif self._value == 2:
-            return f"{self.sid:X}"
+            if self.sid:
+                return f"{self.sid:016X}"
+            else:
+                return "No sensor detected"
         elif self._value == 3:
-            files = sorted(Path(DIR.parent / "device_log").glob("*"))
-            string = str(files[-1].name) if files else "No file"
-            return string
+            if self.file:
+                return Path(self.file).name[-20:]
+            else:
+                return "Not recording"
         elif self._value == 4:
-            return "Classic: v0.3+"
+            return get_version() or "Unable to retrieve"
         else:
             raise NotImplementedError("Setting must be in range 0-3")
 

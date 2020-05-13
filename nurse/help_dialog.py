@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from nurse.qt import QtWidgets, QtGui, QtCore, Qt, Slot, HBoxLayout
+from processor.version import get_version
 
 
 class HelpDialog(QtWidgets.QDialog):
@@ -40,6 +41,9 @@ class HelpDialog(QtWidgets.QDialog):
         )
         drilldown_help.setWordWrap(True)
         tabs.addTab(drilldown_help, "Drilldown")
+
+        version = get_version() or "<unknown>"
+        layout.addWidget(QtWidgets.QLabel(f"Version: {version}"))
 
         self.button = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
         layout.addWidget(self.button)

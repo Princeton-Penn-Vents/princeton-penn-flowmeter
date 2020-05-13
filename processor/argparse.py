@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 from typing import Tuple, List, Optional
 
-from processor.config import config
+from processor.config import config, get_internal_file
 from processor.logging import init_logger
-
-
-DIR = Path(__file__).parent.resolve()
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -19,7 +15,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self.add_argument(
             "--config",
-            default=str(DIR.parent / "povm.yml"),
+            default=str(get_internal_file("povm.yml")),
             help="YAML configuration file",
         )
 
@@ -28,6 +24,8 @@ class ArgumentParser(argparse.ArgumentParser):
             action="store_true",
             help="Start up in debug mode (log to screen)",
         )
+
+        self.add_argument("--dir", help="Set a directory to log data to")
 
         self.log_dir = log_dir
         self.log_stem = log_stem
@@ -42,6 +40,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         if args.config:
             config.set_file(args.config)
+
+        if "dir" in args:
+            config.set_args({"global": {"datadir": args.dir}})
 
         if "debug" in args:
             config.set_args({"global": {"debug": args.debug}})

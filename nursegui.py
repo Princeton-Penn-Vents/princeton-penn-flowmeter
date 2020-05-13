@@ -6,13 +6,11 @@ import pyqtgraph as pg
 import sys
 import math
 from string import Template
-from pathlib import Path
 import signal
 import logging
 from typing import Optional, List, Tuple
 import threading
 import itertools
-from collections import Counter
 
 from nurse.qt import (
     QtCore,
@@ -37,8 +35,6 @@ from nurse.gen_record_gui import GenRecordGUI
 from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
 from processor.logging import make_nested_logger
-
-DIR = Path(__file__).parent.resolve()
 
 logger = logging.getLogger("povm")
 

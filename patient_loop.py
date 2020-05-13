@@ -9,7 +9,6 @@ args = parser.parse_args()
 
 import signal
 import threading
-from pathlib import Path
 from contextlib import ExitStack
 
 
@@ -18,8 +17,7 @@ from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.broadcast import Broadcast
 from patient.mac_address import get_box_name
-
-DIR = Path(__file__).parent.resolve()
+from processor.config import get_data_dir
 
 
 # Initialize LCD
@@ -50,8 +48,8 @@ with ExitStack() as stack:
     collector = stack.enter_context(Collector(rotary=rotary, port=args.port))
     stack.enter_context(Broadcast("patient_loop", port=args.port, live=5))
 
-    rotary.live_load(DIR / "povm-live.yml")
-    rotary.live_save(DIR / "povm-live.yml", every=10)
+    rotary.live_load(get_data_dir() / "povm-live.yml")
+    rotary.live_save(get_data_dir() / "povm-live.yml", every=10)
 
     signal.signal(signal.SIGINT, close)
     signal.signal(signal.SIGTERM, close)

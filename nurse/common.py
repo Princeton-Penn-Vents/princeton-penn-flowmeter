@@ -3,9 +3,10 @@ from pathlib import Path
 from nurse.qt import QtGui
 
 # Replace with proper importlib.resources if made a package
-DIR = Path(__file__).parent.absolute()
-style_path = DIR / "style.css"
-dialog_style_path = DIR / "dialogs.css"
+from processor.config import get_internal_file
+
+style_path = get_internal_file("nurse/style.css")
+dialog_style_path = get_internal_file("nurse/dialogs.css")
 
 guicolors = {
     "ALERT": QtGui.QColor(0, 0, 100),

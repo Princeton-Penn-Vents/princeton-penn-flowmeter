@@ -5,7 +5,7 @@ After=patientdevice.service
 [Service]
 Type=simple
 User=pi
-ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/patient_loop.py
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/patient_loop.py --dir /data
 WorkingDirectory=/home/pi/princeton-penn-flowmeter
 Restart=always
 

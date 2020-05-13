@@ -517,7 +517,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def external_update_sid(self):
-        text = f"Sensor ID: {self.gen.record.sid:X}"
+        text = f"Sensor ID: {self.gen.record.sid:016X}"
         if self.sensor_id.text() != text:
             self.sensor_id.setText(text)
 
