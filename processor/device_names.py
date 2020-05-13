@@ -49,7 +49,7 @@ def addr_to_address(addr: int) -> str:
     Converts a MAC address integer (48 bit) into a string (lowercase hexidecimal
     with colons).
     """
-    out = hex(addr).replace("0x", "")
+    out = "{0:012x}".format(addr)
     return ":".join(out[2 * i : 2 * i + 2] for i in range(6))
 
 
