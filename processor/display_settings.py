@@ -2,6 +2,7 @@ from processor.setting import SelectionSetting
 from typing import Optional, List, Sequence
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
+from pathlib import Path
 
 
 class AdvancedSetting(SelectionSetting):
@@ -30,10 +31,13 @@ class AdvancedSetting(SelectionSetting):
             except ValueError:
                 return "<Unknown>"
         elif self._value == 2:
-            return f"{self.sid:016X}"
+            if self.sid:
+                return f"{self.sid:016X}"
+            else:
+                return "No sensor detected"
         elif self._value == 3:
             if self.file:
-                return self.file[-20:]
+                return Path(self.file).name[-20:]
             else:
                 return "Not recording"
         elif self._value == 4:
