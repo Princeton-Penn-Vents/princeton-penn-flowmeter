@@ -49,10 +49,10 @@ class GenRecord:
         """
         The name of the box, or <unknown>.
         """
-        if self.mac is None:
+        if self._mac is None:
             return "<unknown>"
         try:
-            return address_to_name(self.mac).title()
+            return address_to_name(self._mac).title()
         except ValueError:
             return self.mac
 
@@ -63,10 +63,10 @@ class GenRecord:
         If unknown, return Box name: <unknown>.
         """
 
-        if self.mac is None:
-            return "Box name:\n<unknown>"
+        if self._mac is None:
+            return "Box name\n<unknown>"
         try:
-            return "\n".join(address_to_name(self.mac).title().split())
+            return "\n".join(address_to_name(self._mac).title().split())
         except ValueError:
             return self.mac
 

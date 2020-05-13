@@ -385,13 +385,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         warning_layout.addStretch()
 
-        warning_layout.addWidget(QtWidgets.QLabel("Box name:"))
-        self.box_name = BoxName("<unknown>")
+        warning_layout.addWidget(QtWidgets.QLabel("Box name: "))
+        self.box_name = BoxName("???")
         warning_layout.addWidget(self.box_name)
 
         warning_layout.addStretch()
 
-        self.sensor_id = QtWidgets.QLabel("Sensor ID: not yet known")
+        self.sensor_id = QtWidgets.QLabel("Sensor ID: ???")
         warning_layout.addWidget(self.sensor_id)
 
         warning_layout.addStretch()

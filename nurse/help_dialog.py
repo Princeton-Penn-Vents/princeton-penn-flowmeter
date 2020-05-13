@@ -42,6 +42,21 @@ class HelpDialog(QtWidgets.QDialog):
         drilldown_help.setWordWrap(True)
         tabs.addTab(drilldown_help, "Drilldown")
 
+        drilldown_rotary = QtWidgets.QLabel(
+            r"""
+        <p> The patient box has a screen and a dial. To use the dial:
+        <ul>
+        <li>Press to silence the buzzer</li>
+        <li>Turn to select items from the menu (item number is shown in the top left)</li>
+        <li>Press and turn to set a value</li>
+        <li>Reset menu item only: Press and turn to activate the reset; release while the meter is full to reset the alarm settings.</li>
+        <li>Box name menu item only: Press and turn to see sub-menu items.</li>
+        </ul>
+        """
+        )
+        drilldown_rotary.setWordWrap(True)
+        tabs.addTab(drilldown_rotary, "Patient box")
+
         version = get_version() or "<unknown>"
         layout.addWidget(QtWidgets.QLabel(f"Version: {version}"))
 
