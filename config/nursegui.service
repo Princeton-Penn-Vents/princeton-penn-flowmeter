@@ -1,0 +1,15 @@
+[Unit]
+Description=Nurse GUI
+Requires=networking.service
+After=networking.service
+
+[Service]
+Type=simple
+User=pi
+Environment=DISPLAY=:0
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/nursegui.py
+WorkingDirectory=/home/pi/princeton-penn-flowmeter
+Restart=always
+
+[Install]
+WantedBy=graphical.target
