@@ -39,7 +39,9 @@ if arg.dir:
 else:
     directory = DIR / "device_log"
 
-directory.mkdir(parents=True, exist_ok=True)
+if arg.name:
+    print("Logging to", directory)
+    directory.mkdir(parents=True, exist_ok=True)
 
 ReadoutHz: "Final" = 50.0
 oversampleADC: "Final" = 4
