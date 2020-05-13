@@ -3,8 +3,11 @@
 
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--file", help="File to record to")
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("--name", default="data.out", help="Base filename to record to")
+parser.add_argument(
+    "--dir", help="Directory to record to (device_log will be appended)"
+)
 arg = parser.parse_args()
 
 # hardware interfaces:
@@ -19,14 +22,20 @@ import json
 import zmq
 import threading
 from pathlib import Path
-from typing import Optional, TextIO, Iterator, TYPE_CHECKING
+from typing import Optional, TextIO, Iterator, TYPE_CHECKING, Dict, Any
 from contextlib import contextmanager, ExitStack
 
 if TYPE_CHECKING:
     from typing_extensions import Final
 
 DIR = Path(__file__).parent.resolve()
-(DIR / "device_log").mkdir(exist_ok=True)
+
+if arg.dir:
+    directory = Path(arg.dir).expanduser().resolve() / "device_log"
+else:
+    directory = DIR / "device_log"
+
+directory.mkdir(parents=True, exist_ok=True)
 
 ReadoutHz: "Final" = 50.0
 oversampleADC: "Final" = 4
@@ -195,7 +204,7 @@ def read_loop(
         btmpdataSDP3 = tmpdataSDP3[1]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
 
-        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}
+        d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}  # type: Dict[str, Any]
 
         if len(btmpdataSDP3) == nbytesTEMP:
             tmptemp = ((btmpdataSDP3[3] << 8) | btmpdataSDP3[4]) / 200.0
@@ -227,6 +236,9 @@ def read_loop(
 
             d.update({"C": curTEMP, "D": dcTEMP, "sn": sn})
 
+            if myfile is not None:
+                d["file"] = myfile.name
+
         ds = json.dumps(d)
         pub_socket.send_string(ds)
 
@@ -234,15 +246,19 @@ def read_loop(
             print(ds, file=myfile)
 
 
-with pi_cleanup() as pi, spidev.SpiDev() as spiMCP3008, ExitStack() as stack, zmq.Context() as ctx, ctx.socket(
-    zmq.PUB
-) as pub_socket:
+with ExitStack() as stack:
+
+    pi = stack.enter_context(pi_cleanup())
+    spiMCP3008 = stack.enter_context(spidev.SpiDev())
+    ctx = stack.enter_context(zmq.Context())
+    pub_socket = stack.enter_context(ctx.socket(zmq.PUB))
+
     pub_socket.bind("tcp://*:5556")
 
     myfile = None  # type: Optional[TextIO]
 
     if arg.file:
-        file_path = Path(arg.file)
+        file_path = directory / arg.name
         myfile = stack.enter_context(open_next(file_path))
         print("Logging:", myfile.name)
 
@@ -267,8 +283,11 @@ with pi_cleanup() as pi, spidev.SpiDev() as spiMCP3008, ExitStack() as stack, zm
             read_loop(spiMCP3008, pi, hSDP3, running, myfile)
         except pigpio.error:
             # 1 second of "fake" readings
-            for _ in range(int(ReadoutHz)):
-                d = {"v": 1, "t": int(1000 * time.monotonic())}
+            for i in range(int(ReadoutHz)):
+                d = {"v": 1, "t": int(1000 * time.monotonic())}  # type: Dict[str, Any]
+                if i == 0 and myfile is not None:
+                    d["file"] = myfile.name
+
                 pub_socket.send_json(d)
 
                 running.wait(1 / ReadoutHz)

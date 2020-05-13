@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Callable
+from typing import Optional
 from dataclasses import dataclass
 from logging import Logger
 from processor.device_names import address_to_name

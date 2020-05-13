@@ -21,6 +21,7 @@ class CollectorThread(threading.Thread):
     def __init__(self, parent: Collector):
         self.parent = parent
         self._sn: Optional[int] = None
+        self._file: Optional[str] = None
 
         self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
         self._flow = Rolling(window_size=parent.window_size)
@@ -72,6 +73,9 @@ class CollectorThread(threading.Thread):
                 if "sn" in j:
                     self._sn = j["sn"]
 
+                if "file" in j:
+                    self._file = j["file"]
+
                 with self._collector_lock:
                     self._time.inject_value(t)
                     self._flow.inject_value(f)
@@ -91,6 +95,12 @@ class CollectorThread(threading.Thread):
                         if "Advanced" in self.parent.rotary:
                             setting = self.parent.rotary["Advanced"]
                             setting.sid = self._sn
+
+                    if self._file is not None:
+                        extra_dict["file"] = self._file
+                        if "Advanced" in self.parent.rotary:
+                            setting = self.parent.rotary["Advanced"]
+                            setting.file = self._file
 
                     pub_socket.send_json(extra_dict)
 

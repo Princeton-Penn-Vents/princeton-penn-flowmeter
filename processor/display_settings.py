@@ -1,12 +1,7 @@
 from processor.setting import SelectionSetting
-from pathlib import Path
 from typing import Optional, List, Sequence
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
-
-
-DIR = Path(__file__).parent.resolve()
-(DIR.parent / "device_log").mkdir(exist_ok=True)
 
 
 class AdvancedSetting(SelectionSetting):
@@ -18,6 +13,7 @@ class AdvancedSetting(SelectionSetting):
 
         # Sensor ID
         self.sid: int = 0
+        self.file: str = ""
 
         super().__init__(0, string_listing, name="Advanced", rate=rate)
 
@@ -34,11 +30,12 @@ class AdvancedSetting(SelectionSetting):
             except ValueError:
                 return "<Unknown>"
         elif self._value == 2:
-            return f"{self.sid:X}"
+            return f"{self.sid:016X}"
         elif self._value == 3:
-            files = sorted(Path(DIR.parent / "device_log").glob("*"))
-            string = str(files[-1].name) if files else "No file"
-            return string
+            if self.file:
+                return self.file[-20:]
+            else:
+                return "Not recording"
         elif self._value == 4:
             return "Classic: v0.3+"
         else:
