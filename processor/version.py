@@ -11,7 +11,7 @@ DIR = Path(__file__).parent.resolve()
 def get_version() -> str:
     try:
         return (
-            subprocess.check_output(["git", "describe"], cwd=DIR, text=True)
+            subprocess.check_output(["git", "describe", "--tags"], cwd=DIR, text=True)
             .strip()
             .lstrip("v")
         )
