@@ -15,7 +15,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self.add_argument(
             "--config",
-            default=str(get_internal_file("processor/povm.yml")),
+            default=str(get_internal_file("povm.yml")),
             help="YAML configuration file",
         )
 

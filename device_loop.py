@@ -5,10 +5,14 @@ import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--name", default="data.out", help="Base filename to record to")
+parser.add_argument("--file", help="DEPRECATED: do no use")
 parser.add_argument(
     "--dir", help="Directory to record to (device_log will be appended)"
 )
 arg = parser.parse_args()
+
+if arg.file:
+    print("Warning: Do not use --file, use --dir and/or --name instead")
 
 # hardware interfaces:
 # SDP3 diff pressure sensor - I2C handled by pigpio.pi()
@@ -257,7 +261,7 @@ with ExitStack() as stack:
 
     myfile = None  # type: Optional[TextIO]
 
-    if arg.file:
+    if arg.name:
         file_path = directory / arg.name
         myfile = stack.enter_context(open_next(file_path))
         print("Logging:", myfile.name)
