@@ -34,7 +34,6 @@ with ExitStack() as stack:
 
     rotary.backlight.magenta()
     rotary.lcd.upper("POVM Box name:")
-    rotary.lcd.lower("Getting name...")
     rotary.lcd.lower(f"{get_box_name():<20}")
     forever.wait(3)
 
