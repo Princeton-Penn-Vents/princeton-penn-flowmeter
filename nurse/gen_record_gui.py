@@ -72,6 +72,10 @@ class GenRecordGUI(GenRecord):
             d = {"title": self.title, "sid": self.sid, "notes": self.notes}
             if self.ip_address:
                 d["ip_address"] = self.ip_address
+
+            # Later this will turned off by "Disconnect"
+            d["active"] = True
+
             yaml.safe_dump(d, f)
 
     def sid_changed(self) -> None:

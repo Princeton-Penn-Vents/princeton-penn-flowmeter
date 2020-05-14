@@ -485,7 +485,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         displays_layout.addStretch()
 
-        nurse_layout.addWidget(BoxHeader("Nurse log"))
+        nurse_layout.addWidget(BoxHeader("Notes:"))
         self.log_edit = LogTextEdit()
         nurse_layout.addWidget(self.log_edit, 1)
 

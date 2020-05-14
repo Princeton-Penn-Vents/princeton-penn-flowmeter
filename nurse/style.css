@@ -352,7 +352,7 @@ BoxHeader {
   margin-left: 6px;
 }
 
-PatientDrilldownWidget > QTextEdit {
+PatientDrilldownWidget > QPlainTextEdit {
   background-color: #202020;
   margin: 5px;
   padding: 3px;
