@@ -4,7 +4,7 @@ from nurse.qt import QtWidgets, QtGui, Qt, Slot, HBoxLayout
 from nurse.common import GraphInfo
 from datetime import datetime
 
-from nurse.limits_dialog import LimitDialog
+from nurse.limits_dialog import LimitDialog, NoLimitDialog
 from nurse.help_dialog import HelpDialog
 
 
@@ -63,21 +63,14 @@ class LimitButton(QtWidgets.QPushButton):
         self.setProperty("graph", key)
         self.clicked.connect(self.click_graph_info)
 
-        self.limit = LimitDialog(key, parent=self)
-
     @Slot()
     def click_graph_info(self):
-        b = self.limit.exec()
-        if b:
-            for graph in self.parent().parent().parent().graphs:
-                graph.graph[self.limit.key].setRange(
-                    yRange=[self.limit.lower.value(), self.limit.upper.value(),]
-                )
+        graphs = self.parent().parent().parent().graphs
+        if not graphs:
+            NoLimitDialog(self).exec()
         else:
-            for graph in self.parent().parent().parent().graphs:
-                graph.graph[self.limit.key].setRange(
-                    yRange=[self.limit.orig_lower, self.limit.orig_upper,]
-                )
+            limit = LimitDialog(self.key, parent=self)
+            limit.open()
 
 
 class GraphLabelWidget(QtWidgets.QWidget):

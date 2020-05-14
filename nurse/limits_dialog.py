@@ -1,5 +1,5 @@
 from nurse.qt import QtWidgets, Qt, Slot
-from nurse.common import GraphInfo, dialog_style_path
+from nurse.common import GraphInfo
 
 
 class LimitSpinBox(QtWidgets.QDoubleSpinBox):
@@ -15,18 +15,30 @@ class LimitSpinBox(QtWidgets.QDoubleSpinBox):
         self.setSuffix(" " + gis.units[self.key])
 
 
+class GraphUnits(QtWidgets.QLabel):
+    def __init__(self, key, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setProperty("graph", key)
+
+
 class LimitDialog(QtWidgets.QDialog):
     def __init__(self, name, parent):
-        super().__init__()
+        super().__init__(parent)
         gis = GraphInfo()
-        self.p = parent
         self.key = name
         self.setWindowTitle(f"Change {name} limits")
-        self.setWindowModality(Qt.ApplicationModal)
         self.orig_lower: float = gis.yLims[self.key][0]
         self.orig_upper: float = gis.yLims[self.key][1]
 
         layout = QtWidgets.QVBoxLayout(self)
+
+        layout.addWidget(
+            GraphUnits(
+                self.key, f"{gis.graph_names[self.key]} ({gis.units[self.key]})"
+            ),
+            0,
+            Qt.AlignHCenter,
+        )
 
         form_layout = QtWidgets.QFormLayout()
         layout.addLayout(form_layout)
@@ -46,27 +58,33 @@ class LimitDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
-        with open(dialog_style_path) as f:
-            self.setStyleSheet(f.read())
-
-    def exec(self):
-        graphs = self.p.parent().parent().parent().graphs
-        if not graphs:
-            return QtWidgets.QMessageBox(
-                QtWidgets.QMessageBox.Warning,
-                "No sensors connected",
-                "No sensors are connected, use the + button on the top right or plug in a sensor.",
-            ).exec()
-
+        graphs = parent.parent().parent().parent().graphs
         graph = graphs[0]
+
         self.orig_lower, self.orig_upper = graph.graph[self.key].viewRange()[1]
         self.lower.setValue(self.orig_lower)
         self.upper.setValue(self.orig_upper)
-        return super().exec()
 
     @Slot()
     def change_value(self):
-        for graph in self.p.parent().parent().parent().graphs:
+        for graph in self.parent().parent().parent().parent().graphs:
             graph.graph[self.key].setRange(
                 yRange=[self.lower.value(), self.upper.value(),]
             )
+
+    @Slot()
+    def reject(self):
+        self.lower.setValue(self.orig_lower)
+        self.upper.setValue(self.orig_upper)
+        self.change_value()
+        super().reject()
+
+
+class NoLimitDialog(QtWidgets.QMessageBox):
+    def __init__(self, parent: QtWidgets.QWidget):
+        super().__init__(
+            QtWidgets.QMessageBox.Warning,
+            "No sensors connected",
+            "No sensors are connected, use the + button on the top right or plug in a sensor.",
+            parent=parent,
+        )

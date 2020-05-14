@@ -104,15 +104,23 @@ DrilldownHeaderWidget > QPushButton#return_btn:hover {
   background-color: darkred;
 }
 
-GraphLabelWidget > QPushButton[graph="flow"] {
+GraphUnits {
+  font-size: 18pt;
+  font-weight: bold;
+}
+
+GraphLabelWidget > QPushButton[graph="flow"],
+GraphUnits[graph="flow"] {
   color: rgb${flow};
 }
 
-GraphLabelWidget > QPushButton[graph="pressure"]{
+GraphLabelWidget > QPushButton[graph="pressure"],
+GraphUnits[graph="pressure"] {
   color: rgb${pressure};
 }
 
-GraphLabelWidget > QPushButton[graph="volume"]{
+GraphLabelWidget > QPushButton[graph="volume"],
+GraphUnits[graph="volume"] {
   color: rgb${volume};
 }
 
@@ -377,4 +385,19 @@ PatientDrilldownWidget > QPlainTextEdit {
   padding: 3px;
   border-radius: 6px;
   border: 1px solid grey;
+}
+
+
+/* Limit box */
+
+LimitDialog QLabel, LimitDialog LimitSpinBox {
+  font-size: 26pt;
+}
+
+LimitDialog LimitSpinBox {
+  height: 56px
+}
+
+LimitDialog LimitSpinBox::up-button, LimitSpinBox::down-button {
+  width: 48px;
 }

@@ -6,7 +6,6 @@ from nurse.qt import QtGui
 from processor.config import get_internal_file
 
 style_path = get_internal_file("nurse/style.css")
-dialog_style_path = get_internal_file("nurse/dialogs.css")
 
 guicolors = {
     "ALERT": QtGui.QColor(0, 0, 100),
