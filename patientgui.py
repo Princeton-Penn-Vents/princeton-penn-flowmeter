@@ -6,8 +6,9 @@ parser = ArgumentParser(log_dir="patient_log", log_stem="patientgui")
 parser.add_argument("--port", "-p", type=int, default=8100, help="Select a port")
 args = parser.parse_args()
 
-import sys
+import os
 import signal
+import sys
 
 from nurse.qt import QtWidgets
 from processor.settings import get_live_settings
@@ -15,6 +16,10 @@ from patient.rotary_gui import MainWindow, RotaryGUI
 from processor.collector import Collector
 from processor.broadcast import Broadcast
 from processor.config import get_data_dir
+
+# Hack to allow this to run on non-devices.
+if "POVM_MACADDR" not in os.environ:
+    os.environ["POVM_MACADDR"] = "00:00:00:00:00:00"
 
 
 with RotaryGUI(get_live_settings()) as rotary, Collector(

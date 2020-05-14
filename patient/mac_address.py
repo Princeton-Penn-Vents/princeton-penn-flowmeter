@@ -2,6 +2,7 @@ from functools import lru_cache
 import time
 from pathlib import Path
 from processor.device_names import address_to_name
+import os
 
 import logging
 
@@ -22,6 +23,8 @@ def get_mac_addr() -> str:
             logger.info(f"MAC Addr: {mac}")
             return mac
         except IOError:
+            if "POVM_MACADDR" in os.environ:
+                return os.environ["POVM_MACADDR"]
             time.sleep(1)
 
 
