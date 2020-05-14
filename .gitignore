@@ -139,3 +139,4 @@ dmypy.json
 
 # Logs
 /*_log/*
+/nurse_layout/*

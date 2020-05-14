@@ -10,6 +10,7 @@ from nurse.qt import (
     QtCore,
     QtWidgets,
     Qt,
+    QtGui,
     Slot,
     HBoxLayout,
     VBoxLayout,
@@ -270,6 +271,9 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.parent().parent().drilldown_activate(alarm_box.i)
 
     def activate(self, i: int):
+        if self.patient.gen is not None:
+            self.deactivate()
+
         "Call this to activate or switch drilldown screens!"
 
         for n, box in enumerate(self.alarm_boxes):
@@ -288,20 +292,21 @@ class DrilldownWidget(QtWidgets.QWidget):
                 self.patient.external_update_sid
             )
 
-        self.patient.title.deactivate()
         self.patient.gen = main_stack.graphs[i].gen
         self.patient.title.activate()
 
         record = self.patient.gen.record
         record.master_signal.mac_changed.connect(self.patient.external_update_boxname)
         record.master_signal.sid_changed.connect(self.patient.external_update_sid)
+        record.master_signal.notes_changed.connect(self.patient.external_update_notes)
 
         self.patient.external_update_boxname()
         self.patient.external_update_sid()
+        self.patient.external_update_notes()
 
         self.patient.update_plot(True)
 
-    def deactivate(self):
+    def deactivate(self) -> None:
         record: GenRecordGUI
         record = self.patient.gen.record
 
@@ -309,6 +314,10 @@ class DrilldownWidget(QtWidgets.QWidget):
             self.patient.external_update_boxname
         )
         record.master_signal.sid_changed.disconnect(self.patient.external_update_sid)
+
+        record.master_signal.notes_changed.disconnect(
+            self.patient.external_update_notes
+        )
 
         self.patient.title.deactivate()
         self.patient.gen = None
@@ -366,6 +375,27 @@ class AlarmBox(QtWidgets.QPushButton):
             self.setProperty("alert_status", value_name)
             self.style().unpolish(self)
             self.style().polish(self)
+
+
+class LogTextEdit(QtWidgets.QPlainTextEdit):
+    def __init__(self):
+        super().__init__()
+
+        self.text_changed = False
+        self.textChanged.connect(self.update_notes)
+
+    @Slot()
+    def update_notes(self):
+        self.text_changed = True
+
+    @property
+    def record(self) -> GenRecordGUI:
+        return self.parent().gen.record
+
+    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+        if self.text_changed:
+            self.record.notes = self.toPlainText()
+        self.text_changed = False
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
@@ -456,7 +486,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         displays_layout.addStretch()
 
         nurse_layout.addWidget(BoxHeader("Nurse log"))
-        self.log_edit = QtWidgets.QTextEdit()
+        self.log_edit = LogTextEdit()
         nurse_layout.addWidget(self.log_edit, 1)
 
         self.qTimer = QtCore.QTimer()
@@ -529,6 +559,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         text = f"Sensor ID: {self.gen.record.sid:016X}"
         if self.sensor_id.text() != text:
             self.sensor_id.setText(text)
+
+    @Slot()
+    def external_update_notes(self):
+        text = self.gen.record.notes
+        self.log_edit.setPlainText(text)
 
     def set_plot(self, graph_layout, phase_layout):
         gis = GraphInfo()

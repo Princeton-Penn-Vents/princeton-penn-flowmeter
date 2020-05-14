@@ -86,11 +86,12 @@ class MainStack(QtWidgets.QWidget):
             )
             for i, addr in disp_addr:
                 local_logger = make_nested_logger(i)
+                ip_addr = addr or "tcp://127.0.0.1:8100"
                 gen = (
                     RemoteGenerator(
-                        address=addr or "tcp://127.0.0.1:8100",
+                        address=ip_addr,
                         logger=local_logger,
-                        gen_record=GenRecordGUI(local_logger),
+                        gen_record=GenRecordGUI(local_logger, ip_address=ip_addr),
                     )
                     if not sim
                     else LocalGenerator(
@@ -142,7 +143,9 @@ class MainStack(QtWidgets.QWidget):
     def add_new_by_address(self, addr: str):
         local_logger = make_nested_logger(len(self.graphs))
         gen = RemoteGenerator(
-            address=addr, logger=local_logger, gen_record=GenRecordGUI(local_logger)
+            address=addr,
+            logger=local_logger,
+            gen_record=GenRecordGUI(local_logger, ip_address=addr),
         )
         gen.run()
         self.add_item(gen)

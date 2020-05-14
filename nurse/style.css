@@ -271,11 +271,6 @@ AlarmBox {
   padding-bottom: 0px;
 }
 
-AlarmBox > .QWidget {
-  margin-top: -2px;
-  margin-bottom: -2px;
-}
-
 AlarmBox QLabel {
   font-weight: bold;
   max-width: 146px;
