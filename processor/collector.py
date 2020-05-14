@@ -183,4 +183,4 @@ if __name__ == "__main__":
 
 # Sadly, since we are not making this a full proper python package (at the moment),
 # we have to do the following to run this file for testing:
-# PYTHONPATH=$PWD ./patient/collector.py
+# python3 -m patient.collector

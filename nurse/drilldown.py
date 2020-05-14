@@ -229,9 +229,8 @@ class PatientTitle(QtWidgets.QWidget):
 
     @Slot()
     def click_number(self) -> None:
-        dialog = GeneratorDialog(self.parent().gen)
-        if dialog.exec():
-            pass
+        dialog = GeneratorDialog(self, self.parent().gen)
+        dialog.open()
 
 
 class DrilldownWidget(QtWidgets.QWidget):

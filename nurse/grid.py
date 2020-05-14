@@ -166,12 +166,18 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         layout.addWidget(self.values)
 
         self.curves: Dict[str, Any] = {}
+        self.dialog: Optional[GeneratorDialog] = None
 
     @Slot()
-    def click_number(self):
-        dialog = GeneratorDialog(self.gen)
-        if dialog.exec():
-            pass
+    def click_number(self) -> None:
+        if self.dialog is not None:
+            if self.dialog.isVisible():
+                return
+
+        self.dialog = GeneratorDialog(self, self.gen, grid=True)
+        self.dialog.setWindowFlags(self.dialog.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.dialog.move(self.geometry().center())
+        self.dialog.show()
 
     def set_plot(self):
         assert len(self.curves) == 0

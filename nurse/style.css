@@ -22,6 +22,21 @@ QPushButton, QCheckBox {
   font-style:italic;
 }
 
+QToolTip {
+  background-color: rgba(100, 50, 0, 200);
+  border-radius: 10px;
+  color: white;
+  font-size: 16pt;
+  padding: 4px;
+  border: none;
+}
+
+QDialog {
+  margin: 5px;
+  padding: 5px;
+  background-color: #32373C;
+}
+
 
 /* Header design */
 

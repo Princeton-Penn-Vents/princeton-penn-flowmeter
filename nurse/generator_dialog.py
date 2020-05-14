@@ -1,5 +1,6 @@
-from nurse.qt import QtWidgets
-from processor.generator import Generator
+from nurse.qt import QtWidgets, Slot
+from processor.generator import Generator, Status
+from processor.local_generator import LocalGenerator
 
 
 class BasicTab(QtWidgets.QWidget):
@@ -40,8 +41,10 @@ class DetailsTab(QtWidgets.QWidget):
 
 
 class GeneratorDialog(QtWidgets.QDialog):
-    def __init__(self, gen: Generator):
-        super().__init__()
+    def __init__(
+        self, parent: QtWidgets.QWidget, gen: Generator, *, grid: bool = False
+    ):
+        super().__init__(parent)
         self.setWindowTitle(f"Info for {gen.record.box_name}")
 
         self.gen = gen
@@ -57,18 +60,28 @@ class GeneratorDialog(QtWidgets.QDialog):
         self.buttons = QtWidgets.QDialogButtonBox()
         self.buttons.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.discon = self.buttons.addButton(
-            "Disconnect", QtWidgets.QDialogButtonBox.DestructiveRole
-        )
-        self.discon.setEnabled(False)
-        self.discon.setToolTip("You can only disconnect an unplugged sensor")
+
+        if grid:
+            self.discon = self.buttons.addButton(
+                "Disconnect", QtWidgets.QDialogButtonBox.DestructiveRole
+            )
+            self.discon.setEnabled(
+                self.gen.status == Status.DISCON or isinstance(self.gen, LocalGenerator)
+            )
+            self.discon.setToolTip("You can only disconnect an unplugged sensor")
+            self.buttons.destroyed.connect(self.disconnect_sensor)
+
         layout.addWidget(self.buttons)
 
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
 
-    def exec(self) -> int:
-        result = super().exec()
-        if result:
-            self.gen.record.title = self.basic.title.text()
-        return result
+    @Slot()
+    def disconnect_sensor(self) -> None:
+        self.discon = True
+        self.reject()
+
+    @Slot()
+    def accept(self) -> None:
+        self.gen.record.title = self.basic.title.text()
+        super().accept()
