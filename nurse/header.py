@@ -146,7 +146,9 @@ class MainHeaderWidget(HeaderWidget):
 
     @Slot()
     def call_for_help(self):
-        HelpDialog(0).exec()
+        help = HelpDialog(self, 0)
+        help.setWindowFlags(Qt.Popup)
+        help.show()
 
 
 class DrilldownHeaderWidget(HeaderWidget):
@@ -191,4 +193,6 @@ class DrilldownHeaderWidget(HeaderWidget):
 
     @Slot()
     def call_for_help(self):
-        HelpDialog(1).exec()
+        help = HelpDialog(self, 0)
+        help.setWindowFlags(Qt.Popup)
+        help.show()

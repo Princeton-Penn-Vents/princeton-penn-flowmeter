@@ -3,14 +3,22 @@ from __future__ import annotations
 import sys
 from nurse.qt import QtWidgets, QtGui, QtCore, Qt, Slot, HBoxLayout
 from processor.version import get_version
+from string import Template
+from nurse.common import style_path, GraphInfo
+
+
+class HelpTitle(QtWidgets.QLabel):
+    pass
 
 
 class HelpDialog(QtWidgets.QDialog):
-    def __init__(self, default_tab: int = 0):
-        super().__init__()
+    def __init__(self, parent: QtWidgets.QWidget = None, default_tab: int = 0):
+        super().__init__(parent)
         self.setWindowTitle("Help")
 
         layout = QtWidgets.QVBoxLayout(self)
+
+        layout.addWidget(HelpTitle("Help for the Princeton Open Ventilator Monitor"))
 
         tabs = QtWidgets.QTabWidget()
         layout.addWidget(tabs)
@@ -70,6 +78,20 @@ class HelpDialog(QtWidgets.QDialog):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
+    if "Fusion" in QtWidgets.QStyleFactory.keys():
+        QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
+    else:
+        print("Fusion style is not available, display may be platform dependent")
+
     dialog = HelpDialog()
+
+    gis = GraphInfo()
+
+    with open(style_path) as f:
+        s = Template(f.read())
+        t = s.substitute(**gis.graph_pens)
+        dialog.setStyleSheet(t)
+
     dialog.show()
     sys.exit(app.exec_())
