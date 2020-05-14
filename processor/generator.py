@@ -386,6 +386,16 @@ class Generator(abc.ABC):
                 )
                 if last_update_timediff >= stale_threshold:
                     stale[field] = last_update_timediff
+
+            old_stale = self._alarms.get("Stale Data", {})
+            for name in stale:
+                if name not in old_stale:
+                    self.logger.info(f"Stale data alarm for {repr(name)} activated")
+
+            for name in old_stale:
+                if name not in stale:
+                    self.logger.info(f"Stale data alarm for {repr(name)} deactivated")
+
             if len(stale) > 0:
                 self._alarms["Stale Data"] = stale
 
