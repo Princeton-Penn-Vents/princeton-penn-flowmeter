@@ -355,7 +355,12 @@ class Generator(abc.ABC):
                 )
 
         self._alarms = processor.analysis.add_alarms(
-            self.rotary, updated, new_breaths, self._cumulative
+            self.rotary,
+            updated,
+            new_breaths,
+            self._cumulative,
+            self._alarms,
+            self.logger,
         )
 
         timestamp = time.time()

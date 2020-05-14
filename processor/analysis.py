@@ -622,6 +622,7 @@ def alarm_record(old_record, timestamp, value, ismax):
             "last timestamp": timestamp,
             "extreme": value,
         }
+
     else:
         record = dict(old_record)
         record["last timestamp"] = timestamp
@@ -650,7 +651,7 @@ def avg_alarms(
     return {}
 
 
-def add_alarms(rotary, _updated, _new_breaths, cumulative):
+def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
     alarms = {}
 
     if "PIP" in cumulative:
@@ -661,7 +662,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["RR"] > rotary["RR Max"].value
         ):
             alarms["RR Max"] = alarm_record(
-                alarms.get("RR Max"),
+                old_alarms.get("RR Max"),
                 cumulative["last breath timestamp"],
                 cumulative["RR"],
                 True,
@@ -673,7 +674,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["PIP"] > rotary["PIP Max"].value
         ):
             alarms["PIP Max"] = alarm_record(
-                alarms.get("PIP Max"),
+                old_alarms.get("PIP Max"),
                 cumulative["last breath timestamp"],
                 cumulative["PIP"],
                 True,
@@ -685,7 +686,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["PIP"] < rotary["PIP Min"].value
         ):
             alarms["PIP Min"] = alarm_record(
-                alarms.get("PIP Min"),
+                old_alarms.get("PIP Min"),
                 cumulative["last breath timestamp"],
                 cumulative["PIP"],
                 False,
@@ -697,7 +698,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["PEEP"] > rotary["PEEP Max"].value
         ):
             alarms["PEEP Max"] = alarm_record(
-                alarms.get("PEEP Max"),
+                old_alarms.get("PEEP Max"),
                 cumulative["last breath timestamp"],
                 cumulative["PEEP"],
                 True,
@@ -709,7 +710,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["PEEP"] < rotary["PEEP Min"].value
         ):
             alarms["PEEP Min"] = alarm_record(
-                alarms.get("PEEP Min"),
+                old_alarms.get("PEEP Min"),
                 cumulative["last breath timestamp"],
                 cumulative["PEEP"],
                 False,
@@ -721,7 +722,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["TVe"] > rotary["TVe Max"].value
         ):
             alarms["TVe Max"] = alarm_record(
-                alarms.get("TVe Max"),
+                old_alarms.get("TVe Max"),
                 cumulative["last breath timestamp"],
                 cumulative["TVe"],
                 True,
@@ -733,7 +734,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["TVe"] < rotary["TVe Min"].value
         ):
             alarms["TVe Min"] = alarm_record(
-                alarms.get("TVe Min"),
+                old_alarms.get("TVe Min"),
                 cumulative["last breath timestamp"],
                 cumulative["TVe"],
                 False,
@@ -745,7 +746,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["TVi"] > rotary["TVi Max"].value
         ):
             alarms["TVi Max"] = alarm_record(
-                alarms.get("TVi Max"),
+                old_alarms.get("TVi Max"),
                 cumulative["last breath timestamp"],
                 cumulative["TVi"],
                 True,
@@ -757,10 +758,26 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative):
             and cumulative["TVi"] < rotary["TVi Min"].value
         ):
             alarms["TVi Min"] = alarm_record(
-                alarms.get("TVi Min"),
+                old_alarms.get("TVi Min"),
                 cumulative["last breath timestamp"],
                 cumulative["TVi"],
                 False,
             )
+
+        for name in alarms:
+            if name not in old_alarms:
+                logger.info(
+                    f"Alarm {repr(name)} activated with value {alarms[name]['extreme']}"
+                )
+
+        for name in old_alarms:
+            if name not in alarms:
+                time_active = (
+                    cumulative["last breath timestamp"]
+                    - old_alarms[name]["first timestamp"]
+                )
+                logger.info(
+                    f"Alarm {repr(name)} deactivated after being on for {time_active:g} seconds"
+                )
 
     return alarms
