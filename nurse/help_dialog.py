@@ -1,14 +1,10 @@
 from __future__ import annotations
 
 import sys
-from nurse.qt import QtWidgets, QtGui, QtCore, Qt, Slot, HBoxLayout
+from nurse.qt import QtWidgets, PopdownTitle
 from processor.version import get_version
 from string import Template
 from nurse.common import style_path, GraphInfo
-
-
-class HelpTitle(QtWidgets.QLabel):
-    pass
 
 
 class HelpDialog(QtWidgets.QDialog):
@@ -18,7 +14,7 @@ class HelpDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout(self)
 
-        layout.addWidget(HelpTitle("Help for the Princeton Open Ventilator Monitor"))
+        layout.addWidget(PopdownTitle("Help for the Princeton Open Ventilator Monitor"))
 
         tabs = QtWidgets.QTabWidget()
         layout.addWidget(tabs)

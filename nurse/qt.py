@@ -21,6 +21,10 @@ class BoxName(QtWidgets.QLabel):
     pass
 
 
+class PopdownTitle(QtWidgets.QLabel):
+    pass
+
+
 # Layout factory functions
 def HBoxLayout(*args, **kwargs):
     layout = QtWidgets.QHBoxLayout(*args, **kwargs)

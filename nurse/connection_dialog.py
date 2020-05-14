@@ -8,6 +8,8 @@ from nurse.qt import (
     QtWidgets,
     QtGui,
     Qt,
+    Slot,
+    PopdownTitle,
 )
 
 
@@ -50,8 +52,10 @@ class TabbedConnection(QtWidgets.QTabWidget):
 
 
 class ConnectionDialog(QtWidgets.QDialog):
-    def __init__(self, listener: FindBroadcasts, i: int, address: str):
-        super().__init__()
+    def __init__(
+        self, parent: QtWidgets.QWidget, listener: FindBroadcasts, i: int, address: str
+    ):
+        super().__init__(parent)
 
         self.i = i
         self.listener = listener
@@ -61,6 +65,8 @@ class ConnectionDialog(QtWidgets.QDialog):
         self.setWindowModality(Qt.ApplicationModal)
 
         layout = QtWidgets.QVBoxLayout(self)
+
+        layout.addWidget(PopdownTitle("Add a device"))
 
         self.tabbed = TabbedConnection()
         layout.addWidget(self.tabbed)
@@ -75,7 +81,6 @@ class ConnectionDialog(QtWidgets.QDialog):
 
         layout.addWidget(buttons)
 
-    def exec(self) -> int:
         self.setWindowTitle(f"Patient box {self.i} connection")
 
         parsed = urlparse(self.address)
@@ -90,7 +95,10 @@ class ConnectionDialog(QtWidgets.QDialog):
             self.tabbed.setCurrentIndex(1)
             self.tabbed.setTabEnabled(0, False)
 
-        return super().exec()
+    @Slot()
+    def accept(self):
+        self.parent().add_new_by_address(self.connection_address())
+        super().accept()
 
     def connection_address(self) -> str:
         if self.tabbed.currentIndex() == 0:

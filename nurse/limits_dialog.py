@@ -1,4 +1,4 @@
-from nurse.qt import QtWidgets, Qt, Slot
+from nurse.qt import QtWidgets, Qt, Slot, PopdownTitle
 from nurse.common import GraphInfo
 
 
@@ -15,7 +15,7 @@ class LimitSpinBox(QtWidgets.QDoubleSpinBox):
         self.setSuffix(" " + gis.units[self.key])
 
 
-class GraphUnits(QtWidgets.QLabel):
+class GraphUnits(PopdownTitle):
     def __init__(self, key, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setProperty("graph", key)
