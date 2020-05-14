@@ -324,27 +324,36 @@ class AlarmBox(QtWidgets.QPushButton):
         record.master_signal.title_changed.connect(self.update_gen)
         self.active = False
         self.i = i
+
+        self.stack = QtWidgets.QStackedLayout()
+        self.setLayout(self.stack)
+
+        boxname_container = QtWidgets.QWidget()
+        boxname_layout = VBoxLayout(boxname_container)
+        self.stack.addWidget(boxname_container)
+        self.upper = BoxName("Box name")
+        self.lower = BoxName("Unknown")
+        boxname_layout.addWidget(self.upper, 0, Qt.AlignHCenter)
+        boxname_layout.addWidget(self.lower, 0, Qt.AlignHCenter)
+
+        title_container = QtWidgets.QWidget()
+        title_layout = VBoxLayout(title_container)
+        self.title = QtWidgets.QLabel("")
+        title_layout.addWidget(self.title, 0, Qt.AlignHCenter)
+        self.stack.addWidget(title_container)
+
         self.update_gen()
 
     @Slot()
     def update_gen(self):
         if self.gen.record.title:
-            self.setText(self.gen.record.title)
-            self.auto = False
+            self.title.setText(self.gen.record.title)
+            self.stack.setCurrentIndex(1)
         else:
-            self.setText(self.gen.record.stacked_name)
-            self.auto = True
-
-    @property
-    def auto(self) -> bool:
-        return self.property("nurse_id") == "auto"
-
-    @auto.setter
-    def auto(self, value: bool):
-        if value != self.auto:
-            self.setProperty("nurse_id", "auto" if value else "")
-            self.style().unpolish(self)
-            self.style().polish(self)
+            upper, lower = self.gen.record.stacked_name.split("\n")
+            self.upper.setText(upper)
+            self.lower.setText(lower)
+            self.stack.setCurrentIndex(0)
 
     @property
     def status(self) -> Status:

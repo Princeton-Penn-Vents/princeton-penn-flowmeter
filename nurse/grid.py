@@ -114,22 +114,6 @@ class PatientTitleWidget(QtWidgets.QWidget):
         self.name_edit.style().polish(self.name_edit)
 
 
-class GraphicsView(pg.GraphicsView):
-    """
-    Don't worry about clicks - they'll be ignored so the parent can implement click-in
-    and drag n' drop.
-    """
-
-    def mousePressEvent(self, ev: QtGui.QMouseEvent):
-        ev.ignore()
-
-    def mouseMoveEvent(self, ev: QtGui.QMouseEvent):
-        ev.ignore()
-
-    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):
-        ev.ignore()
-
-
 class PatientSensor(QtGui.QFrame, DragDropGridMixin):
     @property
     def status(self):
@@ -159,7 +143,8 @@ class PatientSensor(QtGui.QFrame, DragDropGridMixin):
         self.title_widget = PatientTitleWidget(gen)
         layout_left.addWidget(self.title_widget)
 
-        self.graphview = GraphicsView()
+        self.graphview = pg.GraphicsView()
+        self.graphview.setAttribute(Qt.WA_TransparentForMouseEvents)
         graphlayout = pg.GraphicsLayout()
         graphlayout.setContentsMargins(0, 5, 0, 0)
         self.graphview.setCentralWidget(graphlayout)
