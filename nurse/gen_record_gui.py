@@ -30,6 +30,7 @@ class GenRecordGUI(GenRecord):
     _path: Optional[Path] = None
     ip_address: Optional[str] = None
     _notes: str = ""
+    _active: bool = True
 
     @property
     def notes(self) -> str:
@@ -64,7 +65,17 @@ class GenRecordGUI(GenRecord):
             info = yaml.safe_load(f)
             self.title = info["title"]
             self.notes = info["notes"]
+            self._active = True  # Loading a device activates it!
 
+        self.save()
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, value: bool):
+        self._active = value
         self.save()
 
     def save(self) -> None:
@@ -73,8 +84,7 @@ class GenRecordGUI(GenRecord):
             if self.ip_address:
                 d["ip_address"] = self.ip_address
 
-            # Later this will turned off by "Disconnect"
-            d["active"] = True
+            d["active"] = self._active
 
             yaml.safe_dump(d, f)
 

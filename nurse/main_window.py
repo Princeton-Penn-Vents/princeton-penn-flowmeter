@@ -215,6 +215,8 @@ class MainStack(QtWidgets.QWidget):
 
     def drop_item(self, i: int) -> None:
         graph: PatientSensor = self.graphs.pop(i)
+        record: GenRecordGUI = graph.gen.record  # type: ignore
+        record.active = False
         graph.gen.close()
         ind = self.grid_layout.indexOf(graph)
         x, y, *_ = self.grid_layout.getItemPosition(ind)
