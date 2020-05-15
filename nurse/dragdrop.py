@@ -32,7 +32,7 @@ class DragDropGridMixin:
     # self.parent().grid_layout (not checked by mypy)
 
     def mime_type(self: DragGridProtocol) -> str:
-        return f"application/{self.__class__.__name__}"
+        return f"application/{self.MIME_NAME}"
 
     def __init__(self: DragGridProtocol, *args, **kwargs):
         self.setAcceptDrops(True)

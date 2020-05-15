@@ -26,28 +26,28 @@ class PopdownTitle(QtWidgets.QLabel):
 
 
 # Layout factory functions
-def HBoxLayout(*args, **kwargs):
+def HBoxLayout(*args, **kwargs) -> QtWidgets.QHBoxLayout:
     layout = QtWidgets.QHBoxLayout(*args, **kwargs)
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
 
 
-def VBoxLayout(*args, **kwargs):
+def VBoxLayout(*args, **kwargs) -> QtWidgets.QVBoxLayout:
     layout = QtWidgets.QVBoxLayout(*args, **kwargs)
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
     return layout
 
 
-def FormLayout(*args, **kwargs):
+def FormLayout(*args, **kwargs) -> QtWidgets.QFormLayout:
     layout = QtWidgets.QFormLayout(*args, **kwargs)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     return layout
 
 
-def GridLayout(*args, **kwargs):
+def GridLayout(*args, **kwargs) -> QtWidgets.QGridLayout:
     layout = QtWidgets.QGridLayout(*args, **kwargs)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
