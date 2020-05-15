@@ -772,12 +772,15 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
 
         for name in old_alarms:
             if name not in alarms:
-                time_active = (
-                    cumulative["last breath timestamp"]
-                    - old_alarms[name]["first timestamp"]
-                )
-                logger.info(
-                    f"Alarm {repr(name)} deactivated after being on for {time_active:g} seconds"
-                )
+                try:
+                    time_active = (
+                        cumulative["last breath timestamp"]
+                        - old_alarms[name]["first timestamp"]
+                    )
+                    logger.info(
+                        f"Alarm {repr(name)} deactivated after being on for {time_active:g} seconds"
+                    )
+                except KeyError:
+                    pass
 
     return alarms
