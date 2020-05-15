@@ -162,35 +162,37 @@ class MainStack(QtWidgets.QWidget):
         self.add_item(gen)
 
     def _get_next_empty(self) -> Tuple[int, int]:
+        # First, see if there's a open empty cell. If there is, return that index.
         old_ind = self.grid_layout.count()
-        ind = sum(
-            not isinstance(self.grid_layout.itemAt(i).widget(), EmptySensor)
-            for i in range(old_ind)
-        )
-        n_items = ind + 1
-        height = math.ceil(math.sqrt(n_items))
-        width = math.ceil(n_items / height)
+        for i in range(old_ind):
+            widget = self.grid_layout.itemAt(i).widget()
+            if isinstance(widget, (EmptySensor, WaitingWidget)):
+                i, j, _width, _height = self.grid_layout.getItemPosition(i)
+                self.grid_layout.removeWidget(widget)
+                widget.setParent(None)
+                return i, j
 
-        # Avoid wiggles when updating
-        for i in range(width):
-            self.grid_layout.setColumnStretch(i, 3)
+        height = self.grid_layout.rowCount()
+        width = self.grid_layout.columnCount()
 
-        for j in range(height):
-            self.grid_layout.setRowStretch(j, 3)
+        if old_ind == 0:
+            self.grid_layout.setRowStretch(0, 1)
+            self.grid_layout.setColumnStretch(0, 1)
+            return 0, 0
 
-        for i in range(height):
-            for j in range(width):
-                item = self.grid_layout.itemAtPosition(i, j)
-                if item is not None and isinstance(item.widget(), EmptySensor):
-                    widget = item.widget()
-                    self.grid_layout.removeWidget(widget)
-                    widget.setParent(None)
-                    item = None
-                empty = item is None
-                if empty:
-                    return i, j
+        if height <= width:
+            # Adding row
+            self.grid_layout.setRowStretch(height, 1)
+            for i in range(1, width):
+                self.grid_layout.addWidget(EmptySensor(), height, i)
+            return height, 0
 
-        raise RuntimeError("No empty space!")
+        else:
+            # Adding column
+            self.grid_layout.setColumnStretch(width, 1)
+            for i in range(1, height):
+                self.grid_layout.addWidget(EmptySensor(), i, width)
+            return 0, width
 
     def add_item(self, gen: Generator):
         ind = self.next_graph
