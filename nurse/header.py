@@ -21,7 +21,7 @@ class PrincetonLogoWidget(QtWidgets.QWidget):
         logolabel = QtWidgets.QLabel()
         logolabel.setPixmap(logo)
 
-        text = QtWidgets.QLabel("Princeton Open Vent Monitor")
+        text = QtWidgets.QLabel("Princeton Open Ventilation Monitor")
         text.setMinimumWidth(90)
         text.setAlignment(Qt.AlignLeft)
         layout.addWidget(logolabel, 0, Qt.AlignVCenter)

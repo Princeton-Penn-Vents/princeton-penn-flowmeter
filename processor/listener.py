@@ -65,7 +65,7 @@ class Listener(ServiceListener):
     def _add_if_unseen(
         self, status: str, zeroconf: Zeroconf, service_type: str, name: str
     ) -> Set[Detector]:
-        if "Princeton Open Vent Monitor" in name:
+        if "Princeton Open Vent" in name:
             info = zeroconf.get_service_info(service_type, name)
             if not info:
                 logger.info(f"Service {name} not {status}, missing info!")

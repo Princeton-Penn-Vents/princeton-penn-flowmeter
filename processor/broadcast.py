@@ -63,7 +63,7 @@ class Broadcast:
 
             self.info = ServiceInfo(
                 "_http._tcp.local.",
-                f"Princeton Open Vent Monitor - {get_box_name()} - {self.port}._http._tcp.local.",
+                f"Princeton Open Ventilation Monitor - {get_box_name()} - {self.port}._http._tcp.local.",
                 addresses=[ipaddress.ip_address(ip).packed for ip in addrs],
                 port=self.port,
                 properties={
