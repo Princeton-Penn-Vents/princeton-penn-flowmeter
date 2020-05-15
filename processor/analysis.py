@@ -765,13 +765,13 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
             )
 
         for name in alarms:
-            if name not in old_alarms:
+            if name != "Stale Data" and name not in old_alarms:
                 logger.info(
                     f"Alarm {repr(name)} activated with value {alarms[name]['extreme']}"
                 )
 
         for name in old_alarms:
-            if name not in alarms:
+            if name != "Stale Data" and name not in alarms:
                 try:
                     time_active = (
                         cumulative["last breath timestamp"]
