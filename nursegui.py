@@ -273,27 +273,32 @@ def main(argv, *, window: bool, **kwargs):
 
     logger.info("Starting nursegui")
 
-    app = QtWidgets.QApplication(argv)
+    try:
+        app = QtWidgets.QApplication(argv)
 
-    with FindBroadcasts() as listener:
-        main = MainWindow(listener=listener, **kwargs)
-        if not window:
-            main.showFullScreen()
-        else:
-            size = app.screens()[0].availableSize()
-            if size.width() < 2000 or size.height() < 1200:
-                main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
-                main.showMaximized()
+        with FindBroadcasts() as listener:
+            main = MainWindow(listener=listener, **kwargs)
+            if not window:
+                main.showFullScreen()
             else:
-                main.resize(1920, 1080)
-                main.showNormal()
+                size = app.screens()[0].availableSize()
+                if size.width() < 2000 or size.height() < 1200:
+                    main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
+                    main.showMaximized()
+                else:
+                    main.resize(1920, 1080)
+                    main.showNormal()
 
-        def ctrl_c(_sig_num, _stack_frame):
-            signal.signal(signal.SIGINT, signal.SIG_DFL)
-            main.close()
+            def ctrl_c(_sig_num, _stack_frame):
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
+                main.close()
 
-        signal.signal(signal.SIGINT, ctrl_c)
-        sys.exit(app.exec())
+            signal.signal(signal.SIGINT, ctrl_c)
+            sys.exit(app.exec())
+
+    except Exception:
+        logger.exception("Main GUI unexpected error!")
+        raise
 
 
 if __name__ == "__main__":

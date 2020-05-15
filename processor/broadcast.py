@@ -77,11 +77,15 @@ class Broadcast:
             self.addrs = addrs
 
     def _run(self):
-        while not self.stop.is_set():
-            self.register()
-            self.stop.wait(self.live)
-        if self.info is not None:
-            self.zeroconf.unregister_service(self.info)
+        try:
+            while not self.stop.is_set():
+                self.register()
+                self.stop.wait(self.live)
+            if self.info is not None:
+                self.zeroconf.unregister_service(self.info)
+        except Exception:
+            logging.exception("Broadcast loop error!")
+            raise
 
     def __enter__(self) -> Broadcast:
         if self.live > 0:

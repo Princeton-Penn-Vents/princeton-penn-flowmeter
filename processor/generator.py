@@ -204,8 +204,15 @@ class Generator(abc.ABC):
         for k, v in self.rotary.to_dict().items():
             self.logger.info(f"rotary: {k} set to {v['value']} (initial value)")
 
-        self._run_thread = threading.Thread(target=self._run)
+        self._run_thread = threading.Thread(target=self._logging_run)
         self._run_thread.start()
+
+    def _logging_run(self):
+        try:
+            self._run()
+        except Exception:
+            self.parent.logger.exception("Unexpected error in analysis!")
+            raise
 
     def _run(self) -> None:
         """

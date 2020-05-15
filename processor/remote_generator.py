@@ -36,9 +36,16 @@ class RemoteThread(threading.Thread):
 
         super().__init__()
 
+    def run(self) -> None:
+        try:
+            self._logging_run()
+        except Exception:
+            self.parent.logger.exception("Unexpected error in remote collection!")
+            raise
+
     @context()
     @socket(zmq.SUB)
-    def run(self, _ctx: zmq.Context, sub_socket: zmq.Socket) -> None:
+    def _logging_run(self, _ctx: zmq.Context, sub_socket: zmq.Socket) -> None:
 
         sub_socket.connect(self._address)
         sub_socket.subscribe(b"")
