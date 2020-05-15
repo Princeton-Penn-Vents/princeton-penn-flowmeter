@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 class DragDropGridMixin:
     # Requirements:
     # self.parent().grid_layout (not checked by mypy)
+    # And now drop_final_row_or_column_if_needed is required too (so now it's pretty
+    # specialized. Oh, well.)
 
     def mime_type(self: DragGridProtocol) -> str:
         return f"application/{self.MIME_NAME}"
@@ -76,6 +78,7 @@ class DragDropGridMixin:
         if drag.target() and drag.source() != drag.target():
             parent = self.parent()
             swap_grid(parent.grid_layout, drag.source(), drag.target())
+            parent.drop_final_row_or_column_if_needed()
 
         self.setVisible(True)
 

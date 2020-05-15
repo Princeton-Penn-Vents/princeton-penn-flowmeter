@@ -172,8 +172,7 @@ class MainStack(QtWidgets.QWidget):
                 widget.setParent(None)
                 return i, j
 
-        height = self.grid_layout.rowCount()
-        width = self.grid_layout.columnCount()
+        height, width = self.row_column_count()
 
         if old_ind == 0:
             self.grid_layout.setRowStretch(0, 1)
@@ -224,6 +223,51 @@ class MainStack(QtWidgets.QWidget):
         graph.setParent(None)
         drilldown: DrilldownWidget = self.parent().parent().drilldown
         drilldown.drop_alarm_box(i)
+
+        self.drop_final_row_or_column_if_needed()
+
+    def row_column_count(self):
+        height = self.grid_layout.rowCount()
+        width = self.grid_layout.columnCount()
+
+        rows = [False] * height
+        columns = [False] * width
+
+        for row in range(height):
+            for column in range(width):
+                if self.grid_layout.itemAtPosition(row, column) != None:
+                    rows[row] = True
+                    columns[column] = True
+        return sum(rows), sum(columns)
+
+    def drop_final_row_or_column_if_needed(self) -> None:
+        height, width = self.row_column_count()
+
+        widgets = [
+            self.grid_layout.itemAtPosition(row, width - 1).widget()
+            for row in range(height)
+        ]
+
+        if all(isinstance(widget, EmptySensor) for widget in widgets):
+            for widget in widgets:
+                self.grid_layout.removeWidget(widget)
+                widget.setParent(None)
+            self.grid_layout.setColumnStretch(height - 1, 0)
+
+            return self.drop_final_row_or_column_if_needed()
+
+        widgets = [
+            self.grid_layout.itemAtPosition(height - 1, column).widget()
+            for column in range(width)
+        ]
+
+        if all(isinstance(widget, EmptySensor) for widget in widgets):
+            for widget in widgets:
+                self.grid_layout.removeWidget(widget)
+                widget.setParent(None)
+            self.grid_layout.setRowStretch(width - 1, 0)
+
+            return self.drop_final_row_or_column_if_needed()
 
     @Slot()
     def update_plots(self) -> None:
