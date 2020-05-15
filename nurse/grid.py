@@ -114,7 +114,19 @@ class PatientTitleWidget(QtWidgets.QWidget):
         self.name_edit.style().polish(self.name_edit)
 
 
-class PatientSensor(QtGui.QFrame, DragDropGridMixin):
+class DraggableSensor(QtGui.QFrame, DragDropGridMixin):
+    MIME_NAME = "DraggableSensor"
+
+
+class EmptySensor(DraggableSensor):
+    def __init__(self):
+        super().__init__()
+
+        layout = VBoxLayout(self)
+        layout.addWidget(QtWidgets.QLabel("Empty"), 0, Qt.AlignHCenter)
+
+
+class PatientSensor(DraggableSensor):
     @property
     def status(self):
         return Status[self.property("alert_status")]

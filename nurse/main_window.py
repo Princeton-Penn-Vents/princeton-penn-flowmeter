@@ -22,7 +22,7 @@ from nurse.qt import (
 
 from nurse.common import style_path, GraphInfo
 from nurse.header import MainHeaderWidget
-from nurse.grid import PatientSensor
+from nurse.grid import PatientSensor, EmptySensor
 from nurse.drilldown import DrilldownWidget
 from nurse.connection_dialog import ConnectionDialog
 
@@ -42,7 +42,7 @@ class WaitingWidget(QtWidgets.QFrame):
         super().__init__()
         layout = QtWidgets.QVBoxLayout(self)
         layout.addStretch()
-        text = QtWidgets.QLabel("Waiting for a device to be connected...")
+        text = QtWidgets.QLabel("Waiting for a patient sensor to be discovered...")
         text.setAlignment(Qt.AlignCenter)
         layout.addWidget(text)
         layout.addStretch()
@@ -73,7 +73,7 @@ class MainStack(QtWidgets.QWidget):
         layout.addWidget(self.header)
 
         grid_layout = GridLayout()
-        self.grid_layout = grid_layout
+        self.grid_layout: QtWidgets.QGridLayout = grid_layout
         layout.addLayout(grid_layout)
 
         self.graphs: Dict[int, PatientSensor] = {}
@@ -162,7 +162,11 @@ class MainStack(QtWidgets.QWidget):
         self.add_item(gen)
 
     def _get_next_empty(self) -> Tuple[int, int]:
-        ind = self.grid_layout.count()
+        old_ind = self.grid_layout.count()
+        ind = sum(
+            not isinstance(self.grid_layout.itemAt(i).widget(), EmptySensor)
+            for i in range(old_ind)
+        )
         n_items = ind + 1
         height = math.ceil(math.sqrt(n_items))
         width = math.ceil(n_items / height)
@@ -171,9 +175,18 @@ class MainStack(QtWidgets.QWidget):
         for i in range(width):
             self.grid_layout.setColumnStretch(i, 3)
 
+        for j in range(height):
+            self.grid_layout.setRowStretch(j, 3)
+
         for i in range(height):
             for j in range(width):
-                empty = self.grid_layout.itemAtPosition(i, j) is None
+                item = self.grid_layout.itemAtPosition(i, j)
+                if item is not None and isinstance(item.widget(), EmptySensor):
+                    widget = item.widget()
+                    self.grid_layout.removeWidget(widget)
+                    widget.setParent(None)
+                    item = None
+                empty = item is None
                 if empty:
                     return i, j
 
@@ -202,7 +215,10 @@ class MainStack(QtWidgets.QWidget):
     def drop_item(self, i: int) -> None:
         graph: PatientSensor = self.graphs.pop(i)
         graph.gen.close()
+        ind = self.grid_layout.indexOf(graph)
+        x, y, *_ = self.grid_layout.getItemPosition(ind)
         self.grid_layout.removeWidget(graph)
+        self.grid_layout.addWidget(EmptySensor(), x, y)
         graph.setParent(None)
         drilldown: DrilldownWidget = self.parent().parent().drilldown
         drilldown.drop_alarm_box(i)

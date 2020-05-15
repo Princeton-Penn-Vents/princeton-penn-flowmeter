@@ -50,6 +50,17 @@ QComboBox QAbstractItemView {
   background: black;
 }
 
+/* Empty slots */
+
+EmptySensor {
+  background-color: black;
+}
+
+EmptySensor > QLabel {
+  color: floralwhite;
+  font-size: 20pt;
+}
+
 /* Header design */
 
 HeaderWidget QLabel {
