@@ -42,6 +42,14 @@ PopdownTitle {
   font-weight: bold;
 }
 
+QLineEdit, QComboBox {
+  background-color: #32373C;
+}
+
+QComboBox QAbstractItemView {
+  background: black;
+}
+
 /* Header design */
 
 HeaderWidget QLabel {

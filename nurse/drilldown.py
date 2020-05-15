@@ -3,6 +3,7 @@ from __future__ import annotations
 import pyqtgraph as pg
 
 from typing import Optional, Dict, List
+import logging
 
 import numpy as np
 
@@ -23,6 +24,8 @@ from nurse.header import DrilldownHeaderWidget
 from nurse.gen_record_gui import GenRecordGUI
 from processor.generator import Status, Generator
 from nurse.generator_dialog import GeneratorDialog
+
+logger = logging.getLogger("povm")
 
 
 class BoxHeader(QtWidgets.QLabel):
@@ -263,6 +266,21 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.alarm_boxes.append(alarm_box)
         self.alarms_layout.addWidget(alarm_box)
         alarm_box.clicked.connect(self.click_alarm)
+
+    def drop_alarm_box(self, ind: int):
+        res = None
+        for i, box in enumerate(self.alarm_boxes):
+            if self.alarm_boxes[i].i == ind:
+                res = i
+                break
+        if res is None:
+            logger.error(f"Cannot find box {ind}")
+            return
+
+        alarm_box = self.alarm_boxes.pop(res)
+        alarm_box.clicked.disconnect(self.click_alarm)
+        self.alarms_layout.removeWidget(alarm_box)
+        alarm_box.setParent(None)
 
     @Slot()
     def click_alarm(self):
@@ -702,7 +720,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
 
-            for alarm_box, graph in zip(patient.alarm_boxes, main_stack.graphs):
+            for alarm_box, graph in zip(
+                patient.alarm_boxes, main_stack.graphs.values()
+            ):
                 alarm_box.status = graph.gen.status
 
         self.qTimer.start(50)

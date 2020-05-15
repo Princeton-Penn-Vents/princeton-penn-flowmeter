@@ -1,6 +1,14 @@
+from __future__ import annotations
+
 from nurse.qt import QtWidgets, Slot
 from processor.generator import Generator, Status
 from processor.local_generator import LocalGenerator
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from nurse.main_window import MainStack
+    from nurse.grid import PatientSensor
 
 
 class BasicTab(QtWidgets.QWidget):
@@ -69,7 +77,7 @@ class GeneratorDialog(QtWidgets.QDialog):
                 self.gen.status == Status.DISCON or isinstance(self.gen, LocalGenerator)
             )
             self.discon.setToolTip("You can only disconnect an unplugged sensor")
-            self.buttons.destroyed.connect(self.disconnect_sensor)
+            self.discon.clicked.connect(self.disconnect_sensor)
 
         layout.addWidget(self.buttons)
 
@@ -78,7 +86,10 @@ class GeneratorDialog(QtWidgets.QDialog):
 
     @Slot()
     def disconnect_sensor(self) -> None:
-        self.discon = True
+        print("Diconnecting")
+        parent: PatientSensor = self.parent()
+        main: MainStack = parent.parent()
+        main.drop_item(parent.i)
         self.reject()
 
     @Slot()

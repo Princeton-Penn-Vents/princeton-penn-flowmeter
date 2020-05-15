@@ -6,7 +6,7 @@ import pyqtgraph as pg
 import math
 from string import Template
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 import threading
 import itertools
 
@@ -65,6 +65,7 @@ class MainStack(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.listener = listener
+        self.sim = sim
 
         layout = VBoxLayout(self)
 
@@ -75,8 +76,9 @@ class MainStack(QtWidgets.QWidget):
         self.grid_layout = grid_layout
         layout.addLayout(grid_layout)
 
-        self.graphs: List[PatientSensor] = []
+        self.graphs: Dict[int, PatientSensor] = {}
         self.infos: List[WaitingWidget] = []
+        self.next_graph: int = 0  # Value of next graph to add
 
         if displays or addresses:
             disp_addr = itertools.zip_longest(
@@ -133,16 +135,28 @@ class MainStack(QtWidgets.QWidget):
     @Slot()
     def add_item_dialog(self):
         dialog = ConnectionDialog(
-            self, self.listener, self.grid_layout.count() + 1, "tcp://127.0.0.1:8100"
+            self,
+            self.listener,
+            self.grid_layout.count() + 1,
+            "tcp://127.0.0.1:8100",
+            self.sim,
         )
         dialog.open()
 
     def add_new_by_address(self, addr: str):
-        local_logger = make_nested_logger(len(self.graphs))
+        local_logger = make_nested_logger(self.next_graph)
         gen = RemoteGenerator(
             address=addr,
             logger=local_logger,
             gen_record=GenRecordGUI(local_logger, ip_address=addr),
+        )
+        gen.run()
+        self.add_item(gen)
+
+    def add_new_generator(self, i: int):
+        local_logger = make_nested_logger(self.next_graph)
+        gen = LocalGenerator(
+            i=i + 1, logger=local_logger, gen_record=GenRecordGUI(local_logger),
         )
         gen.run()
         self.add_item(gen)
@@ -166,7 +180,7 @@ class MainStack(QtWidgets.QWidget):
         raise RuntimeError("No empty space!")
 
     def add_item(self, gen: Generator):
-        ind = self.grid_layout.count()
+        ind = self.next_graph
         if len(self.graphs) == 0 and self.infos:
             waiting = self.infos.pop()
             self.grid_layout.removeWidget(waiting)
@@ -178,15 +192,25 @@ class MainStack(QtWidgets.QWidget):
         drilldown.add_alarm_box(gen, i=ind)
 
         graph = PatientSensor(i=ind, gen=gen)
-        self.graphs.append(graph)
+        self.graphs[ind] = graph
 
         self.grid_layout.addWidget(graph, i, j)
         graph.set_plot()
 
+        self.next_graph += 1
+
+    def drop_item(self, i: int) -> None:
+        graph: PatientSensor = self.graphs.pop(i)
+        graph.gen.close()
+        self.grid_layout.removeWidget(graph)
+        graph.setParent(None)
+        drilldown: DrilldownWidget = self.parent().parent().drilldown
+        drilldown.drop_alarm_box(i)
+
     @Slot()
     def update_plots(self) -> None:
         if self.isVisible():
-            for graph in self.graphs:
+            for graph in self.graphs.values():
                 graph.update_plot()
             self.qTimer.start(50)
         else:
@@ -257,6 +281,6 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def closeEvent(self, evt):
-        for graph in self.main_stack.graphs:
+        for graph in self.main_stack.graphs.values():
             graph.gen.close()
         super().closeEvent(evt)
