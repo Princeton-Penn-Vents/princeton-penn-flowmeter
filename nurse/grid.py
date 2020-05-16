@@ -19,7 +19,7 @@ from nurse.qt import (
 )
 
 from nurse.common import GraphInfo, INFO_STRINGS
-from nurse.dragdrop import DragDropGridMixin
+from nurse.dragdrop import DraggableSensor
 from nurse.generator_dialog import GeneratorDialog
 from nurse.gen_record_gui import GeneratorGUI
 from processor.generator import Status
@@ -110,10 +110,6 @@ class PatientTitleWidget(QtWidgets.QWidget):
 
         self.name_edit.style().unpolish(self.name_edit)
         self.name_edit.style().polish(self.name_edit)
-
-
-class DraggableSensor(QtGui.QFrame, DragDropGridMixin):
-    MIME_NAME = "DraggableSensor"
 
 
 class EmptySensor(DraggableSensor):
