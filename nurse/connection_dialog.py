@@ -56,7 +56,7 @@ class DetectedTab(QtWidgets.QWidget):
         self.detected.addItems(items)
 
     def current_url(self) -> str:
-        return self.items[self.currentIndex()].url
+        return self.items[self.detected.currentIndex()].url
 
 
 class LocalTab(QtWidgets.QWidget):

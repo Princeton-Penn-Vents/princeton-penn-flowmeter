@@ -259,25 +259,16 @@ class DrilldownWidget(QtWidgets.QWidget):
         side_layout.addLayout(self.alarms_layout)
         side_layout.addStretch()
 
-        self.alarm_boxes: List[AlarmBox] = []
+        self.alarm_boxes: Dict[int, AlarmBox] = {}
 
     def add_alarm_box(self, gen: Generator, i: int):
         alarm_box = AlarmBox(gen, i)
-        self.alarm_boxes.append(alarm_box)
+        self.alarm_boxes[i] = alarm_box
         self.alarms_layout.addWidget(alarm_box)
         alarm_box.clicked.connect(self.click_alarm)
 
     def drop_alarm_box(self, ind: int):
-        res = None
-        for i, box in enumerate(self.alarm_boxes):
-            if self.alarm_boxes[i].i == ind:
-                res = i
-                break
-        if res is None:
-            logger.error(f"Cannot find box {ind}")
-            return
-
-        alarm_box = self.alarm_boxes.pop(res)
+        alarm_box = self.alarm_boxes.pop(ind)
         alarm_box.clicked.disconnect(self.click_alarm)
         self.alarms_layout.removeWidget(alarm_box)
         alarm_box.setParent(None)
@@ -293,7 +284,7 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         "Call this to activate or switch drilldown screens!"
 
-        for n, box in enumerate(self.alarm_boxes):
+        for n, box in self.alarm_boxes.items():
             box.active = i == n
             box.update_gen()
 
@@ -720,9 +711,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack
 
-            for alarm_box, graph in zip(
-                patient.alarm_boxes, main_stack.graphs.values()
-            ):
-                alarm_box.status = graph.gen.status
+            for ind in main_stack.graphs.keys():
+                patient.alarm_boxes[ind].status = main_stack.graphs[ind].gen.status
 
         self.qTimer.start(50)
