@@ -249,6 +249,10 @@ class MainStack(QtWidgets.QWidget):
     def drop_final_row_or_column_if_needed(self) -> None:
         height, width = self.row_column_count()
 
+        # Don't drop the final tile!
+        if height<=1 and width<=1:
+            return
+
         widgets = [
             self.grid_layout.itemAtPosition(row, width - 1).widget()
             for row in range(height)
