@@ -44,6 +44,10 @@ class DrilldownLabel(QtWidgets.QLabel):
     pass
 
 
+class DrilldownSince(QtWidgets.QLabel):
+    pass
+
+
 class DisplayBox(QtWidgets.QFrame):
     @property
     def status(self) -> Status:
@@ -74,6 +78,9 @@ class DisplayBox(QtWidgets.QFrame):
 
         self.cumulative = DrilldownCumulative()
         upper_layout.addWidget(self.cumulative)
+
+        self.since = DrilldownSince()
+        layout.addWidget(self.since, 0, Qt.AlignHCenter)
 
         lower_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(lower_layout)
@@ -114,10 +121,21 @@ class DisplayBox(QtWidgets.QFrame):
 
         if value is not None:
             self.cumulative.setText(format(value, self.fmt))
-            if f"{self.key} Max" in gen.alarms or f"{self.key} Min" in gen.alarms:
+            if f"{self.key} Max" in gen.alarms:
                 self.status = Status.ALERT
+                item = gen.alarms[f"{self.key} Max"]
+                if "first timestamp" in item:
+                    over = (self.gen.realtime[-1] - item["first timestamp"]) + gen.tardy
+                    self.since.setText(f"Over for {over:.0f} s")
+            elif f"{self.key} Min" in gen.alarms:
+                self.status = Status.ALERT
+                item = gen.alarms[f"{self.key} Min"]
+                if "first timestamp" in item:
+                    under = (gen.realtime[-1] - item["first timestamp"]) + gen.tardy
+                    self.since.setText(f"Under for {under:.0f} s")
             else:
                 self.status = Status.OK
+                self.since.setText("")
         else:
             self.cumulative.setText("---")
             self.status = Status.DISCON

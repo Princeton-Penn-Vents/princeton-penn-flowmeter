@@ -2,7 +2,9 @@ import numpy as np
 import scipy.integrate
 import scipy.signal
 from typing import Iterable, Dict
+import logging
 
+from processor.rotary import LocalRotary
 from processor.config import config
 
 
@@ -634,21 +636,54 @@ def alarm_record(old_record, timestamp, value, ismax):
 
 
 def avg_alarms(
-    rotary, key: str, values: Dict[int, float]
+    old_alarms: Dict[str, Dict[str, float]],
+    rotary: LocalRotary,
+    key: str,
+    values: Dict[int, float],
+    timestamp: float,
+    logger: logging.Logger,
 ) -> Dict[str, Dict[str, float]]:
     """
     Return a dict with an alarm if alarm present and out of bounds.
     """
+
     timescale = rotary["AvgWindow"].value
     max_key = f"Avg {key.capitalize()} Max"
     min_key = f"Avg {key.capitalize()} Min"
+
     if max_key in rotary:
         if values[timescale] > rotary[max_key].value:
-            return {max_key: {"extreme": values[timescale]}}
+            old_alarms[max_key] = alarm_record(
+                old_alarms.get(max_key), timestamp, values[timescale], True
+            )
+            if old_alarms[max_key]["first timestamp"] == timestamp:
+                logger.info(
+                    f"Alarm {max_key!r} activated with value {old_alarms[max_key]['extreme']}"
+                )
+        elif max_key in old_alarms:
+            time_active = timestamp - old_alarms[max_key]["first timestamp"]
+            logger.info(
+                f"Alarm {max_key!r} deactivated after being on for {time_active:g} seconds"
+            )
+            del old_alarms[max_key]
+
     if min_key in rotary:
         if values[timescale] < rotary[min_key].value:
-            return {min_key: {"extreme": values[timescale]}}
-    return {}
+            old_alarms[min_key] = alarm_record(
+                old_alarms.get(min_key), timestamp, values[timescale], True
+            )
+            if old_alarms[min_key]["first timestamp"] == timestamp:
+                logger.info(
+                    f"Alarm {min_key!r} activated with value {old_alarms[min_key]['extreme']}"
+                )
+        elif min_key in old_alarms:
+            time_active = timestamp - old_alarms[min_key]["first timestamp"]
+            logger.info(
+                f"Alarm {min_key!r} deactivated after being on for {time_active:g} seconds"
+            )
+            del old_alarms[min_key]
+
+    return old_alarms
 
 
 def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
@@ -767,7 +802,7 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
         for name in alarms:
             if name != "Stale Data" and name not in old_alarms:
                 logger.info(
-                    f"Alarm {repr(name)} activated with value {alarms[name]['extreme']}"
+                    f"Alarm {name!r} activated with value {alarms[name]['extreme']}"
                 )
 
         for name in old_alarms:
@@ -778,9 +813,9 @@ def add_alarms(rotary, _updated, _new_breaths, cumulative, old_alarms, logger):
                         - old_alarms[name]["first timestamp"]
                     )
                     logger.info(
-                        f"Alarm {repr(name)} deactivated after being on for {time_active:g} seconds"
+                        f"Alarm {name!r} deactivated after being on for {time_active:g} seconds"
                     )
                 except KeyError:
-                    pass
+                    logger.error(f"Unable to find key in {name!r}")
 
     return alarms

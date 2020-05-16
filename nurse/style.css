@@ -368,8 +368,16 @@ DisplayBox > DrilldownCumulative {
 }
 
 DisplayBox > DrilldownLimit {
-  font-size: 20pt;
+  font-size: 16pt;
   color: #A0A0A0;
+}
+
+DisplayBox > DrilldownSince {
+  font-size: 12pt;
+  min-height: 12px;
+  color: #C0C0C0;
+  margin: 0px;
+  padding: 0px;
 }
 
 DisplayBox > DrilldownLabel {
