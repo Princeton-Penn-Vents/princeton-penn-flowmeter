@@ -9,9 +9,6 @@
 
 /* General rules */
 
-QPushButton, QCheckBox {
-  border: none;
-}
 
 .MainWindow  {
   background-color: #32373C;
@@ -19,7 +16,7 @@ QPushButton, QCheckBox {
 
 .BoxName {
   color: yellow;
-  font-style:italic;
+  font-style: italic;
 }
 
 QToolTip {
@@ -50,6 +47,38 @@ QComboBox QAbstractItemView {
   background: black;
 }
 
+QPushButton, QCheckBox {
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  background-color: #555;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+QPushButton#Remove {
+  background-color: darkred;
+}
+
+QPushButton:hover, QCheckBox:hover {
+  background-color: #777;
+}
+
+QPushButton#Remove:hover {
+  background-color: red;
+}
+
+QPushButton#Remove:disabled {
+  background-color: #555;
+  color: #888;
+}
+
+
+QDialog QPushButton {
+  padding: 4px 8px 4px 8px;
+}
+
 /* Empty slots */
 
 EmptySensor {
@@ -57,8 +86,9 @@ EmptySensor {
 }
 
 EmptySensor > QLabel {
-  color: floralwhite;
+  color: #888;
   font-size: 20pt;
+  font-weight: bold;
 }
 
 /* Header design */
@@ -67,23 +97,16 @@ HeaderWidget QLabel {
   margin-left: 4px;
 }
 
-HeaderWidget QLabel, HeaderWidget QPushButton, HeaderWidget QCheckBox, QPushButton {
-  color: floralwhite;
-  font-weight: bold;
+HeaderWidget QLabel, HeaderWidget QPushButton, HeaderWidget QCheckBox {
   margin: 2px;
-  padding: 4px;
-  font-size: 18px;
-  background-color: transparent;
-  border-radius: 6px;
 }
 
-HeaderWidget QPushButton:hover, HeaderWidget QCheckBox:hover {
-  background-color: #606060;
-}
+
 
 HeaderWidget > PrincetonLogoWidget > QLabel {
   color: #F58025;
   font-family: Times;
+  font-size: 18px;
 }
 
 HeaderButton {

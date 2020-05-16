@@ -71,13 +71,14 @@ class GeneratorDialog(QtWidgets.QDialog):
 
         if grid:
             self.discon = self.buttons.addButton(
-                "Disconnect", QtWidgets.QDialogButtonBox.DestructiveRole
+                "Remove", QtWidgets.QDialogButtonBox.DestructiveRole
             )
             self.discon.setEnabled(
                 self.gen.status == Status.DISCON or isinstance(self.gen, LocalGenerator)
             )
             self.discon.setToolTip("You can only disconnect an unplugged sensor")
             self.discon.clicked.connect(self.disconnect_sensor)
+            self.discon.setObjectName("Remove")
 
         layout.addWidget(self.buttons)
 
