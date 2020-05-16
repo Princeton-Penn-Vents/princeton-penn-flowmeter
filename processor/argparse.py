@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import time
 import argparse
 from typing import Tuple, List, Optional
 
 from processor.config import config, get_internal_file
 from processor.logging import init_logger
+from processor.broadcast import get_ip
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -23,6 +25,11 @@ class ArgumentParser(argparse.ArgumentParser):
             "--debug",
             action="store_true",
             help="Start up in debug mode (log to screen)",
+        )
+
+        self.add_argument(
+            "--iface",
+            help="Wait for 1 IP address to be assigned on this interface before starting",
         )
 
         self.add_argument("--dir", help="Set a directory to log data to")
@@ -51,5 +58,11 @@ class ArgumentParser(argparse.ArgumentParser):
             init_logger(f"{self.log_dir}/{self.log_stem}.log")
         else:
             init_logger(None)
+
+        if "iface" in args:
+            iface = args.iface
+            while not get_ip(iface):
+                print("Didn't find iface, waiting 1s")
+                time.sleep(1)
 
         return args, unparsed_args
