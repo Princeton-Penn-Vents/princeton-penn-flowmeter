@@ -27,24 +27,30 @@ def main(argv, *, window: bool, **kwargs):
         app = QtWidgets.QApplication(argv)
 
         with FindBroadcasts() as listener:
-            main = MainWindow(listener=listener, **kwargs)
-            if not window:
-                main.showFullScreen()
+            main_window = MainWindow(listener=listener, **kwargs)
+            size = app.screens()[0].availableSize()
+            if size.width() < 2000 or size.height() < 1200:
+                main_window.resize(int(size.width() * 0.95), int(size.height() * 0.85))
+                main_window.was_maximized = True
             else:
-                size = app.screens()[0].availableSize()
-                if size.width() < 2000 or size.height() < 1200:
-                    main.resize(int(size.width() * 0.95), int(size.height() * 0.85))
-                    main.showMaximized()
-                else:
-                    main.resize(1920, 1080)
-                    main.showNormal()
+                main_window.resize(1920, 1080)
+                main_window.was_maximized = False
 
-            fs_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence.FullScreen, main)
-            fs_shortcut.activated.connect(main.toggle_fs)
+            if not window:
+                main_window.showFullScreen()
+            elif main_window.was_maximized:
+                main_window.showMaximized()
+            else:
+                main_window.showNormal()
+
+            fs_shortcut = QtWidgets.QShortcut(
+                QtGui.QKeySequence.FullScreen, main_window
+            )
+            fs_shortcut.activated.connect(main_window.toggle_fs)
 
             def ctrl_c(_sig_num, _stack_frame):
                 signal.signal(signal.SIGINT, signal.SIG_DFL)
-                main.close()
+                main_window.close()
 
             signal.signal(signal.SIGINT, ctrl_c)
             sys.exit(app.exec())

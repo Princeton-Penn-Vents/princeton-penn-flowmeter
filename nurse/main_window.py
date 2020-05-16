@@ -320,20 +320,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_stack.header.fs_exit.clicked.connect(self.close)
         self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
 
+        self.was_maximized: bool = False
+
     @Slot()
-    def toggle_fs(self):
+    def toggle_fs(self) -> None:
         if self.isFullScreen():
-            self.showNormal()
+            if self.was_maximized:
+                self.showMaximized()
+            else:
+                self.showNormal()
         else:
+            self.was_maximized = self.isMaximized()
             self.showFullScreen()
 
     @Slot()
-    def drilldown_deactivate(self):
+    def drilldown_deactivate(self) -> None:
         self.drilldown.deactivate()
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(0)
 
-    def drilldown_activate(self, i):
+    def drilldown_activate(self, i: int) -> None:
         self.drilldown.activate(i)
         stacked_widget = self.centralWidget()
         stacked_widget.setCurrentIndex(1)
