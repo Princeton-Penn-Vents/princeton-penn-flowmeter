@@ -8,6 +8,8 @@ from nurse.qt import (
     swap_grid,
 )
 
+from nurse.gen_record_gui import GenRecordGUI
+
 from typing import Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -78,6 +80,12 @@ class DragDropGridMixin:
         if drag.target() and drag.source() != drag.target():
             parent = self.parent()
             swap_grid(parent.grid_layout, drag.source(), drag.target())
+            for item in (drag.source(), drag.target()):
+                if hasattr(item, "gen"):
+                    record: GenRecordGUI = item.gen.record
+                    ind = parent.grid_layout.indexOf(item)
+                    x, y, _width, _height = parent.grid_layout.getItemPosition(ind)
+                    record.position = (x, y)
             parent.drop_final_row_or_column_if_needed()
 
         self.setVisible(True)

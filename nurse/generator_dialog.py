@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from nurse.qt import QtWidgets, Slot
-from processor.generator import Generator, Status
-from processor.local_generator import LocalGenerator
+from processor.generator import Status
+from nurse.gen_record_gui import (
+    LocalGeneratorGUI,
+    GeneratorGUI,
+)
 
 from typing import TYPE_CHECKING
 
@@ -12,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class BasicTab(QtWidgets.QWidget):
-    def __init__(self, gen: Generator):
+    def __init__(self, gen: GeneratorGUI):
         super().__init__()
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -36,7 +39,7 @@ class BasicTab(QtWidgets.QWidget):
 
 
 class DetailsTab(QtWidgets.QWidget):
-    def __init__(self, gen: Generator):
+    def __init__(self, gen: GeneratorGUI):
         super().__init__()
 
         layout = QtWidgets.QFormLayout(self)
@@ -50,7 +53,7 @@ class DetailsTab(QtWidgets.QWidget):
 
 class GeneratorDialog(QtWidgets.QDialog):
     def __init__(
-        self, parent: QtWidgets.QWidget, gen: Generator, *, grid: bool = False
+        self, parent: QtWidgets.QWidget, gen: GeneratorGUI, *, grid: bool = False
     ):
         super().__init__(parent)
         self.setWindowTitle(f"Info for {gen.record.box_name}")
@@ -74,7 +77,8 @@ class GeneratorDialog(QtWidgets.QDialog):
                 "Remove", QtWidgets.QDialogButtonBox.DestructiveRole
             )
             self.discon.setEnabled(
-                self.gen.status == Status.DISCON or isinstance(self.gen, LocalGenerator)
+                self.gen.status == Status.DISCON
+                or isinstance(self.gen, LocalGeneratorGUI)
             )
             self.discon.setToolTip("You can only disconnect an unplugged sensor")
             self.discon.clicked.connect(self.disconnect_sensor)

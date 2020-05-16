@@ -21,9 +21,8 @@ from nurse.qt import (
 from nurse.common import GraphInfo, INFO_STRINGS
 from nurse.dragdrop import DragDropGridMixin
 from nurse.generator_dialog import GeneratorDialog
-from nurse.gen_record_gui import GenRecordGUI
-
-from processor.generator import Status, Generator
+from nurse.gen_record_gui import GeneratorGUI
+from processor.generator import Status
 
 
 class NumberLabel(QtWidgets.QLabel):
@@ -72,11 +71,10 @@ class NumbersWidget(QtWidgets.QWidget):
 
 
 class PatientTitleWidget(QtWidgets.QWidget):
-    def __init__(self, gen: Generator):
+    def __init__(self, gen: GeneratorGUI):
         super().__init__()
         self.gen = gen
-        record: GenRecordGUI
-        record = self.gen.record  # type: ignore
+        record = self.gen.record
 
         layout = HBoxLayout(self)
 
@@ -140,10 +138,10 @@ class PatientSensor(DraggableSensor):
             self.style().unpolish(self)
             self.style().polish(self)
 
-    def __init__(self, *, i: int, gen: Generator):
+    def __init__(self, *, i: int, gen: GeneratorGUI):
         super().__init__()
         self.last_status_change = int(1000 * datetime.now().timestamp())
-        self.gen: Generator = gen
+        self.gen: GeneratorGUI = gen
         self.current_alarms: Dict[str, Any] = {}
         self.i = i
 

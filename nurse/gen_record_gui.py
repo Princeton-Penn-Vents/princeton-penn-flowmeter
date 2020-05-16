@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TextIO, Optional
+from typing import Tuple, Optional, Union
 from pathlib import Path
 from contextlib import suppress
 
@@ -10,6 +10,19 @@ import yaml
 from processor.gen_record import GenRecord
 from nurse.qt import Signal, QtCore
 from processor.config import get_data_dir
+from processor.remote_generator import RemoteGenerator
+from processor.local_generator import LocalGenerator
+
+
+class RemoteGeneratorGUI(RemoteGenerator):
+    record: GenRecordGUI
+
+
+class LocalGeneratorGUI(LocalGenerator):
+    record: GenRecordGUI
+
+
+GeneratorGUI = Union[RemoteGeneratorGUI, LocalGeneratorGUI]
 
 
 class RecordSignals(QtCore.QObject):
@@ -31,6 +44,16 @@ class GenRecordGUI(GenRecord):
     ip_address: Optional[str] = None
     _notes: str = ""
     _active: bool = True
+    _position: Tuple[int, int] = (-1, -1)
+
+    @property
+    def position(self) -> Tuple[int, int]:
+        return self._position
+
+    @position.setter
+    def position(self, value: Tuple[int, int]):
+        self._position = value
+        self.save()
 
     @property
     def notes(self) -> str:
@@ -83,6 +106,8 @@ class GenRecordGUI(GenRecord):
             d = {"title": self.title, "sid": self.sid, "notes": self.notes}
             if self.ip_address:
                 d["ip_address"] = self.ip_address
+            if self._position[0] >= 0 and self._position[1] >= 0:
+                d["position"] = self._position
 
             d["active"] = self._active
 

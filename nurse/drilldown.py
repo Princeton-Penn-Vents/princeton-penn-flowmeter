@@ -21,8 +21,8 @@ from nurse.qt import (
 
 from nurse.common import GraphInfo
 from nurse.header import DrilldownHeaderWidget
-from nurse.gen_record_gui import GenRecordGUI
-from processor.generator import Status, Generator
+from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
+from processor.generator import Status
 from nurse.generator_dialog import GeneratorDialog
 
 logger = logging.getLogger("povm")
@@ -102,7 +102,7 @@ class DisplayBox(QtWidgets.QFrame):
         self.update_limits()
 
     def update_cumulative(self):
-        gen: Optional[Generator] = (
+        gen: Optional[GeneratorGUI] = (
             self.parent().parent().gen
             if (self.parent() and self.parent().parent())
             else None
@@ -279,7 +279,7 @@ class DrilldownWidget(QtWidgets.QWidget):
 
         self.alarm_boxes: Dict[int, AlarmBox] = {}
 
-    def add_alarm_box(self, gen: Generator, i: int):
+    def add_alarm_box(self, gen: GeneratorGUI, i: int):
         alarm_box = AlarmBox(gen, i)
         self.alarm_boxes[i] = alarm_box
         self.alarms_layout.addWidget(alarm_box)
@@ -351,11 +351,10 @@ class DrilldownWidget(QtWidgets.QWidget):
 
 
 class AlarmBox(QtWidgets.QPushButton):
-    def __init__(self, gen: Generator, i: int):
+    def __init__(self, gen: GeneratorGUI, i: int):
         super().__init__()
-        self.gen: Generator = gen
-        record: GenRecordGUI
-        record = self.gen.record  # type: ignore
+        self.gen: GeneratorGUI = gen
+        record: GenRecordGUI = self.gen.record
         record.master_signal.title_changed.connect(self.update_gen)
         self.active = False
         self.i = i
@@ -432,7 +431,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.upper = {}
         self.lower = {}
         self.current = {}
-        self.gen: Optional[Generator] = None
+        self.gen: Optional[GeneratorGUI] = None
 
         layout = HBoxLayout(self)
 

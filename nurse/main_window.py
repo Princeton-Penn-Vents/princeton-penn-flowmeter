@@ -26,10 +26,13 @@ from nurse.grid import PatientSensor, EmptySensor
 from nurse.drilldown import DrilldownWidget
 from nurse.connection_dialog import ConnectionDialog
 
-from processor.generator import Generator
-from processor.local_generator import LocalGenerator
-from processor.remote_generator import RemoteGenerator
-from nurse.gen_record_gui import GenRecordGUI
+from nurse.gen_record_gui import (
+    GenRecordGUI,
+    LocalGeneratorGUI,
+    RemoteGeneratorGUI,
+    GeneratorGUI,
+)
+
 from processor.listener import FindBroadcasts
 from processor.logging import make_nested_logger
 
@@ -87,14 +90,14 @@ class MainStack(QtWidgets.QWidget):
             for i, addr in disp_addr:
                 local_logger = make_nested_logger(i)
                 ip_addr = addr or "tcp://127.0.0.1:8100"
-                gen = (
-                    RemoteGenerator(
+                gen: GeneratorGUI = (
+                    RemoteGeneratorGUI(
                         address=ip_addr,
                         logger=local_logger,
                         gen_record=GenRecordGUI(local_logger, ip_address=ip_addr),
                     )
                     if not sim
-                    else LocalGenerator(
+                    else LocalGeneratorGUI(
                         i=i + 1,
                         logger=local_logger,
                         gen_record=GenRecordGUI(local_logger),
@@ -145,7 +148,7 @@ class MainStack(QtWidgets.QWidget):
 
     def add_new_by_address(self, addr: str):
         local_logger = make_nested_logger(self.next_graph)
-        gen = RemoteGenerator(
+        gen = RemoteGeneratorGUI(
             address=addr,
             logger=local_logger,
             gen_record=GenRecordGUI(local_logger, ip_address=addr),
@@ -155,7 +158,7 @@ class MainStack(QtWidgets.QWidget):
 
     def add_new_generator(self, i: int):
         local_logger = make_nested_logger(self.next_graph)
-        gen = LocalGenerator(
+        gen = LocalGeneratorGUI(
             i=i + 1, logger=local_logger, gen_record=GenRecordGUI(local_logger),
         )
         gen.run()
@@ -193,7 +196,7 @@ class MainStack(QtWidgets.QWidget):
                 self.grid_layout.addWidget(EmptySensor(), i, width)
             return 0, width
 
-    def add_item(self, gen: Generator):
+    def add_item(self, gen: GeneratorGUI):
         ind = self.next_graph
         if len(self.graphs) == 0 and self.infos:
             waiting = self.infos.pop()
@@ -201,6 +204,7 @@ class MainStack(QtWidgets.QWidget):
             waiting.setParent(None)
             ind = 0
         i, j = self._get_next_empty()
+        gen.record.position = (i, j)
 
         drilldown: DrilldownWidget = self.parent().parent().drilldown
         drilldown.add_alarm_box(gen, i=ind)
@@ -215,7 +219,7 @@ class MainStack(QtWidgets.QWidget):
 
     def drop_item(self, i: int) -> None:
         graph: PatientSensor = self.graphs.pop(i)
-        record: GenRecordGUI = graph.gen.record  # type: ignore
+        record: GenRecordGUI = graph.gen.record
         record.active = False
         graph.gen.close()
         ind = self.grid_layout.indexOf(graph)

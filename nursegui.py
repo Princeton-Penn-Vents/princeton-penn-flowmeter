@@ -6,7 +6,7 @@ import sys
 import signal
 import logging
 
-from nurse.qt import QtWidgets, QtCore, QtGui, Qt
+from nurse.qt import QtWidgets, QtGui
 from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
 from nurse.main_window import MainWindow
