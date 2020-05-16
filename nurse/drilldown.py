@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pyqtgraph as pg
 
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, TYPE_CHECKING
 import logging
 
 import numpy as np
@@ -24,6 +24,9 @@ from nurse.header import DrilldownHeaderWidget
 from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
 from nurse.generator_dialog import GeneratorDialog
+
+if TYPE_CHECKING:
+    from nurse.main_window import MainStack
 
 logger = logging.getLogger("povm")
 
@@ -291,16 +294,36 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.alarms_layout.removeWidget(alarm_box)
         alarm_box.setParent(None)
 
+    def sort_alarms(self):
+        stacked: MainStack = self.parent().parent().main_stack
+        positions = {
+            tuple(reversed(graph.gen.record.position)): n
+            for n, graph in stacked.graphs.items()
+        }
+        ordered = [positions[k] for k in sorted(positions)]
+        for i in range(len(ordered)):
+            if self.alarms_layout.itemAt(i).widget().i != ordered[i]:
+                for j in range(i, len(ordered)):
+                    if self.alarms_layout.itemAt(j).widget().i == ordered[i]:
+                        print(f"Swap {i} and {j}")
+                        item = self.alarms_layout.takeAt(j)
+                        self.alarms_layout.insertWidget(i, item.widget())
+                        break
+
     @Slot()
     def click_alarm(self):
         alarm_box: AlarmBox = self.sender()
         self.parent().parent().drilldown_activate(alarm_box.i)
 
     def activate(self, i: int):
+        """
+        Call this to activate or switch drilldown screens!
+        """
+
         if self.patient.gen is not None:
             self.deactivate()
 
-        "Call this to activate or switch drilldown screens!"
+        self.sort_alarms()
 
         for n, box in self.alarm_boxes.items():
             box.active = i == n
