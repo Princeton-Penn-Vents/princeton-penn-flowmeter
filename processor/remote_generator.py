@@ -32,6 +32,7 @@ class RemoteThread(threading.Thread):
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
         self.mac: Optional[str] = None
+        self.box_name: Optional[str] = None
         self.sid = 0
 
         super().__init__()
@@ -58,6 +59,9 @@ class RemoteThread(threading.Thread):
                 if "mac" in root:
                     with self._remote_lock:
                         self.mac = root["mac"]
+                if "name" in root:
+                    with self._remote_lock:
+                        self.box_name = root["name"]
                 if "sid" in root:
                     with self._remote_lock:
                         self.sid = root["sid"]
@@ -103,7 +107,10 @@ class RemoteThread(threading.Thread):
             # These log and perform (simple, please!) callbacks
             if self.mac is not None:
                 self.parent.record.mac = self.mac
-            self.parent.record.sid = self.sid
+            if self.box_name is not None:
+                self.parent.record.box_name = self.box_name
+            if self.sid != 0:
+                self.parent.record.sid = self.sid
 
             if len(self._time) > 0:
                 self.parent._last_ts = self._time[-1]

@@ -14,7 +14,7 @@ import time
 from datetime import datetime
 from typing import Optional
 import math
-from patient.mac_address import get_mac_addr
+from patient.mac_address import get_mac_addr, get_box_name
 
 
 class CollectorThread(threading.Thread):
@@ -88,6 +88,7 @@ class CollectorThread(threading.Thread):
                         "rotary": self.parent.rotary.to_dict(),
                         "date": datetime.now().timestamp(),
                         "mac": get_mac_addr(),
+                        "name": get_box_name(),
                     }
 
                     if self._sn is not None:

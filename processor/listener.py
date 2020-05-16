@@ -19,17 +19,11 @@ class Detector:
     port: int
     mac: str
     service: str
+    name: str
 
     @property
     def url(self):
         return f"tcp://{ipaddress.ip_address(self.address)}:{self.port}"
-
-    @property
-    def name(self) -> str:
-        try:
-            return address_to_name(self.mac)
-        except ValueError:
-            return self.mac
 
     def __str__(self):
         return f"{self.name} @ {ipaddress.ip_address(self.address)}:{self.port}"
@@ -73,9 +67,17 @@ class Listener(ServiceListener):
 
             macaddr = info.properties.get(b"mac_addr", b"<unknown>").decode()
             service = info.properties.get(b"service", b"<unknown>").decode()
+            box_name = info.properties.get(b"name", b"").decode()
+            if not box_name:
+                try:
+                    box_name = address_to_name(macaddr)
+                except ValueError:
+                    box_name = macaddr
 
             addresses = {
-                Detector(ipaddress.ip_address(ip), info.port or 0, macaddr, service)
+                Detector(
+                    ipaddress.ip_address(ip), info.port or 0, macaddr, service, box_name
+                )
                 for ip in info.addresses
             }
 
