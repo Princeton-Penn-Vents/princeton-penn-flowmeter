@@ -67,7 +67,7 @@ class LimitDialog(QtWidgets.QDialog):
 
     @Slot()
     def change_value(self):
-        for graph in self.parent().parent().parent().parent().graphs:
+        for graph in self.parent().parent().parent().parent().graphs.values():
             graph.graph[self.key].setRange(
                 yRange=[self.lower.value(), self.upper.value(),]
             )
