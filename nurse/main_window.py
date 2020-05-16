@@ -321,6 +321,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.drilldown.return_btn.clicked.connect(self.drilldown_deactivate)
 
     @Slot()
+    def toggle_fs(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
+    @Slot()
     def drilldown_deactivate(self):
         self.drilldown.deactivate()
         stacked_widget = self.centralWidget()

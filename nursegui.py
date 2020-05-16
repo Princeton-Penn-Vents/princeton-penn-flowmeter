@@ -6,7 +6,7 @@ import sys
 import signal
 import logging
 
-from nurse.qt import QtWidgets
+from nurse.qt import QtWidgets, QtCore, QtGui, Qt
 from processor.argparse import ArgumentParser
 from processor.listener import FindBroadcasts
 from nurse.main_window import MainWindow
@@ -38,6 +38,9 @@ def main(argv, *, window: bool, **kwargs):
                 else:
                     main.resize(1920, 1080)
                     main.showNormal()
+
+            fs_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence.FullScreen, main)
+            fs_shortcut.activated.connect(main.toggle_fs)
 
             def ctrl_c(_sig_num, _stack_frame):
                 signal.signal(signal.SIGINT, signal.SIG_DFL)
