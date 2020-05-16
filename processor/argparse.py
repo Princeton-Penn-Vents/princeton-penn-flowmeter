@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import argparse
+import logging
 from typing import Tuple, List, Optional
 
 from processor.config import config, get_internal_file
@@ -59,10 +60,14 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             init_logger(None)
 
-        if "iface" in args:
+        logger = logging.getLogger("povm")
+
+        if args.iface is not None:
             iface = args.iface
-            while not get_ip(iface):
-                print("Didn't find iface, waiting 1s")
+            logger.info(f"Checking (and waiting, if needed) for {iface}")
+            faces = get_ip(iface)
+            while not list(get_ip(iface)):
+                logger.info("Didn't find iface, waiting 1s")
                 time.sleep(1)
 
         return args, unparsed_args
