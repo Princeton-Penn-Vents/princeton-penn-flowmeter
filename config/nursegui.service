@@ -7,7 +7,7 @@ After=networking.service
 Type=simple
 User=pi
 Environment=DISPLAY=:0
-ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/nursegui.py
+ExecStart= /usr/bin/python3 /home/pi/princeton-penn-flowmeter/nursegui.py --iface eth0
 WorkingDirectory=/home/pi/princeton-penn-flowmeter
 Restart=always
 
