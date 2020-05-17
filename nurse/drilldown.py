@@ -129,7 +129,7 @@ class DisplayBox(QtWidgets.QFrame):
                 self.status = Status.ALERT
                 item = gen.alarms[f"{self.key} Max"]
                 if "first timestamp" in item:
-                    over = (self.gen.realtime[-1] - item["first timestamp"]) + gen.tardy
+                    over = (gen.realtime[-1] - item["first timestamp"]) + gen.tardy
                     self.since.setText(f"Over for {over:.0f} s")
             elif f"{self.key} Min" in gen.alarms:
                 self.status = Status.ALERT
