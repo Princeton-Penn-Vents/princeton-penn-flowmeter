@@ -76,3 +76,22 @@ def swap_grid(
     grid_layout.removeItem(target_item)
     grid_layout.addItem(source_item, t_x, t_y)
     grid_layout.addItem(target_item, s_x, s_y)
+
+
+class DraggableMixin:
+    def __init__(self, *args, **kwargs):
+        self.offset = None
+
+    def mousePressEvent(self, event):
+        self.offset = event.pos()
+
+    def mouseMoveEvent(self, event):
+        if self.offset is not None:
+            x = event.globalX()
+            y = event.globalY()
+            x_w = self.offset.x()
+            y_w = self.offset.y()
+            self.move(x - x_w, y - y_w)
+
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.offset = None

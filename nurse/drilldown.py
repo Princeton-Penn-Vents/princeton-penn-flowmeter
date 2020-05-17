@@ -17,6 +17,7 @@ from nurse.qt import (
     VBoxLayout,
     GridLayout,
     BoxName,
+    DraggableMixin,
 )
 
 from nurse.common import GraphInfo
@@ -446,6 +447,10 @@ class LogTextEdit(QtWidgets.QPlainTextEdit):
         self.text_changed = False
 
 
+class DraggableMsg(QtWidgets.QMessageBox, DraggableMixin):
+    pass
+
+
 class PatientDrilldownWidget(QtWidgets.QFrame):
     def __init__(self):
         super().__init__()
@@ -562,11 +567,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         if not cumulative:
             cumulative = "No computed values yet"
 
-        box = QtWidgets.QMessageBox()
+        box = DraggableMsg(self)
+        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Computed values")
         box.setTextFormat(Qt.RichText)
         box.setText(cumulative)
-        box.exec()
+        box.setWindowFlags(Qt.Popup)
+        box.show()
 
     @Slot()
     def display_alarms(self):
@@ -578,11 +585,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         if not active_alarms:
             active_alarms = "No alarms currently."
 
-        box = QtWidgets.QMessageBox()
+        box = DraggableMsg(self)
+        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Active alarms")
         box.setTextFormat(Qt.RichText)
         box.setText(active_alarms)
-        box.exec()
+        box.setWindowFlags(Qt.Popup)
+        box.show()
 
     @Slot()
     def display_rotary(self):
@@ -590,11 +599,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             rf"<p>{v.name}: {v.value} {v.unit}</p>" for v in self.gen.rotary.values()
         )
 
-        box = QtWidgets.QMessageBox()
+        box = DraggableMsg(self)
+        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Currently set alarm limits")
         box.setTextFormat(Qt.RichText)
         box.setText(rotary_text)
-        box.exec()
+        box.setWindowFlags(Qt.Popup)
+        box.show()
 
     @Slot()
     def external_update_boxname(self):

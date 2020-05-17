@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import sys
-from nurse.qt import QtWidgets, PopdownTitle
+from nurse.qt import QtWidgets, PopdownTitle, DraggableMixin
 from processor.version import get_version
 from string import Template
 from nurse.common import style_path, GraphInfo
 
 
-class HelpDialog(QtWidgets.QDialog):
+class HelpDialog(QtWidgets.QDialog, DraggableMixin):
     def __init__(self, parent: QtWidgets.QWidget = None, default_tab: int = 0):
         super().__init__(parent)
         self.setWindowTitle("Help")

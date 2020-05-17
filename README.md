@@ -227,6 +227,28 @@ sudo killall pigpiod
 
 ## Common test procedures:
 
+#### Start up a batch of local simulations
+
+```bash
+./nursegui.py -n 20 --sim --debug --window
+```
+
+(You can always click the `+` to add a device - and you can even add a new sim if you started with `--sim`)
+
+#### Start simulations and stream through sockets
+
+Terminal 1:
+
+```bash
+./patientsim.py --port 8100 -n 20
+```
+
+Terminal 2 (same computer or on a local network):
+
+```bash
+./nursegui.py --debug --window
+```
+
 #### Replay a log file
 
 ```bash
