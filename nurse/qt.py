@@ -85,6 +85,10 @@ class DraggableMixin:
     def mousePressEvent(self, event):
         self.offset = event.pos()
 
+        # Only required on Linux
+        if self.childAt(event.pos()) is None:
+            self.close()
+
     def mouseMoveEvent(self, event):
         if self.offset is not None:
             x = event.globalX()
