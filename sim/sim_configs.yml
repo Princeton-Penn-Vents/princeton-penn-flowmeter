@@ -12,7 +12,7 @@ nominal_breather:
   - max_breath_interval: 9000.0
   - measurement_error_flow: 1.0
   - measurement_error_pressure: 0.1
-  - average_flow: 50.0
+  - average_flow: 60.0
 
 nominal_nonbreather:
   - sample_length: 20.0
@@ -28,7 +28,7 @@ nominal_nonbreather:
   - max_breath_interval: 9000.0
   - measurement_error_flow: 1.0
   - measurement_error_pressure: 0.1
-  - average_flow: 50.0
+  - average_flow: 60.0
 
 alarm_nonbreather:
   - sample_length: 20.0
@@ -44,6 +44,6 @@ alarm_nonbreather:
   - max_breath_interval: 9000.0
   - measurement_error_flow: 1.0
   - measurement_error_pressure: 0.1
-  - average_flow: 50.0
+  - average_flow: 60.0
 
 

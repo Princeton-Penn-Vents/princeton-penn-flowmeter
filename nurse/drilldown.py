@@ -306,7 +306,6 @@ class DrilldownWidget(QtWidgets.QWidget):
             if self.alarms_layout.itemAt(i).widget().i != ordered[i]:
                 for j in range(i, len(ordered)):
                     if self.alarms_layout.itemAt(j).widget().i == ordered[i]:
-                        print(f"Swap {i} and {j}")
                         item = self.alarms_layout.takeAt(j)
                         self.alarms_layout.insertWidget(i, item.widget())
                         break
