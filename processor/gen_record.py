@@ -12,6 +12,7 @@ class GenRecord:
 
     _mac: Optional[str] = None
     _sid: int = 0
+    _name: Optional[str] = None
 
     # Nurse only, but in master class to make simpler
     _nurse_name: str = ""
@@ -49,12 +50,22 @@ class GenRecord:
         """
         The name of the box, or <unknown>.
         """
+        if self._name is not None:
+            return self._name
+
         if self._mac is None:
             return "<unknown>"
+
         try:
             return address_to_name(self._mac).title()
         except ValueError:
             return self.mac
+
+    @box_name.setter
+    def box_name(self, value: Optional[str]):
+        self._name = value
+        self.logger.info(f"Box name: {self._name}")
+        self.mac_changed()
 
     @property
     def stacked_name(self) -> str:

@@ -70,6 +70,7 @@ class Broadcast:
                     "type": "povm",
                     "mac_addr": get_mac_addr(),
                     "service": self.service,
+                    "name": get_box_name(),
                     "v": "1",
                 },
             )
