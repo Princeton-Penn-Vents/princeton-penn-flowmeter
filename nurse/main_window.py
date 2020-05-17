@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import pyqtgraph as pg
 
-# stdlib
-import math
-from string import Template
 import logging
+from string import Template
 from typing import Optional, List, Tuple, Dict
 import threading
 import itertools
@@ -25,6 +23,7 @@ from nurse.header import MainHeaderWidget
 from nurse.grid import PatientSensor, EmptySensor
 from nurse.drilldown import DrilldownWidget
 from nurse.connection_dialog import ConnectionDialog
+from nurse.recover import collect_restore, restore_limits
 
 from nurse.gen_record_gui import (
     GenRecordGUI,
@@ -64,6 +63,7 @@ class MainStack(QtWidgets.QWidget):
         displays: Optional[int],
         sim: bool,
         addresses: List[str],
+        fresh: bool,
     ):
         super().__init__(parent)
 
@@ -104,12 +104,28 @@ class MainStack(QtWidgets.QWidget):
                     )
                 )
                 gen.run()  # Close must be called
-
                 self.add_item(gen)
+        elif fresh:
+            self.grid_layout.addWidget(WaitingWidget())
         else:
-            waiting = WaitingWidget()
-            self.infos.append(waiting)
-            self.grid_layout.addWidget(waiting)
+            restore_dict = collect_restore()
+            if not restore_dict:
+                self.grid_layout.addWidget(WaitingWidget)
+            else:
+                a, b = restore_limits(restore_dict)
+                self.empty_grid(a, b)
+                for mac, restore in restore_dict.items():
+                    logger.info(f"Restoring {mac} @ {restore.ip_address}")
+                    local_logger = make_nested_logger(self.next_graph)
+                    gen = RemoteGeneratorGUI(
+                        address=restore.ip_address,
+                        logger=local_logger,
+                        gen_record=GenRecordGUI(
+                            local_logger, ip_address=restore.ip_address
+                        ),
+                    )
+                    gen.run()
+                    self.add_item(gen, restore.position)
 
         self.qTimer = QtCore.QTimer()
         self.qTimer.timeout.connect(self.update_plots)
@@ -133,7 +149,12 @@ class MainStack(QtWidgets.QWidget):
         with self.queue_lock:
             while not self.listener.queue.empty():
                 address = self.listener.queue.get()
-                self.add_new_by_address(address.url)
+                for graph in self.graphs.values():
+                    logger.debug(f"{graph.gen.record.ip_address} == {address.url}")
+                    if graph.gen.record.ip_address == address.url:
+                        break
+                else:
+                    self.add_new_by_address(address.url)
 
     @Slot()
     def add_item_dialog(self):
@@ -196,14 +217,42 @@ class MainStack(QtWidgets.QWidget):
                 self.grid_layout.addWidget(EmptySensor(), i, width)
             return 0, width
 
-    def add_item(self, gen: GeneratorGUI):
+    def empty_grid(self, height: int, width: int) -> None:
+        logger.debug(f"Setting up {height}x{width} empty grid")
+        for i in range(height + 1):
+            self.grid_layout.setRowStretch(i, 1)
+        for j in range(width + 1):
+            self.grid_layout.setColumnStretch(j, 1)
+        for i in range(height + 1):
+            for j in range(width + 1):
+                self.grid_layout.addWidget(EmptySensor())
+
+    def add_item(self, gen: GeneratorGUI, pos: Optional[Tuple[int, int]] = None):
+        """
+        If you use pos, you should make sure the grid is large enough (basically, you
+        should have an empty grid). Currently only used by the restoring functionality.
+        """
         ind = self.next_graph
-        if len(self.graphs) == 0 and self.infos:
-            waiting = self.infos.pop()
-            self.grid_layout.removeWidget(waiting)
-            waiting.setParent(None)
-            ind = 0
-        i, j = self._get_next_empty()
+        if (
+            len(self.graphs) == 0
+            and self.grid_layout.count() == 1
+            and isinstance(
+                self.grid_layout.itemAtPosition(0, 0).widget(), WaitingWidget
+            )
+        ):
+            waiting = self.grid_layout.takeAt(0)
+            waiting.widget().setParent(None)
+
+        if pos is None or not isinstance(
+            self.grid_layout.itemAtPosition(*pos).widget(), EmptySensor
+        ):
+            i, j = self._get_next_empty()
+        else:
+            i, j = pos
+            item = self.grid_layout.itemAtPosition(i, j)
+            self.grid_layout.removeWidget(item.widget())
+            item.widget().setParent(None)
+
         gen.record.position = (i, j)
 
         drilldown: DrilldownWidget = self.parent().parent().drilldown

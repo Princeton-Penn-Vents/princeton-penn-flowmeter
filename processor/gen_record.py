@@ -63,9 +63,10 @@ class GenRecord:
 
     @box_name.setter
     def box_name(self, value: Optional[str]):
-        self._name = value
-        self.logger.info(f"Box name: {self._name}")
-        self.mac_changed()
+        if self._name != value:
+            self._name = value
+            self.logger.info(f"Box name: {self._name}")
+            self.mac_changed()
 
     @property
     def stacked_name(self) -> str:

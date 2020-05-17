@@ -66,7 +66,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Read from fake sim instead of remote generators (cannot be passed with addresses)",
     )
-
+    parser.add_argument(
+        "--fresh",
+        action="store_true",
+        help="Don't try to restore previous boxes, but instead only show detected boxes",
+    )
     parser.add_argument(
         "--window", action="store_true", help="Open in window instead of fullscreen"
     )
@@ -97,4 +101,5 @@ if __name__ == "__main__":
         sim=args.sim,
         displays=args.displays,
         window=args.window,
+        fresh=args.fresh,
     )

@@ -14,7 +14,8 @@ logger = logging.getLogger("povm")
 
 
 def excepthook(exctype, value, traceback):
-    logger.error("uncaught exception", exec_info=(exctype, value, traceback))
+    logger.error("uncaught exception", exc_info=(exctype, value, traceback))
+    sys.__excepthook__(exctype, value, traceback)
 
 
 class ArgumentParser(argparse.ArgumentParser):
