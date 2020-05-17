@@ -250,7 +250,7 @@ class MainStack(QtWidgets.QWidget):
         else:
             i, j = pos
             item = self.grid_layout.itemAtPosition(i, j)
-            ind = self.grid_layout.indexOf(item)
+            ind = self.grid_layout.indexOf(item.widget())
             item = self.grid_layout.takeAt(ind)
             item.widget().setParent(None)
 
