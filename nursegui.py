@@ -23,41 +23,34 @@ def main(argv, *, window: bool, **kwargs):
 
     logger.info("Starting nursegui")
 
-    try:
-        app = QtWidgets.QApplication(argv)
+    app = QtWidgets.QApplication(argv)
 
-        with FindBroadcasts() as listener:
-            main_window = MainWindow(listener=listener, **kwargs)
-            size = app.screens()[0].availableSize()
-            if size.width() < 2000 or size.height() < 1200:
-                main_window.resize(int(size.width() * 0.95), int(size.height() * 0.85))
-                main_window.was_maximized = True
-            else:
-                main_window.resize(1920, 1080)
-                main_window.was_maximized = False
+    with FindBroadcasts() as listener:
+        main_window = MainWindow(listener=listener, **kwargs)
+        size = app.screens()[0].availableSize()
+        if size.width() < 2000 or size.height() < 1200:
+            main_window.resize(int(size.width() * 0.95), int(size.height() * 0.85))
+            main_window.was_maximized = True
+        else:
+            main_window.resize(1920, 1080)
+            main_window.was_maximized = False
 
-            if not window:
-                main_window.showFullScreen()
-            elif main_window.was_maximized:
-                main_window.showMaximized()
-            else:
-                main_window.showNormal()
+        if not window:
+            main_window.showFullScreen()
+        elif main_window.was_maximized:
+            main_window.showMaximized()
+        else:
+            main_window.showNormal()
 
-            fs_shortcut = QtWidgets.QShortcut(
-                QtGui.QKeySequence.FullScreen, main_window
-            )
-            fs_shortcut.activated.connect(main_window.toggle_fs)
+        fs_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence.FullScreen, main_window)
+        fs_shortcut.activated.connect(main_window.toggle_fs)
 
-            def ctrl_c(_sig_num, _stack_frame):
-                signal.signal(signal.SIGINT, signal.SIG_DFL)
-                main_window.close()
+        def ctrl_c(_sig_num, _stack_frame):
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            main_window.close()
 
-            signal.signal(signal.SIGINT, ctrl_c)
-            sys.exit(app.exec())
-
-    except Exception:
-        logger.exception("Main GUI unexpected error!")
-        raise
+        signal.signal(signal.SIGINT, ctrl_c)
+        sys.exit(app.exec())
 
 
 if __name__ == "__main__":

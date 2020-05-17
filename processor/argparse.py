@@ -3,11 +3,18 @@ from __future__ import annotations
 import time
 import argparse
 import logging
+import sys
 from typing import Tuple, List, Optional
 
 from processor.config import config, get_internal_file
 from processor.logging import init_logger
 from processor.broadcast import get_ip
+
+logger = logging.getLogger("povm")
+
+
+def excepthook(exctype, value, traceback):
+    logger.error("uncaught exception", exec_info=(exctype, value, traceback))
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -54,6 +61,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         if "debug" in args:
             config.set_args({"global": {"debug": args.debug}})
+
+        if not config["global"]["debug"].get(bool):
+            sys.excepthook = excepthook
 
         if self.log_dir is not None and self.log_dir is not None:
             init_logger(f"{self.log_dir}/{self.log_stem}.log")
