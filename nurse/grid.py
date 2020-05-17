@@ -182,8 +182,8 @@ class PatientSensor(DraggableSensor):
 
         self.dialog = GeneratorDialog(self, self.gen, grid=True)
         self.dialog.setWindowFlags(self.dialog.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.dialog.move(self.geometry().center())
         self.dialog.show()
+        self.dialog.move(self.geometry().center() - self.dialog.rect().center())
 
     def set_plot(self):
         assert len(self.curves) == 0
