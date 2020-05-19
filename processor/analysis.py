@@ -113,10 +113,14 @@ def smooth_derivative(times, values, sig=0.2):
         windowed_weights * windowed_times_centered * windowed_values, axis=1
     )
     delta = (sumw * sumwxx) - (sumwx * sumwx)
-    intercept = ((sumwxx * sumwy) - (sumwx * sumwxy)) / delta
-    slope = ((sumw * sumwxy) - (sumwx * sumwy)) / delta
 
-    return centers, intercept, slope
+    with numpy.seterr(all="ignore"):
+        intercept = ((sumwxx * sumwy) - (sumwx * sumwxy)) / delta
+        slope = ((sumw * sumwxy) - (sumwx * sumwy)) / delta
+
+    good = (~numpy.isnan(intercept)) & (~numpy.isnan(slope))
+
+    return centers[good], intercept[good], slope[good]
 
 
 def find_roots(times, values, derivative, threshold=0.02):
@@ -224,6 +228,8 @@ def measure_breaths(time, flow, volume, pressure):
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(
             time, pressure
         )
+        if len(smooth_time_f) < 4:
+            return []
 
         turning_points = find_roots(smooth_time_f, smooth_flow, smooth_dflow)
 
