@@ -126,7 +126,7 @@ def read_loop(
     running: threading.Event,
     myfile: Optional[TextIO],
 ):
-    dcTEMP = 3000
+    dcTEMP = 3500
 
     # first issue stop command
     pi.i2c_write_device(hSDP3, [0x3F, 0xF9])
