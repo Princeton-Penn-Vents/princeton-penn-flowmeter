@@ -180,7 +180,7 @@ def read_loop(
     NReadout = 0
     ADCsamples = []
 
-    last_errorTEMP = 0.0
+    last_errorTEMP = 1.0 # + sign helps with cold start
     first_crossTEMP = True
     dcTEMP_at_cross: int = 0
 
