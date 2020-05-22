@@ -207,11 +207,11 @@ class Generator(abc.ABC):
         self._run_thread = threading.Thread(target=self._logging_run)
         self._run_thread.start()
 
-    def _logging_run(self):
+    def _logging_run(self) -> None:
         try:
             self._run()
         except Exception:
-            self.parent.logger.exception("Unexpected error in analysis!")
+            self.logger.exception("Unexpected error in analysis!")
             raise
 
     def _run(self) -> None:
