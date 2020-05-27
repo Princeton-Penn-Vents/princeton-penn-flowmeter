@@ -114,11 +114,11 @@ def smooth_derivative(times, values, sig=0.2):
     )
     delta = (sumw * sumwxx) - (sumwx * sumwx)
 
-    with numpy.seterr(all="ignore"):
+    with np.seterr(all="ignore"):
         intercept = ((sumwxx * sumwy) - (sumwx * sumwxy)) / delta
         slope = ((sumw * sumwxy) - (sumwx * sumwy)) / delta
 
-    good = (~numpy.isnan(intercept)) & (~numpy.isnan(slope))
+    good = (~np.isnan(intercept)) & (~np.isnan(slope))
 
     return centers[good], intercept[good], slope[good]
 
