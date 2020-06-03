@@ -114,7 +114,7 @@ def smooth_derivative(times, values, sig=0.2):
     )
     delta = (sumw * sumwxx) - (sumwx * sumwx)
 
-    with np.seterr(all="ignore"):
+    with np.errstate(all="ignore"):
         intercept = ((sumwxx * sumwy) - (sumwx * sumwxy)) / delta
         slope = ((sumw * sumwxy) - (sumwx * sumwy)) / delta
 
