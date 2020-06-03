@@ -11,6 +11,7 @@ parser.add_argument("input", help="Input single-line json file")
 parser.add_argument(
     "--repeat", default=1, type=int, help="Number of times to repeat, 0 for forever"
 )
+parser.add_argument("--ff", type=int, help="Fast forward until this timestamp is found")
 args = parser.parse_args()
 
 
@@ -31,6 +32,8 @@ with zmq.Context() as ctx, ctx.socket(zmq.PUB) as pub_socket:
 
     with open(args.input) as f:
         for line in f:
+            if args.ff and args.ff > json.loads(line)["t"]:
+                continue
             with controlled_time(1 / rate):
                 pub_socket.send_string(line)
 
