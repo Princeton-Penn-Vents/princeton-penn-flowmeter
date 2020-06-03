@@ -75,7 +75,7 @@ class GenRecord:
         If unknown, return Box name: <unknown>.
         """
 
-        if self._mac is None:
+        if self._mac is None or self._mac == "00:00:00:00:00:00":
             return "Box name\n<unknown>"
         try:
             return "\n".join(address_to_name(self._mac).title().split())
