@@ -5,6 +5,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input single-line json file")
 parser.add_argument(
+    "--drop-header",
+    action="store_true",
+    help="If enabled, the header line will be dropped",
+)
+parser.add_argument(
     "--deglitch-pressure",
     action="store_true",
     help="If enabled, pass pressure through pressure_deglitch_smooth",
@@ -72,6 +77,7 @@ if args.deglitch_pressure:
 volume = analysis.flow_to_volume(numpy.array(time), None, numpy.array(flow), None)
 volume -= numpy.min(volume)
 
-print("     time (sec), pressure (L/min), volume (mL)")
-for t, f, p in zip(time, flow, pressure):
-    print(f"{t:15.3f}, {f:16.4f}, {p:11.4f}")
+if not args.drop_header:
+    print("     time (sec), pressure (cm H2O), flow (L/min), volume (mL)")
+for t, p, f, v in zip(time, pressure, flow, volume):
+    print(f"{t:15.3f}, {p:17.4f}, {f:12.4f}, {v:11.4f}")
