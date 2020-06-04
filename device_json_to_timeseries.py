@@ -36,8 +36,8 @@ pressure_scale = config["device"]["pressure"]["scale"].as_number()
 pressure_offset = config["device"]["pressure"]["offset"].as_number()
 
 time = []
-flow = []
 pressure = []
+flow = []
 
 starttime = None
 with open(args.input) as fin:
@@ -59,8 +59,8 @@ with open(args.input) as fin:
         # I could not extract this correction from the main codebase; we'll
         # have to fix it both here and there.
         t = j["t"] / 1000.0
-        f = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
         p = j["P"] * pressure_scale - pressure_offset
+        f = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
 
         if starttime is None:
             starttime = t
@@ -68,8 +68,8 @@ with open(args.input) as fin:
             t -= starttime
 
         time.append(t)
-        flow.append(f)
         pressure.append(p)
+        flow.append(f)
 
 if args.deglitch_pressure:
     pressure = analysis.pressure_deglitch_smooth(numpy.array(pressure))
