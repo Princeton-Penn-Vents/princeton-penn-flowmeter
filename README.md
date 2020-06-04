@@ -251,6 +251,8 @@ Terminal 2 (same computer or on a local network):
 
 #### Replay a log file
 
+Add `--ff <timestamp>` to fast-forward to a timestamp before starting playback to the socket.
+
 ```bash
 # Terminal 1
 ./device_json_to_socket.py data/20200422_helmet.out
