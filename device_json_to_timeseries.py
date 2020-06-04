@@ -4,8 +4,16 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input single-line json file")
-parser.add_argument("--deglitch-pressure", action="store_true", help="If enabled, pass pressure through pressure_deglitch_smooth")
-parser.add_argument("--start-time-at-zero", action="store_true", help="If enabled, the timeseries starts at zero")
+parser.add_argument(
+    "--deglitch-pressure",
+    action="store_true",
+    help="If enabled, pass pressure through pressure_deglitch_smooth",
+)
+parser.add_argument(
+    "--start-time-at-zero",
+    action="store_true",
+    help="If enabled, the timeseries starts at zero",
+)
 args = parser.parse_args()
 
 import json
