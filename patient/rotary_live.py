@@ -3,7 +3,7 @@ from __future__ import annotations
 from processor.config import config
 from processor.setting import Setting
 from processor.rotary import LocalRotary
-from typing import Optional, Union, Dict, TypeVar
+from typing import Optional, Dict, TypeVar
 import threading
 import yaml
 import logging

@@ -46,7 +46,7 @@ class Setting(abc.ABC):
         with self._lock:
             return self._value
 
-    @value.setter  # type: ignore
+    @value.setter
     def value(self, val: Any):
         # Only used to set values remotely
         with self._lock:
@@ -192,7 +192,7 @@ class SelectionSetting(Setting):
         with self._lock:
             return self._listing[self._value]
 
-    @value.setter  # type: ignore
+    @value.setter
     def value(self, val: float):
         # Only used to set values remotely
         with self._lock:

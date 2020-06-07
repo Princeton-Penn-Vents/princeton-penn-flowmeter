@@ -60,8 +60,12 @@ dcSTEP: "Final" = 1
 dcMAX: "Final" = 9000
 dcRANGE: "Final" = 10000
 dcSTROBE: "Final" = 1 * NReadoutTemp
-sgn = lambda a: (a > 0) - (a < 0)
 pinPWM: "Final" = 13
+
+
+def sgn(a: float) -> float:
+    return (a > 0) - (a < 0)
+
 
 chanMP3V5004: "Final" = 0
 
@@ -180,7 +184,7 @@ def read_loop(
     NReadout = 0
     ADCsamples = []
 
-    last_errorTEMP = 1.0 # + sign helps with cold start
+    last_errorTEMP = 1.0  # + sign helps with cold start
     first_crossTEMP = True
     dcTEMP_at_cross: int = 0
 

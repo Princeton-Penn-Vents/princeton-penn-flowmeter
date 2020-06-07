@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # MCP3008 ADC readings - SPI handled by spidev.SpiDev()
-import sys
 import time
 import signal
 import spidev

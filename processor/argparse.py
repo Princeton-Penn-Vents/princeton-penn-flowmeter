@@ -77,7 +77,7 @@ class ArgumentParser(argparse.ArgumentParser):
             iface = args.iface
             logger.info(f"Checking (and waiting, if needed) for {iface}")
             faces = get_ip(iface)
-            while not list(get_ip(iface)):
+            while not list(faces):
                 logger.info("Didn't find iface, waiting 1s")
                 time.sleep(1)
 

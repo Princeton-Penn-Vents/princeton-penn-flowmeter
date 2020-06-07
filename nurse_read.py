@@ -39,7 +39,7 @@ with gen:
         time.sleep(arg.n)
 
         with np.printoptions(threshold=6, precision=4, floatmode="fixed", linewidth=95):
-            print(f"--- Current status ---")
+            print("--- Current status ---")
             print(f"gen.timestamps:    {gen.timestamps} ({len(gen.timestamps)} length)")
             print(f"gen.flow:          {gen.flow} ({len(gen.flow)} length)")
             print(f"gen.pressure:      {gen.pressure} ({len(gen.pressure)} length)")

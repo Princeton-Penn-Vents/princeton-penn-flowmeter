@@ -5,7 +5,7 @@ from processor.generator import Generator
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
-from typing import Union
+from typing import Union, Dict, Any
 
 
 class RedrawSettings(QtCore.QObject):
@@ -111,7 +111,9 @@ class AlarmWidget(UpdatingDisplay):
 class CumulativeWidget(UpdatingDisplay):
     @Slot()
     def update(self):
-        expand = lambda s: "".join(f"\n  {k}: {v}" for k, v in s.items())
+        def expand(s: Dict[str, Any]) -> str:
+            return "".join(f"\n  {k}: {v}" for k, v in s.items())
+
         active_alarms = "\n".join(
             f"{k}: {expand(v)}" for k, v in self.gen.alarms.items()
         )

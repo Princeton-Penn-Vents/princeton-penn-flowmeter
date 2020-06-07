@@ -45,5 +45,3 @@ alarm_nonbreather:
   - measurement_error_flow: 1.0
   - measurement_error_pressure: 0.1
   - average_flow: 60.0
-
-

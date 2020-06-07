@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # SDP3 diff pressure sensor - I2C handled by pigpio.pi()
-import sys
 import time
 import signal
 import pigpio
@@ -65,12 +64,14 @@ temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
 dpsf = (float)((bdataSDP3[6] << 8) | bdataSDP3[7])
 print(time.time(), dp, temp, dpsf)
 print("{} {:.4f} {:.4f}".format(time.time(), (float)(dp / dpsf), (float)(temp / 200.0)))
+
+
 # sdp3 interrupt handler
 def sdp3_handler(signum, frame):
     #  global dpsf
     ts = time.time()
     nbytes = 3
-    tmpdataSDP3 = dataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+    tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
     btmpdataSDP3 = tmpdataSDP3[1]
     tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
     tmpdict = dict({"t": ts, "F": tmpdp, "P": 0})

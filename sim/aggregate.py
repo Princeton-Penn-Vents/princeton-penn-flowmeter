@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     sim = VentSim(now_time, 1000000)
     jsons = []
-    for i in range(3000):
+    for _ in range(3000):
         d = sim.get_next()
         jsons.append(json.dumps(d).encode("ascii"))
     output = aggregate_for_nursing(now_time, jsons)

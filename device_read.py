@@ -17,7 +17,7 @@ with zmq.Context() as ctx, ctx.socket(zmq.SUB) as sub_socket:
     sub_socket.connect("tcp://localhost:5556")
     sub_socket.subscribe(b"")
 
-    for i in range(100):
+    for _ in range(100):
 
         j = sub_socket.recv_json()
         print(f"Received: {j}")

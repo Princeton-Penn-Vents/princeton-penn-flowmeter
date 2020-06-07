@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pyqtgraph as pg
 
-from typing import Optional, Dict, List, TYPE_CHECKING
+from typing import Optional, Any, Dict, TYPE_CHECKING
 import logging
 
 import numpy as np
@@ -576,7 +576,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def display_alarms(self):
-        expand = lambda s: "".join(f"<br>  {k}: {v}" for k, v in s.items())
+        def expand(s: Dict[str, Any]) -> str:
+            return "".join(f"<br>  {k}: {v}" for k, v in s.items())
+
         active_alarms = "\n".join(
             rf"<p>{k}: {expand(v)}</p>" for k, v in self.gen.alarms.items()
         )

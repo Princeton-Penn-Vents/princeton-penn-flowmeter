@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from nurse.qt import QtGui
 
 # Replace with proper importlib.resources if made a package

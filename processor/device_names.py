@@ -85,14 +85,16 @@ def address_to_name(address: str) -> str:
     addr = address_to_addr(address)
     state = addr & ~vendor_mask
 
-    for vendor_id, vendor_address in enumerate(vendors):
+    vendor_id = 0
+    for vid, vendor_address in enumerate(vendors):
         vendor_addr = address_to_addr(vendor_address)
         if (addr & vendor_mask) == (vendor_addr & vendor_mask):
+            vendor_id = vid
             break
     else:
         raise ValueError(f"unrecognized vendor: {addr_to_address(addr & vendor_mask)}")
 
-    for i in range(vendor_id + 1):
+    for _ in range(vendor_id + 1):
         state = lcg_generator(state)
 
     while True:

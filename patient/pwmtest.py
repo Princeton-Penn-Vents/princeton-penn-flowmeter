@@ -2,9 +2,6 @@
 
 # hardware interfaces:
 # heater - PWM handled by pigpio.pi()
-import sys
-import time
-import signal
 import pigpio
 
 # ------------------

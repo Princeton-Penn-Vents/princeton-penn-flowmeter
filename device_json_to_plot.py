@@ -40,7 +40,7 @@ with open(args.input) as fin:
     for line in fin:
         try:
             d = json.loads(line)
-        except:
+        except json.JSONDecodeError:
             warnings.warn("line is not valid JSON: {}".format(repr(line)))
             break
 

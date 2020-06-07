@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import yaml
 import logging
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, Optional
 
 
 logger = logging.getLogger("povm")
@@ -18,7 +18,15 @@ known_compliance_functions = {"constant_compliance": constant_compliance}
 
 
 class VentSim:
-    def __init__(self, curr_time: float, sim_time_max: float, params={}):
+    def __init__(
+        self,
+        curr_time: float,
+        sim_time_max: float,
+        params: Optional[Dict[str, Any]] = None,
+    ):
+        if params is None:
+            params = {}
+
         self.current_bin = 0
         self.curr_time = curr_time
         self.sim_time = sim_time_max
@@ -55,17 +63,19 @@ class VentSim:
                     if key in possible_keys:
                         possible_keys[key] = t_dict[key]
                     else:
-                        assert False, "unexpected value " + key
+                        raise RuntimeError(f"Unexpected value {key}")
 
             if possible_keys["mean"] > -1 and possible_keys["sigma"] > -1:
                 return np.random.normal(possible_keys["mean"], possible_keys["sigma"])
             if possible_keys["min"] > -1 and possible_keys["max"] > -1:
                 return np.random.uniform(possible_keys["min"], possible_keys["max"])
-            assert False, "Missing mean/sigma or min/max values"
+            raise RuntimeError("Missing mean/sigma or min/max values")
         else:
             return val  # its a value
 
-    def use_config(self, config, params={}) -> None:
+    def use_config(self, config, params: Optional[Dict[str, float]] = None) -> None:
+        if params is None:
+            params = {}
         assert config in self.configs, "missing configuration " + config
         new_config = self.configs[config]
         for t_dict in new_config:
@@ -75,7 +85,7 @@ class VentSim:
                     logger.info(f"{key}, {getattr(self, key)}")
                 else:
                     setattr(self, key, params[key])
-        if type(self.compliance_func) == str:
+        if isinstance(self.compliance_func, str):
             assert self.compliance_func in known_compliance_functions, (
                 "missing compliance function " + self.compliance_func
             )
@@ -331,7 +341,7 @@ if __name__ == "__main__":
     simulator.use_config("nominal_breather")
     simulator.initialize_sim()
 
-    for i in range(0, 10):
+    for _ in range(0, 10):
         print(simulator.get_next())
 
     print("testing get from timestamp features")

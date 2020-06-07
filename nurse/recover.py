@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import yaml
 from processor.config import get_data_dir
-from typing import Dict, Union, Tuple
+from typing import Dict, Tuple
 from dataclasses import dataclass
 
 

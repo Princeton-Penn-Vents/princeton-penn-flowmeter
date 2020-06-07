@@ -223,8 +223,8 @@ class MainStack(QtWidgets.QWidget):
             self.grid_layout.setRowStretch(i, 1)
         for j in range(width + 1):
             self.grid_layout.setColumnStretch(j, 1)
-        for i in range(height + 1):
-            for j in range(width + 1):
+        for _ in range(height + 1):
+            for _ in range(width + 1):
                 self.grid_layout.addWidget(EmptySensor())
 
     def add_item(self, gen: GeneratorGUI, pos: Optional[Tuple[int, int]] = None):
@@ -291,7 +291,7 @@ class MainStack(QtWidgets.QWidget):
 
         for row in range(height):
             for column in range(width):
-                if self.grid_layout.itemAtPosition(row, column) != None:
+                if self.grid_layout.itemAtPosition(row, column) is not None:
                     rows[row] = True
                     columns[column] = True
         return sum(rows), sum(columns)

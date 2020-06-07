@@ -22,7 +22,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 import json
-import datetime
 import math
 
 import numpy
@@ -44,7 +43,7 @@ with open(args.input) as fin:
     for line in fin:
         try:
             j = json.loads(line)
-        except:
+        except json.JSONDecodeError:
             continue
         if j.get("v", None) != 1:
             continue

@@ -65,8 +65,8 @@ class RotaryLCD(Rotary):
             self.pi = None
 
     def reset(self):
-        for key, item in self.config.items():
-            item.reset()
+        for value in self.config.values():
+            value.reset()
 
     def push(self) -> None:
         if self.alarm_level == AlarmLevel.LOUD and self.alarms:

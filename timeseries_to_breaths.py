@@ -78,6 +78,6 @@ if not args.drop_header:
 
 for breath in breaths:
     line = []
-    for head, key in order_and_mapping:
+    for _head, key in order_and_mapping:
         line.append(str(breath.get(key, "nan")))
     print(", ".join(line))
