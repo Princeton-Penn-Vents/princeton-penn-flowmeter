@@ -1,4 +1,8 @@
 # Names are selected to be like PySide
+from __future__ import annotations
+
+from typing import Optional
+from typing_extensions import Protocol
 
 import os
 
@@ -78,18 +82,37 @@ def swap_grid(
     grid_layout.addItem(target_item, s_x, s_y)
 
 
+class DraggableProtocol(Protocol):
+    def childAt(self, _: QtCore.QPoint) -> Optional[QtWidgets.QWidget]:
+        ...
+
+    def close(self) -> None:
+        ...
+
+    def move(self, x: float, y: float) -> None:
+        ...
+
+    @property
+    def offset(self) -> QtCore.QPoint:
+        ...
+
+    @offset.setter
+    def offset(self, value: QtCore.QPoint) -> None:
+        ...
+
+
 class DraggableMixin:
     def __init__(self, *args, **kwargs):
         self.offset = None
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self: DraggableProtocol, event):
         self.offset = event.pos()
 
         # Only required on Linux
         if self.childAt(event.pos()) is None:
             self.close()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self: DraggableProtocol, event):
         if self.offset is not None:
             x = event.globalX()
             y = event.globalY()

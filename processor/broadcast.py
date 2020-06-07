@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from zeroconf import ServiceInfo, Zeroconf
-from ifaddr import get_adapters  # type: ignore
+from ifaddr import get_adapters
 from patient.mac_address import get_mac_addr, get_box_name
 from typing import Iterator, Set, Optional
 import threading

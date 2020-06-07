@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 from .ventsim import VentSim
 import random
 import os
+from typing import Any, Dict
 
 
 def start_sims(nSim, start_time, sim_time):
@@ -10,7 +12,7 @@ def start_sims(nSim, start_time, sim_time):
     sims = []
     for i in range(nSim):
 
-        params = {}
+        params: Dict[str, Any] = {}
 
         simulator = VentSim(start_time, sim_time)
         simulator.load_configs(

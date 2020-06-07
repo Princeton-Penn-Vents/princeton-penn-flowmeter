@@ -124,6 +124,8 @@ class DisplayBox(QtWidgets.QFrame):
             value = gen.cumulative.get(self.key)
 
         if value is not None:
+            assert gen is not None, "Should not be possible if value is not None"
+
             self.cumulative.setText(format(value, self.fmt))
             if f"{self.key} Max" in gen.alarms:
                 self.status = Status.ALERT
@@ -342,6 +344,10 @@ class DrilldownWidget(QtWidgets.QWidget):
             )
 
         self.patient.gen = main_stack.graphs[i].gen
+        assert (
+            self.patient.gen is not None
+        ), "Should never be possible to activate with None"
+
         self.patient.title.activate()
 
         record = self.patient.gen.record
@@ -356,6 +362,10 @@ class DrilldownWidget(QtWidgets.QWidget):
         self.patient.update_plot(True)
 
     def deactivate(self) -> None:
+        assert (
+            self.patient.gen is not None
+        ), "Should never be possible to activate with None"
+
         record: GenRecordGUI
         record = self.patient.gen.record
 
@@ -576,6 +586,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def display_alarms(self):
+        assert self.gen is not None
+
         def expand(s: Dict[str, Any]) -> str:
             return "".join(f"<br>  {k}: {v}" for k, v in s.items())
 
@@ -596,6 +608,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def display_rotary(self):
+        assert self.gen is not None
         rotary_text = "\n".join(
             rf"<p>{v.name}: {v.value} {v.unit}</p>" for v in self.gen.rotary.values()
         )
@@ -610,18 +623,21 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @Slot()
     def external_update_boxname(self):
+        assert self.gen is not None
         text = self.gen.record.box_name
         if self.box_name.text() != text:
             self.box_name.setText(text)
 
     @Slot()
     def external_update_sid(self):
+        assert self.gen is not None
         text = f"Sensor ID: {self.gen.record.sid:016X}"
         if self.sensor_id.text() != text:
             self.sensor_id.setText(text)
 
     @Slot()
     def external_update_notes(self):
+        assert self.gen is not None
         text = self.gen.record.notes
         self.log_edit.setPlainText(text)
 

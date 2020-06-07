@@ -20,7 +20,7 @@ def excepthook(exctype, value, traceback):
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, log_dir=Optional[str], log_stem=Optional[str], **kwargs):
-        super().__init__(
+        super().__init__(  # type: ignore
             *args, formatter_class=argparse.ArgumentDefaultsHelpFormatter, **kwargs
         )
 

@@ -230,6 +230,8 @@ class PatientSensor(DraggableSensor):
             alarming_quanities = {key.rsplit(maxsplit=1)[0] for key in self.gen.alarms}
 
             for key in self.values:
+                value: Optional[float]
+
                 if key == "Avg Flow":
                     value = self.gen.average_flow[self.gen.rotary["AvgWindow"].value]
                 elif key == "Avg Pressure":

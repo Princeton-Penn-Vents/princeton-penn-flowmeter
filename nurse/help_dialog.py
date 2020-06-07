@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     with open(style_path) as f:
         s = Template(f.read())
-        t = s.substitute(**gis.graph_pens)
+        t = s.substitute(gis.graph_pens)
         dialog.setStyleSheet(t)
 
     dialog.show()

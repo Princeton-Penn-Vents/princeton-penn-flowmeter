@@ -361,7 +361,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         with open(style_path) as f:
             s = Template(f.read())
-            t = s.substitute(**gis.graph_pens)
+            t = s.substitute(gis.graph_pens)
             self.setStyleSheet(t)
 
         stacked_widget = QtWidgets.QStackedWidget(self)
