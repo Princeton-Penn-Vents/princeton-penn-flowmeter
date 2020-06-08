@@ -1,5 +1,5 @@
-from processor.setting import SelectionSetting
-from typing import Optional, List, Sequence
+from processor.setting import SelectionSetting, DisplaySetting
+from typing import Optional
 from patient.mac_address import get_mac_addr
 from processor.device_names import address_to_name
 from pathlib import Path
@@ -66,46 +66,35 @@ class AdvancedSetting(SelectionSetting):
         return res
 
 
-class CurrentSetting(SelectionSetting):
+class CurrentSetting(DisplaySetting):
     STATIC_UPPER = False
 
-    def __init__(
-        self, default: int, listing: Sequence[int], *, name: str, rate: int = 2
+    def __init__(self, *, name: str):
+
+        self._F: Optional[float] = None
+        self._P: Optional[float] = None
+        self._RR: Optional[float] = None
+
+        super().__init__(name=name)
+
+    def from_processor(
+        self, F: Optional[float], P: Optional[float], RR: Optional[float]
     ):
-        string_listing = [f"{s}s" for s in listing]
-
-        self._F: Optional[List[float]] = None
-        self._P: Optional[List[float]] = None
-
-        super().__init__(default, string_listing, name=name, rate=rate)
-
-    def from_processor(self, F: List[float], P: List[float]):
         self._F = F
         self._P = P
+        self._RR = RR
 
     @property
     def lcd_name(self):
         if self._F is None or self._P is None:
             return self._name
 
-        F = self._F[self._value]
-        P = self._P[self._value]
-
-        return f"F:{F:<6.1f} P:{P:.2f}"
-
-    # For the GUI
-    def print_setting(self, value: int):
-        ave_t = self._listing[value]
-        if self._F is None or self._P is None:
-            return f"{ave_t} -> No average yet"
-        F = self._F[value]
-        P = self._P[value]
-
-        return f"{ave_t} -> F:{F:.5g} P:{P:5.5g}"
+        return f"F:{self._F:<6.1f} P:{self._P:.2f}"
 
     def __str__(self) -> str:
-        ave_t = self._listing[self._value]
-        return f"Current: {ave_t:>3}"
+        if self._RR is None:
+            return "RR: ---"
+        return f"RR: {self._RR} bpm"
 
 
 class ResetSetting(SelectionSetting):

@@ -147,11 +147,10 @@ class Collector(Generator):
         if "Current Setting" in self.rotary:
             setting = self.rotary["Current Setting"]
 
-            F = self.average_flow
-            P = self.average_pressure
-
             setting.from_processor(
-                F=list(F.values()), P=list(P.values()),
+                F=self.average_flow.get(2),
+                P=self.average_pressure.get(2),
+                RR=self.cumulative.get("RR"),
             )
             self.rotary.external_update()
 

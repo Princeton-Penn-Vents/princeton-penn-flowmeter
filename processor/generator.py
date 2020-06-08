@@ -77,22 +77,14 @@ class Generator(abc.ABC):
 
         # The cumulative running windows for flow
         self._flow_cumulative = {
-            1: 0.0,
-            3: 0.0,
-            5: 0.0,
+            2: 0.0,
             10: 0.0,
-            20: 0.0,
-            30: 0.0,
         }
 
         # The cumulative running windows for pressure
         self._pressure_cumulative = {
-            1: 0.0,
-            3: 0.0,
-            5: 0.0,
+            2: 0.0,
             10: 0.0,
-            20: 0.0,
-            30: 0.0,
         }
 
         # The list of breaths

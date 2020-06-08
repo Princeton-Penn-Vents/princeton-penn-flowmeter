@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
+
 import threading
 from typing import List, Any, Dict, Union, Optional
 import abc
@@ -47,12 +50,12 @@ class Setting(abc.ABC):
             return self._value
 
     @value.setter
-    def value(self, val: Any):
+    def value(self, val: Any) -> None:
         # Only used to set values remotely
         with self._lock:
             self._value = val
 
-    def reset(self):
+    def reset(self) -> None:
         with self._lock:
             self._value = self._original_value
 
@@ -65,7 +68,7 @@ class Setting(abc.ABC):
             return self._value
 
     @default.setter
-    def default(self, value: Any):
+    def default(self, value: Any) -> None:
         with self._lock:
             self._value = value
 
@@ -76,7 +79,7 @@ class Setting(abc.ABC):
             unit = "" if self.unit is None else f" {self.unit}"
             return f"{self.value}{unit}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self}, name={self.name})"
 
     def to_dict(self) -> Dict[str, Union[str, float]]:
@@ -109,6 +112,17 @@ class Setting(abc.ABC):
         """
         Called when this becomes the active item.
         """
+
+
+class DisplaySetting(Setting):
+    def __init__(self, *, name: str, lcd_name: str = None):
+        super().__init__(name=name, lcd_name=lcd_name)
+
+    def _up_(self) -> None:
+        pass
+
+    def _down_(self) -> None:
+        pass
 
 
 class IncrSetting(Setting):
@@ -193,7 +207,7 @@ class SelectionSetting(Setting):
             return self._listing[self._value]
 
     @value.setter
-    def value(self, val: float):
+    def value(self, val: float) -> None:
         # Only used to set values remotely
         with self._lock:
             self._value = self._listing.index(val)

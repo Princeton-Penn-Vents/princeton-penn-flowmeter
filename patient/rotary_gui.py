@@ -1,11 +1,11 @@
 from patient.rotary_live import LiveRotary
 from processor.setting import Setting, SelectionSetting, IncrSetting
-from processor.display_settings import CurrentSetting, AdvancedSetting
+from processor.display_settings import AdvancedSetting
 from processor.generator import Generator
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
-from typing import Union, Dict, Any
+from typing import Dict, Any
 
 
 class RedrawSettings(QtCore.QObject):
@@ -39,9 +39,7 @@ class SelectionSettingGUI(QtWidgets.QComboBox):
 
 
 class CurrentSettingGUI(QtWidgets.QComboBox):
-    def __init__(
-        self, rotary: RotaryGUI, setting: Union[CurrentSetting, AdvancedSetting]
-    ):
+    def __init__(self, rotary: RotaryGUI, setting: AdvancedSetting):
         super().__init__()
         self.setting = setting
         self.rotary = rotary
@@ -134,7 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addLayout(form_layout)
 
         for setting in rotary.values():
-            if isinstance(setting, (CurrentSetting, AdvancedSetting)):
+            if isinstance(setting, AdvancedSetting):
                 widget = CurrentSettingGUI(rotary, setting)
             elif isinstance(setting, IncrSetting):
                 widget = IncrSettingGUI(rotary, setting)
