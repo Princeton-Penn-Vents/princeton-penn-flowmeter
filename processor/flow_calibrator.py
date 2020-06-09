@@ -5,6 +5,7 @@ import scipy.interpolate
 import yaml
 import os
 
+
 def get_yaml(yml_file):
     stream = open(yml_file, "r")
     params = yaml.safe_load(stream)
@@ -28,7 +29,7 @@ class flow_calibrator:
                 deltaPs, qs, kind="cubic", fill_value="extrapolate"
             )
             self.func = self.extrap1d
-            
+
         assert self.func is not None
 
     def simple(self, deltaP):
@@ -42,13 +43,17 @@ class flow_calibrator:
         print(self.interp(xs[-1]))
         if isinstance(retval, np.ndarray):
             beyond = deltaP > xs[-1]
-            retval[beyond] = self.interp(xs[-1])*np.power(deltaP[beyond] /xs[-1], 0.5 ) # 4 / 7 is an alternative
+            retval[beyond] = self.interp(xs[-1]) * np.power(
+                deltaP[beyond] / xs[-1], 0.5
+            )  # 4 / 7 is an alternative
         else:
             if deltaP > xs[-1]:
-                retval = self.interp(xs[-1])*np.power(deltaP / xs[-1], 0.5 ) # 4 / 7 is an alternative
-                
+                retval = self.interp(xs[-1]) * np.power(
+                    deltaP / xs[-1], 0.5
+                )  # 4 / 7 is an alternative
+
         return retval
-    
+
     def Q(self, f) -> np.ndarray or float:
         return self.func(f / 60.0)  # put f into Pa to get deltaP
 
@@ -66,22 +71,22 @@ if __name__ == "__main__":
 
     print("Checking the average input file")
     caliber2 = flow_calibrator(
-       os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
+        os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
     )
-    fs = np.arange(0.0, 33000.0, 10.0) #above the max of the ADC
+    fs = np.arange(0.0, 33000.0, 10.0)  # above the max of the ADC
     res2 = caliber2.Q(fs)
-    
+
     print("Checking the detailed input file")
     caliber3 = flow_calibrator(
         os.path.join(os.path.dirname(__file__), "flowcalib_det.yaml")
-        )
+    )
     res3 = caliber3.Q(fs)
 
     import pylab
 
-    pylab.plot(fs,res2,label="Spline + power of 2 above 100 L/min")
-    pylab.plot(fs,res3,label="Spline from Philippe")
-    pylab.xlabel('measured f')
-    pylab.ylabel('Q (L/min)')
-    pylab.legend(loc='best')
+    pylab.plot(fs, res2, label="Spline + power of 2 above 100 L/min")
+    pylab.plot(fs, res3, label="Spline from Philippe")
+    pylab.xlabel("measured f")
+    pylab.ylabel("Q (L/min)")
+    pylab.legend(loc="best")
     pylab.show()
