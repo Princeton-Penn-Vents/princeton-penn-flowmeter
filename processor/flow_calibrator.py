@@ -53,5 +53,23 @@ if __name__ == "__main__":
     caliber2 = flow_calibrator(
         "/Users/lange/covid/gui/princeton-penn-flowmeter/processor/flowcalib_ave.yaml"
     )
+    fs = np.arange(0.0, 25000.0, 10.0)
     print(fs)
     print(caliber2.Q(fs))
+    res2 = caliber2.Q(fs)
+    
+    caliber3 = flow_calibrator(
+        "/Users/lange/covid/gui/princeton-penn-flowmeter/processor/flowcalib_det.yaml"
+    )
+    print(fs)
+    print(caliber3.Q(fs))
+    res3 = caliber3.Q(fs)
+
+    import pylab
+
+    pylab.plot(fs,res2,label="Ave")
+    pylab.plot(fs,res3,label="All")
+    pylab.xlabel('measured f')
+    pylab.ylabel('Q (L/min)')
+    pylab.legend(loc='best')
+    pylab.show()
