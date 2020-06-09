@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.interpolate
 import yaml
-
+import os
 
 def get_yaml(yml_file):
     stream = open(yml_file, "r")
@@ -51,18 +51,15 @@ if __name__ == "__main__":
 
     print("Checking the average input file")
     caliber2 = flow_calibrator(
-        "/Users/lange/covid/gui/princeton-penn-flowmeter/processor/flowcalib_ave.yaml"
+       os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
     )
     fs = np.arange(0.0, 25000.0, 10.0)
-    print(fs)
-    print(caliber2.Q(fs))
     res2 = caliber2.Q(fs)
     
+    print("Checking the detailed input file")
     caliber3 = flow_calibrator(
-        "/Users/lange/covid/gui/princeton-penn-flowmeter/processor/flowcalib_det.yaml"
-    )
-    print(fs)
-    print(caliber3.Q(fs))
+        os.path.join(os.path.dirname(__file__), "flowcalib_det.yaml")
+        )
     res3 = caliber3.Q(fs)
 
     import pylab
