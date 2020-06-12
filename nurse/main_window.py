@@ -110,7 +110,7 @@ class MainStack(QtWidgets.QWidget):
         else:
             restore_dict = collect_restore()
             if not restore_dict:
-                self.grid_layout.addWidget(WaitingWidget)
+                self.grid_layout.addWidget(WaitingWidget())
             else:
                 a, b = restore_limits(restore_dict)
                 self.empty_grid(a, b)
