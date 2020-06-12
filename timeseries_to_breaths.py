@@ -73,6 +73,8 @@ volume = numpy.array(volume)
 
 breaths = analysis.measure_breaths(time, flow, volume, pressure)
 
+breaths, updated, new_breaths = analysis.combine_breaths([], breaths)
+
 if not args.drop_header:
     print(", ".join(head for head, key in order_and_mapping))
 
