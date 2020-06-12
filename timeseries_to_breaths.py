@@ -53,25 +53,28 @@ time = []
 pressure = []
 flow = []
 volume = []
+minbias_volume = []
 
 with open(args.input) as fin:
     # skip the header
     next(fin)
 
     reader = csv.reader(fin)
-    for t_raw, p_raw, f_raw, v_raw in reader:
-        t, p, f, v = float(t_raw), float(p_raw), float(f_raw), float(v_raw)
+    for t_raw, p_raw, f_raw, v_raw, mv_raw in reader:
+        t, p, f, v, mv = float(t_raw), float(p_raw), float(f_raw), float(v_raw), float(mv_raw)
         time.append(t)
         pressure.append(p)
         flow.append(f)
         volume.append(v)
+        minbias_volume.append(mv)
 
 time = numpy.array(time)
 pressure = numpy.array(pressure)
 flow = numpy.array(flow)
 volume = numpy.array(volume)
+minbias_volume = numpy.array(minbias_volume)
 
-breaths = analysis.measure_breaths(time, flow, volume, pressure)
+breaths = analysis.measure_breaths(time, flow, minbias_volume, pressure)
 
 breaths, updated, new_breaths = analysis.combine_breaths([], breaths)
 

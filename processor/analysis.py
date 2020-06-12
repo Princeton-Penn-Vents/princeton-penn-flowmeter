@@ -58,7 +58,7 @@ def compute_cumulative(
     }
 
 
-def flow_to_volume(realtime, old_realtime, flow, old_volume):
+def flow_to_volume(realtime, old_realtime, flow, old_volume, critical_frequency):
     if old_realtime is None:
         shift = 0
     else:
@@ -67,7 +67,7 @@ def flow_to_volume(realtime, old_realtime, flow, old_volume):
     out = scipy.integrate.cumtrapz(flow * 1000, realtime / 60.0, initial=0) + shift
 
     return scipy.signal.sosfilt(
-        scipy.signal.butter(1, 0.004, "highpass", output="sos"), out
+        scipy.signal.butter(1, critical_frequency, "highpass", output="sos"), out
     )
 
 
