@@ -14,6 +14,7 @@ global:
   run-every: 0.5 # seconds
   window-size: 1500 # 30 seconds @ 50 hertz
   datadir: . # relative, with home, or absolute
+  avg-window: 10 # seconds
 
 patient:
   buzzer-volume: 0 # max 255 (200 ideal)
@@ -31,18 +32,4 @@ rotary-live:
 
   Current Setting:
     type: Current
-    default: 3
-    items: [1, 3, 5, 10, 20, 30]
-    rate: 3
     order: 0
-
-rotary:
-  AvgWindow:
-    type: Selection
-    name: Average Window
-    lcd_name: Avg Window
-    default: 3
-    items: [1, 3, 5, 10, 20, 30]
-    unit: s
-    rate: 3
-    order: 1

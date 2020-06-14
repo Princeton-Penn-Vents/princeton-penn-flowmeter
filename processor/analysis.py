@@ -653,7 +653,7 @@ def avg_alarms(
     Return a dict with an alarm if alarm present and out of bounds.
     """
 
-    timescale = rotary["AvgWindow"].value
+    timescale = config["global"]["avg-window"].get(int)
     max_key = f"Avg {key.capitalize()} Max"
     min_key = f"Avg {key.capitalize()} Min"
 
