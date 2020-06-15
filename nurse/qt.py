@@ -1,8 +1,15 @@
 # Names are selected to be like PySide
 from __future__ import annotations
 
-from typing import Optional
-from typing_extensions import Protocol
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Protocol
+else:
+
+    class Protocol:
+        pass
+
 
 import os
 

@@ -4,6 +4,7 @@ import numpy as np
 import scipy.interpolate
 import yaml
 import os
+from typing import Union
 
 
 def get_yaml(yml_file):
@@ -20,17 +21,18 @@ def get_yaml(yml_file):
 
 class flow_calibrator:
     def __init__(self, block="simple") -> None:
-        self.func = None
+        func = None
         if block == "simple":
-            self.func = self.simple
+            func = self.simple
         if block.endswith("yaml") or block.endswith("yml"):
             qs, deltaPs = get_yaml(block)
             self.interp = scipy.interpolate.interp1d(
                 deltaPs, qs, kind="cubic", fill_value="extrapolate"
             )
-            self.func = self.extrap1d
+            func = self.extrap1d
 
-        assert self.func is not None
+        assert func is not None
+        self.func = func
 
     def simple(self, deltaP):
         #        return np.copysign(np.abs(deltaP) ** (4 / 7),deltaP)*0.7198/0.09636372314370535
@@ -54,7 +56,7 @@ class flow_calibrator:
 
         return retval
 
-    def Q(self, f) -> np.ndarray or float:
+    def Q(self, f) -> Union[np.ndarray, float]:
         return self.func(f / 60.0)  # put f into Pa to get deltaP
 
 
@@ -82,11 +84,11 @@ if __name__ == "__main__":
     )
     res3 = caliber3.Q(fs)
 
-    import pylab
+    import matplotlib.pyplot as plt
 
-    pylab.plot(fs, res2, label="Spline + power of 2 above 100 L/min")
-    pylab.plot(fs, res3, label="Spline from Philippe")
-    pylab.xlabel("measured f")
-    pylab.ylabel("Q (L/min)")
-    pylab.legend(loc="best")
-    pylab.show()
+    plt.plot(fs, res2, label="Spline + power of 2 above 100 L/min")
+    plt.plot(fs, res3, label="Spline from Philippe")
+    plt.xlabel("measured f")
+    plt.ylabel("Q (L/min)")
+    plt.legend(loc="best")
+    plt.show()
