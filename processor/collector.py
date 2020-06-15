@@ -45,6 +45,10 @@ class CollectorThread(threading.Thread):
         sub_socket.connect("tcp://localhost:5556")
         sub_socket.subscribe(b"")
 
+        #flow calibration
+        from processor.flow_calibrator import flow_calibrator
+        caliber = flow_calibrator()
+
         # Up to 60 seconds of data (roughly, not promised)
         pub_socket.hwm = 3000
 
@@ -62,10 +66,12 @@ class CollectorThread(threading.Thread):
                     f: float = 0
                     p: float = 0
                 else:
-                    f = (
-                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-                        - self._flow_offset
-                    )
+                    f = caliber.Q(j["F"])
+#                   old calibration
+#                    f = (
+#                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+#                        - self._flow_offset
+#                    )
                     p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})

@@ -28,6 +28,9 @@ import numpy
 
 from processor.config import config
 from processor import analysis
+from processor.flow_calibrator import flow_calibrator
+
+caliber = flow_calibrator()
 
 flow_scale = config["device"]["flow"]["scale"].as_number()
 flow_offset = config["device"]["flow"]["offset"].as_number()
@@ -59,7 +62,9 @@ with open(args.input) as fin:
         # have to fix it both here and there.
         t = j["t"] / 1000.0
         p = j["P"] * pressure_scale - pressure_offset
-        f = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
+        #this was the old flow calibration
+        #fO = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
+        f = caliber.Q(j["F"])
 
         if starttime is None:
             starttime = t
@@ -74,24 +79,18 @@ if args.deglitch_pressure:
     pressure = analysis.pressure_deglitch_smooth(numpy.array(pressure))
 
 volume = analysis.flow_to_volume(
-    numpy.array(time),
-    None,
-    numpy.array(flow),
-    None,
-    critical_frequency=0.004,
+    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.004,
 )
 volume -= numpy.min(volume)
 
 minbias_volume = analysis.flow_to_volume(
-    numpy.array(time),
-    None,
-    numpy.array(flow),
-    None,
-    critical_frequency=0.00001,
+    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.00001,
 )
 minbias_volume -= numpy.min(minbias_volume)
 
 if not args.drop_header:
-    print("     time (sec), pressure (cm H2O), flow (L/min), volume (mL), minbias volume (mL)")
+    print(
+        "     time (sec), pressure (cm H2O), flow (L/min), volume (mL), minbias volume (mL)"
+    )
 for t, p, f, v, mv in zip(time, pressure, flow, volume, minbias_volume):
     print(f"{t:15.3f}, {p:17.4f}, {f:12.4f}, {v:11.4f}, {mv:19.4f}")
