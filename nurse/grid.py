@@ -23,6 +23,7 @@ from nurse.dragdrop import DraggableSensor
 from nurse.generator_dialog import GeneratorDialog
 from nurse.gen_record_gui import GeneratorGUI
 from processor.generator import Status
+from processor.config import config
 
 
 class NumberLabel(QtWidgets.QLabel):
@@ -212,6 +213,7 @@ class PatientSensor(DraggableSensor):
 
     def update_plot(self):
         gis = GraphInfo()
+        avg_window = config["global"]["avg-window"].get(int)
 
         with self.gen.lock:
             # Fill in the data
@@ -233,11 +235,9 @@ class PatientSensor(DraggableSensor):
                 value: Optional[float]
 
                 if key == "Avg Flow":
-                    value = self.gen.average_flow[self.gen.rotary["AvgWindow"].value]
+                    value = self.gen.average_flow[avg_window]
                 elif key == "Avg Pressure":
-                    value = self.gen.average_pressure[
-                        self.gen.rotary["AvgWindow"].value
-                    ]
+                    value = self.gen.average_pressure[avg_window]
                 else:
                     value = self.gen.cumulative.get(key)
 

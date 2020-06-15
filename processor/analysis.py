@@ -653,14 +653,14 @@ def avg_alarms(
     Return a dict with an alarm if alarm present and out of bounds.
     """
 
-    timescale = config["global"]["avg-window"].get(int)
+    avg_window = config["global"]["avg-window"].get(int)
     max_key = f"Avg {key.capitalize()} Max"
     min_key = f"Avg {key.capitalize()} Min"
 
     if max_key in rotary:
-        if values[timescale] > rotary[max_key].value:
+        if values[avg_window] > rotary[max_key].value:
             old_alarms[max_key] = alarm_record(
-                old_alarms.get(max_key), timestamp, values[timescale], True
+                old_alarms.get(max_key), timestamp, values[avg_window], True
             )
             if old_alarms[max_key]["first timestamp"] == timestamp:
                 logger.info(
@@ -674,9 +674,9 @@ def avg_alarms(
             del old_alarms[max_key]
 
     if min_key in rotary:
-        if values[timescale] < rotary[min_key].value:
+        if values[avg_window] < rotary[min_key].value:
             old_alarms[min_key] = alarm_record(
-                old_alarms.get(min_key), timestamp, values[timescale], True
+                old_alarms.get(min_key), timestamp, values[avg_window], True
             )
             if old_alarms[min_key]["first timestamp"] == timestamp:
                 logger.info(
