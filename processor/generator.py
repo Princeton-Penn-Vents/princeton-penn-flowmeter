@@ -349,7 +349,7 @@ class Generator(abc.ABC):
             self._minbias_volume = processor.analysis.flow_to_volume(
                 realtime,
                 None,
-                self.flow,
+                self.flow - np.mean(self.flow),
                 None,
                 critical_frequency=0.00001,
             )
