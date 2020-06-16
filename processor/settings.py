@@ -48,12 +48,7 @@ def get_setting(c: ConfigView) -> Tuple[Optional[int], Setting]:
     elif type_name == "Current":
         return (
             order,
-            CurrentSetting(
-                default=c["default"].get(int),
-                listing=[v.as_number() for v in c["items"]],
-                rate=c["rate"].get(int) if "rate" in c else 2,
-                name="Current:",
-            ),
+            CurrentSetting(name="Current:",),
         )
     elif type_name == "Reset":
         return (

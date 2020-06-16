@@ -61,7 +61,13 @@ with open(args.input) as fin:
 
     reader = csv.reader(fin)
     for t_raw, p_raw, f_raw, v_raw, mv_raw in reader:
-        t, p, f, v, mv = float(t_raw), float(p_raw), float(f_raw), float(v_raw), float(mv_raw)
+        t, p, f, v, mv = (
+            float(t_raw),
+            float(p_raw),
+            float(f_raw),
+            float(v_raw),
+            float(mv_raw),
+        )
         time.append(t)
         pressure.append(p)
         flow.append(f)

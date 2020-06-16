@@ -25,6 +25,7 @@ from nurse.header import DrilldownHeaderWidget
 from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
 from nurse.generator_dialog import GeneratorDialog
+from processor.config import config
 
 if TYPE_CHECKING:
     from nurse.main_window import MainStack
@@ -115,10 +116,10 @@ class DisplayBox(QtWidgets.QFrame):
         if gen is None:
             value = None
         elif self.key == "Avg Flow":
-            avg_window = gen.rotary["AvgWindow"].value
+            avg_window = config["global"]["avg-window"].get(int)
             value = gen.average_flow[avg_window]
         elif self.key == "Avg Pressure":
-            avg_window = gen.rotary["AvgWindow"].value
+            avg_window = config["global"]["avg-window"].get(int)
             value = gen.average_pressure[avg_window]
         else:
             value = gen.cumulative.get(self.key)
@@ -164,7 +165,8 @@ class DisplayBox(QtWidgets.QFrame):
                 self.upper_limit.setText(format(gen.rotary[max_key].value, self.fmt))
 
             if hasattr(self, "avg_time"):
-                self.avg_time.setText(f"({gen.rotary['AvgWindow']})")
+                avg_window = config["global"]["avg-window"].get(int)
+                self.avg_time.setText(f"({avg_window})")
 
 
 class AllDisplays(QtWidgets.QWidget):
@@ -697,7 +699,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
             with self.gen.lock:
                 if first or not self.parent().header.freeze_btn.checkState():
-                    time_avg = self.gen.rotary["AvgWindow"].value
+                    avg_window = config["global"]["avg-window"].get(int)
 
                     for key in gis.graph_labels:
                         if scroll:
@@ -741,11 +743,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                         if val_key == "Avg Flow":
                             self.current[key].setData(
-                                [0, time_avg], [self.gen.average_flow[time_avg]] * 2
+                                [0, avg_window], [self.gen.average_flow[avg_window]] * 2
                             )
                         elif val_key == "Avg Pressure":
                             self.current[key].setData(
-                                [0, time_avg], [self.gen.average_pressure[time_avg]] * 2
+                                [0, avg_window],
+                                [self.gen.average_pressure[avg_window]] * 2,
                             )
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)

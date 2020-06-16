@@ -15,3 +15,5 @@ dependencies:
   - confuse
   - zeroconf
   - markdown
+  - flake8
+  - flake8-bugbear
