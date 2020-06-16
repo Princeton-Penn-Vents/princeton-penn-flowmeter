@@ -1,6 +1,6 @@
 from patient.rotary_live import LiveRotary
-from processor.setting import Setting, SelectionSetting, IncrSetting
-from processor.display_settings import AdvancedSetting
+from processor.setting import SelectionSetting, IncrSetting
+from processor.display_settings import AdvancedSetting, CurrentSetting
 from processor.generator import Generator
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
@@ -38,7 +38,7 @@ class SelectionSettingGUI(QtWidgets.QComboBox):
         print(self.setting)
 
 
-class CurrentSettingGUI(QtWidgets.QComboBox):
+class AdvancedSettingGUI(QtWidgets.QComboBox):
     def __init__(self, rotary: RotaryGUI, setting: AdvancedSetting):
         super().__init__()
         self.setting = setting
@@ -78,11 +78,17 @@ class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
         self.rotary.changed()
 
 
-class DisplaySettingGUI(QtWidgets.QLabel):
-    def __init__(self, rotary: LiveRotary, setting: Setting):
-        super().__init__(f"{setting.value}")
+class CurrentSettingGUI(QtWidgets.QLabel):
+    def __init__(self, rotary: RotaryGUI, setting: CurrentSetting):
+        super().__init__(f"{setting.print_setting()}")
         self.setting = setting
         self.rotary = rotary
+
+        rotary.signal.changed.connect(self.redraw)
+
+    @Slot()
+    def redraw(self):
+        self.setText(f"{self.setting.print_setting()}")
 
 
 class UpdatingDisplay(QtWidgets.QTextEdit):
@@ -133,13 +139,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for setting in rotary.values():
             if isinstance(setting, AdvancedSetting):
-                widget = CurrentSettingGUI(rotary, setting)
+                widget = AdvancedSettingGUI(rotary, setting)
             elif isinstance(setting, IncrSetting):
                 widget = IncrSettingGUI(rotary, setting)
             elif isinstance(setting, SelectionSetting):
                 widget = SelectionSettingGUI(rotary, setting)
+            elif isinstance(setting, CurrentSetting):
+                widget = CurrentSettingGUI(rotary, setting)
             else:
-                widget = DisplaySettingGUI(rotary, setting)
+                raise RuntimeError("Invalid type of rotary item")
 
             widget.setMinimumWidth(250)
             form_layout.addRow(setting.name, widget)
