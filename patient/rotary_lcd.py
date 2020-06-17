@@ -11,15 +11,8 @@ from processor.config import config as _config
 
 import pigpio
 from typing import Dict
-import enum
 import time
 import threading
-
-
-class AlarmLevel(enum.Enum):
-    LOUD = enum.auto()
-    QUIET = enum.auto()
-    OFF = enum.auto()
 
 
 class RotaryLCD(Rotary):
@@ -31,7 +24,6 @@ class RotaryLCD(Rotary):
         self.lcd = LCD(pi=pi)
         self.backlight = Backlight(shade=shade, pi=pi)
         self.buzzer = Buzzer(pi=pi)
-        self.alarm_level: AlarmLevel = AlarmLevel.OFF
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
         self.lock = threading.Lock()
 
@@ -68,15 +60,6 @@ class RotaryLCD(Rotary):
         for value in self.config.values():
             value.reset()
 
-    def push(self) -> None:
-        if self.alarm_level == AlarmLevel.LOUD and self.alarms:
-            self.buzzer.clear()
-            self.backlight.orange()
-            self.alarm_level = AlarmLevel.QUIET
-        else:
-            self.alert()
-            super().push()
-
     def release(self) -> None:
         value = self.value()
         if isinstance(value, ResetSetting) and value.at_maximum():
@@ -99,16 +82,26 @@ class RotaryLCD(Rotary):
             self.lower_display()
             self.upper_display()
 
+    def extra_push(self) -> None:
+        self.lcd.upper("  Setting timeout   ")
+        self.lcd.lower("      to 120 s      ")
+
+    def extra_release(self) -> None:
+        self.set_alarm_silence(120)
+        self.display()
+
     def alert(self) -> None:
         with self.lock:
-            if self.alarms and self.alarm_level == AlarmLevel.OFF:
+            time_left = self.time_left()
+            if self.alarms and time_left < 0:
                 self.backlight.red()
                 self.buzzer.buzz(self.buzzer_volume)
-                self.alarm_level = AlarmLevel.LOUD
             elif not self.alarms:
                 self.backlight.white()
                 self.buzzer.clear()
-                self.alarm_level = AlarmLevel.OFF
+
+            if time_left > 0:
+                self.set_alarm_silence(time_left, reset=False)
 
             if isinstance(self.value(), AdvancedSetting):
                 self.upper_display()
@@ -116,6 +109,19 @@ class RotaryLCD(Rotary):
                 self.lower_display()
 
         super().alert()
+
+    def _add_alarm_text(self, string: str) -> str:
+        time_left = self.time_left()
+        if time_left > 0:
+            string = f"{string:13} Q:{time_left:.0f}s"
+        if self.alarms:
+            n = len(self.alarms)
+            if n == 1:
+                string = string[:14] + " ALARM"
+            else:
+                string = string[:13] + " ALARMS"
+
+        return string
 
     def upper_display(self) -> None:
         current_name = self.value().lcd_name
@@ -129,12 +135,8 @@ class RotaryLCD(Rotary):
 
         string = f"{current_number}: {current_name:<{length_available}}"
 
-        if self.alarms and isinstance(self.value(), AdvancedSetting):
-            n = len(self.alarms)
-            if n == 1:
-                string = string[:14] + " ALARM"
-            else:
-                string = string[:13] + " ALARMS"
+        if isinstance(self.value(), AdvancedSetting):
+            string = self._add_alarm_text(string)
 
         self.lcd.upper(string)
 
@@ -144,12 +146,9 @@ class RotaryLCD(Rotary):
         if len(string) > 20:
             print(f"Warning: Truncating {string!r}")
             string = string[:20]
-        if self.alarms and not isinstance(self.value(), AdvancedSetting):
-            n = len(self.alarms)
-            if n == 1:
-                string = string[:14] + " ALARM"
-            else:
-                string = string[:13] + " ALARMS"
+
+        if not isinstance(self.value(), AdvancedSetting):
+            string = self._add_alarm_text(string)
 
         self.lcd.lower(string)
 

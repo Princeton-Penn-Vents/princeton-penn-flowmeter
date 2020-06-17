@@ -19,10 +19,11 @@ def get_yaml(yml_file):
     return qs, deltaPs
 
 
+DEFAULT_BLOCK = os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
+
+
 class flow_calibrator:
-    def __init__(
-        self, block=os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
-    ) -> None:
+    def __init__(self, block=DEFAULT_BLOCK) -> None:
         func = None
         if block == "simple":
             func = self.simple

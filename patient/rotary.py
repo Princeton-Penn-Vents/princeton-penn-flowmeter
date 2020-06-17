@@ -6,7 +6,7 @@ from patient.rotary_live import LiveRotary
 from processor.setting import Setting
 import enum
 import threading
-from typing import Callable, Dict, Any, Optional, TypeVar, TYPE_CHECKING
+from typing import Dict, Any, Optional, TypeVar, TYPE_CHECKING
 import time
 
 if TYPE_CHECKING:
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 pinA: Final[int] = 17  # terminal A
 pinB: Final[int] = 27  # terminal B
 pinSW: Final[int] = 18  # switch
+pinExt: Final[int] = 12  # Red pushbutton (added in v0.6)
 
 
 class Mode(enum.Enum):
@@ -34,6 +35,7 @@ class MechanicalRotary:
     def __init__(self, *, pi: Optional[pigpio.pi] = None):
         self.pi = pi
         self.pushed_in = False
+        self.last_interaction = time.monotonic()
         self.turns = 0
         self.levA = 0
         self.levB = 0
@@ -59,6 +61,10 @@ class MechanicalRotary:
         self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
         self.pi.set_glitch_filter(pinSW, glitchFilter)
 
+        self.pi.set_mode(pinExt, pigpio.INPUT)
+        self.pi.set_pull_up_down(pinExt, pigpio.PUD_UP)
+        self.pi.set_glitch_filter(pinExt, glitchFilter)
+
         self._rotary_turnedA = self.pi.callback(
             pinA, pigpio.EITHER_EDGE, self.rotary_turned
         )
@@ -67,6 +73,9 @@ class MechanicalRotary:
         )
         self._rotary_switch = self.pi.callback(
             pinSW, pigpio.EITHER_EDGE, self.rotary_switch
+        )
+        self._rotary_extra = self.pi.callback(
+            pinExt, pigpio.EITHER_EDGE, self.rotary_extra
         )
 
         return self
@@ -113,17 +122,29 @@ class MechanicalRotary:
         elif ch == pinSW and level == 1:  # rising edge
             self.release()
 
-    def pushed_turn(self, dir: Dir) -> None:
-        pass
+    def rotary_extra(self, ch: int, level: int, _tick: int) -> None:
+        if ch == pinExt and level == 0:  # falling edge
+            self.extra_push()
+        elif ch == pinExt and level == 1:  # rising edge
+            self.extra_release()
 
-    def turn(self, dir: Dir) -> None:
-        pass
+    def pushed_turn(self, _dir: Dir) -> None:
+        self.last_interaction = time.monotonic()
+
+    def turn(self, _dir: Dir) -> None:
+        self.last_interaction = time.monotonic()
 
     def push(self) -> None:
-        pass
+        self.last_interaction = time.monotonic()
 
     def release(self) -> None:
-        pass
+        self.last_interaction = time.monotonic()
+
+    def extra_push(self) -> None:
+        self.last_interaction = time.monotonic()
+
+    def extra_release(self) -> None:
+        self.last_interaction = time.monotonic()
 
 
 T = TypeVar("T", bound="Rotary")
@@ -134,13 +155,38 @@ class Rotary(LiveRotary, MechanicalRotary):
         LiveRotary.__init__(self, config)
         MechanicalRotary.__init__(self, pi=pi)
 
-        self.alarm_filter: Callable[[str], bool] = lambda x: True
-
         self._current: int = 0
         self._slow_turn: int = 0
 
         # Rate of changing screens on the display
         self._change_rate: Final[int] = 4
+
+        # Timestamp  at which to start the alarm again - will be silenced until this time
+        self._alarm_silence: float = time.monotonic()
+
+        # Singleton Timer that will run alarm() when done.
+        self._time_out_alarm: Optional[threading.Timer] = None
+
+    def time_left(self) -> float:
+        """
+        Amount of time left on the silencer. Negative if silence is off.
+        """
+        return self._alarm_silence - time.monotonic()
+
+    def set_alarm_silence(self, value: float, *, reset: bool = True) -> None:
+        if self._time_out_alarm is not None:
+            # If we are not reseting, do not touch anything
+            if not reset:
+                return
+
+            self._time_out_alarm.cancel()
+
+        def timeout():
+            self._time_out_alarm = None
+            self.alert()
+
+        self._alarm_silence = time.monotonic() + value
+        self._time_out_alarm = threading.Timer(value, timeout)
 
     def turn(self, dir: Dir) -> None:
         self._slow_turn = (self._slow_turn + dir.value) % (
@@ -154,6 +200,8 @@ class Rotary(LiveRotary, MechanicalRotary):
         if self._current != old_current:
             self.value().active()
 
+        super().turn(dir)
+
     def pushed_turn(self, dir: Dir) -> None:
         if dir == Dir.CLOCKWISE:
             self.value().up()
@@ -161,12 +209,7 @@ class Rotary(LiveRotary, MechanicalRotary):
             self.value().down()
 
         self.changed()
-
-    def push(self) -> None:
-        pass
-
-    def release(self) -> None:
-        pass
+        super().pushed_turn(dir)
 
     def key(self) -> str:
         return self._items[self._current]
@@ -176,7 +219,7 @@ class Rotary(LiveRotary, MechanicalRotary):
 
     @property
     def alarms(self) -> Dict[str, Any]:
-        return {k: v for k, v in self._alarms.items() if self.alarm_filter(k)}
+        return self._alarms
 
     @alarms.setter
     def alarms(self, item: Dict[str, Any]) -> None:
@@ -197,6 +240,9 @@ class Rotary(LiveRotary, MechanicalRotary):
         return self
 
     def __exit__(self, *exc) -> None:
+        if self._time_out_alarm is not None:
+            self._time_out_alarm.cancel()
+            self._time_out_alarm = None
         LiveRotary.__exit__(self, *exc)
         MechanicalRotary.__exit__(self, *exc)
 
