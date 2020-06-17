@@ -83,7 +83,7 @@ volume = analysis.flow_to_volume(
 volume -= numpy.min(volume)
 
 minbias_volume = analysis.flow_to_volume(
-    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.00001,
+    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.0004,
 )
 minbias_volume -= numpy.min(minbias_volume)
 

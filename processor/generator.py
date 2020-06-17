@@ -343,7 +343,7 @@ class Generator(abc.ABC):
                 None,
                 self.flow - np.mean(self.flow),
                 None,
-                critical_frequency=0.00001,
+                critical_frequency=0.0004,
             )
 
     def _analyze_full(self) -> None:
