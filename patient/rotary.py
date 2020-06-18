@@ -8,6 +8,9 @@ import enum
 import threading
 from typing import Dict, Any, Optional, TypeVar, TYPE_CHECKING
 import time
+import logging
+
+logger = logging.getLogger("povm")
 
 if TYPE_CHECKING:
     from typing_extensions import Final
@@ -133,26 +136,33 @@ class MechanicalRotary:
         elif ch == pinExt and level == 1:  # rising edge
             self.extra_release()
 
-    def pushed_turn(self, _dir: Dir) -> None:
+    def pushed_turn(self, dir: Dir) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug(f"Push + turn {dir}")
 
-    def extra_turn(self, _dir: Dir) -> None:
+    def extra_turn(self, dir: Dir) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug(f"Extra + turn {dir}")
 
-    def turn(self, _dir: Dir) -> None:
+    def turn(self, dir: Dir) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug(f"Turned {dir}")
 
     def push(self) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug("Pressed")
 
     def release(self) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug("Released")
 
     def extra_push(self) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug("Extra pressed")
 
     def extra_release(self) -> None:
         self.last_interaction = time.monotonic()
+        logger.debug("Extra released")
 
 
 T = TypeVar("T", bound="Rotary")
@@ -195,6 +205,9 @@ class Rotary(LiveRotary, MechanicalRotary):
 
         self._alarm_silence = time.monotonic() + value
         self._time_out_alarm = threading.Timer(value, timeout)
+        logger.info(
+            f"Setting alarm timeout to {value} s, ends at {self._alarm_silence}"
+        )
 
     def turn(self, dir: Dir) -> None:
         self._slow_turn = (self._slow_turn + dir.value) % (

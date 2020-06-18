@@ -83,11 +83,13 @@ class RotaryLCD(Rotary):
             self.upper_display()
 
     def extra_push(self) -> None:
+        super().extra_push()
         self.lcd.upper("  Setting timeout   ")
         self.lcd.lower("      to 120 s      ")
 
     def extra_release(self) -> None:
         self.set_alarm_silence(120)
+        super().extra_release()
         self.display()
 
     def alert(self) -> None:
