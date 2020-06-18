@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
 from __future__ import annotations
 
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, AdvancedSetting, CurrentSetting
 from patient.rotary import Rotary, Dir
-from patient.lcd import LCD
+from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 from patient.buzzer import Buzzer
 from processor.config import config as _config
 
 import pigpio
-from typing import Dict
+from typing import Dict, Any
 import time
 import threading
 
@@ -26,9 +28,10 @@ class RotaryLCD(Rotary):
         self.buzzer = Buzzer(pi=pi)
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
         self.lock = threading.Lock()
+        self.timer_setting = _config["patient"]["silence-timeout"].get(int)
 
     def external_update(self) -> None:
-        if isinstance(self.value(), CurrentSetting):
+        if isinstance(self.value(), CurrentSetting) or self.time_left() > 0:
             with self.lock:
                 self.upper_display()
                 self.lower_display()
@@ -41,7 +44,7 @@ class RotaryLCD(Rotary):
 
         return self
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         self.backlight.cyan()
         self.lcd.clear()
         self.lcd.upper("Princeton Open Vent")
@@ -56,7 +59,7 @@ class RotaryLCD(Rotary):
             self.pi.stop()
             self.pi = None
 
-    def reset(self):
+    def reset(self) -> None:
         for value in self.config.values():
             value.reset()
 
@@ -84,11 +87,11 @@ class RotaryLCD(Rotary):
 
     def extra_push(self) -> None:
         super().extra_push()
-        self.lcd.upper("  Setting timeout   ")
-        self.lcd.lower("      to 120 s      ")
+        self.lcd.upper("Setting timeout", pos=Align.CENTER, fill=" ")
+        self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
 
     def extra_release(self) -> None:
-        self.set_alarm_silence(120)
+        self.set_alarm_silence(self.timer_setting)
         super().extra_release()
         self.display()
 
@@ -100,6 +103,9 @@ class RotaryLCD(Rotary):
                 self.buzzer.buzz(self.buzzer_volume)
             elif not self.alarms:
                 self.backlight.white()
+                self.buzzer.clear()
+            elif time_left > 0:
+                self.backlight.yellow()
                 self.buzzer.clear()
 
             if time_left > 0:
@@ -115,8 +121,9 @@ class RotaryLCD(Rotary):
     def _add_alarm_text(self, string: str) -> str:
         time_left = self.time_left()
         if time_left > 0:
-            string = f"{string:13} Q:{time_left:.0f}s"
-        if self.alarms:
+            string = f"{string[:13]} Q:{time_left:.0f}s"
+            string = f"{string:<20}"
+        elif self.alarms:
             n = len(self.alarms)
             if n == 1:
                 string = string[:14] + " ALARM"

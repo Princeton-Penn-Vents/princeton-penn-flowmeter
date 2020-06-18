@@ -1,9 +1,12 @@
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
+
 from __future__ import annotations
 
 from processor.config import config
 from processor.setting import Setting
 from processor.rotary import LocalRotary
-from typing import Optional, Dict, TypeVar
+from typing import Optional, Dict, TypeVar, Any
 import threading
 import yaml
 import logging
@@ -22,7 +25,7 @@ class LiveRotary(LocalRotary):
         self._live_save_thread: Optional[threading.Thread] = None
         self._live_save_change = threading.Event()
 
-    def changed(self):
+    def changed(self) -> None:
         self._live_save_change.set()
         super().changed()
 
@@ -91,7 +94,7 @@ class LiveRotary(LocalRotary):
         self._live_save_stop.clear()
         return super().__enter__()
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         self._live_save_stop.set()
         if self._live_save_thread is not None:
             self._live_save_thread.join()

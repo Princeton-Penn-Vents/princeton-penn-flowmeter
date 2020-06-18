@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
 from __future__ import annotations
 
 import pigpio
@@ -84,7 +86,7 @@ class MechanicalRotary:
 
         return self
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         assert self.pi is not None, 'Must use "with" to use'
         self._rotary_turnedA.cancel()
         self._rotary_turnedB.cancel()
@@ -199,14 +201,16 @@ class Rotary(LiveRotary, MechanicalRotary):
 
             self._time_out_alarm.cancel()
 
-        def timeout():
+        def timeout() -> None:
             self._time_out_alarm = None
+            logger.debug("Silence timed out")
             self.alert()
 
         self._alarm_silence = time.monotonic() + value
         self._time_out_alarm = threading.Timer(value, timeout)
+        self._time_out_alarm.start()
         logger.info(
-            f"Setting alarm timeout to {value} s, ends at {self._alarm_silence}"
+            f"Setting silence timeout to {value} s, ends at {self._alarm_silence}"
         )
 
     def turn(self, dir: Dir) -> None:
@@ -260,7 +264,7 @@ class Rotary(LiveRotary, MechanicalRotary):
         MechanicalRotary.__enter__(self)
         return self
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         if self._time_out_alarm is not None:
             self._time_out_alarm.cancel()
             self._time_out_alarm = None
@@ -271,7 +275,7 @@ class Rotary(LiveRotary, MechanicalRotary):
 if __name__ == "__main__":
 
     class TestRotary(MechanicalRotary):
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any):
             super().__init__(*args, **kwargs)
             self.turns = 0
 

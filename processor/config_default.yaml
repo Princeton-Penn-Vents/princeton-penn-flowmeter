@@ -17,8 +17,9 @@ global:
   avg-window: 10 # seconds
 
 patient:
-  buzzer-volume: 0 # max 255 (200 ideal)
+  buzzer-volume: 0 # max 255 (200 ideal) TODO: set to 200
   brightness: 200 # max 255
+  silence-timeout: 10 # seconds TODO: Set to 120
 
 rotary-live:
   Reset Setting:
