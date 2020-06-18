@@ -29,6 +29,7 @@ class RotaryLCD(Rotary):
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
         self.lock = threading.Lock()
         self.timer_setting = _config["patient"]["silence-timeout"].get(int)
+        self.orig_timer_setting = _config["patient"]["silence-timeout"].get(int)
 
     def external_update(self) -> None:
         if isinstance(self.value(), CurrentSetting) or self.time_left() > 0:
@@ -86,6 +87,7 @@ class RotaryLCD(Rotary):
             self.upper_display()
 
     def extra_push(self) -> None:
+        self.timer_setting = self.orig_timer_setting
         super().extra_push()
         self.lcd.upper("Setting timeout", pos=Align.CENTER, fill=" ")
         self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
@@ -95,10 +97,17 @@ class RotaryLCD(Rotary):
         super().extra_release()
         self.display()
 
+    def extra_turn(self, dir: Dir) -> None:
+        if dir == Dir.CLOCKWISE and self.timer_setting < 500:
+            self.timer_setting += 5
+        elif dir == Dir.COUNTERCLOCKWISE and self.timer_setting > 0:
+            self.timer_setting -= 5
+        self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
+
     def alert(self) -> None:
         with self.lock:
             time_left = self.time_left()
-            if self.alarms and time_left < 0:
+            if self.alarms and time_left < 0 and not self.extra_in:
                 self.backlight.red()
                 self.buzzer.buzz(self.buzzer_volume)
             elif not self.alarms:
