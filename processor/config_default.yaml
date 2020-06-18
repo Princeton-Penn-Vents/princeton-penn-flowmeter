@@ -19,7 +19,7 @@ global:
 patient:
   buzzer-volume: 0 # max 255 (200 ideal) TODO: set to 200
   brightness: 200 # max 255
-  silence-timeout: 120 # seconds TODO: Set to 120
+  silence-timeout: 120 # seconds
 
 rotary-live:
   Reset Setting:

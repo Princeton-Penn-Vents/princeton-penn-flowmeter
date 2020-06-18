@@ -89,22 +89,24 @@ class RotaryLCD(Rotary):
     def extra_push(self) -> None:
         self.timer_setting = self.orig_timer_setting
         super().extra_push()
-        self.lcd.upper("Setting timeout", pos=Align.CENTER, fill=" ")
+        self.alert(False)
+        self.lcd.upper("Silence duration", pos=Align.CENTER, fill=" ")
         self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
 
     def extra_release(self) -> None:
         self.set_alarm_silence(self.timer_setting)
         super().extra_release()
+        self.alert(False)
         self.display()
 
     def extra_turn(self, dir: Dir) -> None:
-        if dir == Dir.CLOCKWISE and self.timer_setting < 500:
+        if dir == Dir.CLOCKWISE and self.timer_setting < 995:
             self.timer_setting += 5
         elif dir == Dir.COUNTERCLOCKWISE and self.timer_setting > 0:
             self.timer_setting -= 5
         self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
 
-    def alert(self) -> None:
+    def alert(self, full: bool = True) -> None:
         with self.lock:
             time_left = self.time_left()
             if self.alarms and time_left < 0 and not self.extra_in:
@@ -117,27 +119,29 @@ class RotaryLCD(Rotary):
                 self.backlight.yellow()
                 self.buzzer.clear()
 
-            if time_left > 0:
-                self.set_alarm_silence(time_left, reset=False)
+            if full:
+                if time_left > 0:
+                    self.set_alarm_silence(time_left, reset=False)
 
-            if isinstance(self.value(), AdvancedSetting):
-                self.upper_display()
-            else:
-                self.lower_display()
+                if isinstance(self.value(), AdvancedSetting):
+                    self.upper_display()
+                else:
+                    self.lower_display()
 
         super().alert()
 
     def _add_alarm_text(self, string: str) -> str:
         time_left = self.time_left()
         if time_left > 0:
-            string = f"{string[:13]} Q:{time_left:.0f}s"
+            char = "Q" if self.alarms else "S"
+            string = f"{string[:13]} {char}:{time_left:.0f}s"
             string = f"{string:<20}"
         elif self.alarms:
             n = len(self.alarms)
             if n == 1:
                 string = string[:14] + " ALARM"
             else:
-                string = string[:13] + " ALARMS"
+                string = string[:13] + f" {n}ALRMS"
 
         return string
 
