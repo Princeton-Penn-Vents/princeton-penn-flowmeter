@@ -28,11 +28,15 @@ class RotaryLCD(Rotary):
         self.buzzer = Buzzer(pi=pi)
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
         self.lock = threading.Lock()
-        self.timer_setting = _config["patient"]["silence-timeout"].get(int)
         self.orig_timer_setting = _config["patient"]["silence-timeout"].get(int)
+        self.timer_setting = self.orig_timer_setting
 
     def external_update(self) -> None:
-        if isinstance(self.value(), CurrentSetting) or self.time_left() > 0:
+        if (
+            isinstance(self.value(), CurrentSetting)
+            or self.time_left() > 0
+            and not self.pushed_in
+        ):
             with self.lock:
                 self.upper_display()
                 self.lower_display()
@@ -88,6 +92,7 @@ class RotaryLCD(Rotary):
 
     def extra_push(self) -> None:
         self.timer_setting = self.orig_timer_setting
+        self.set_alarm_silence(self.timer_setting)
         super().extra_push()
         self.alert(False)
         self.lcd.upper("Silence duration", pos=Align.CENTER, fill=" ")
