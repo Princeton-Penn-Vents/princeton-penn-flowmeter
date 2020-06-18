@@ -124,6 +124,8 @@ class RotaryLCD(Rotary):
         return string
 
     def upper_display(self) -> None:
+        if self.extra_in:
+            return
         current_name = self.value().lcd_name
         current_number = f"{self._current + 1}"
         if isinstance(self.value(), AdvancedSetting):
@@ -141,6 +143,8 @@ class RotaryLCD(Rotary):
         self.lcd.upper(string)
 
     def lower_display(self) -> None:
+        if self.extra_in:
+            return
         current_item = self.value()
         string = f"{current_item:<20}"
         if len(string) > 20:

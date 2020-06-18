@@ -35,6 +35,7 @@ class MechanicalRotary:
     def __init__(self, *, pi: Optional[pigpio.pi] = None):
         self.pi = pi
         self.pushed_in = False
+        self.extra_in = False
         self.last_interaction = time.monotonic()
         self.turns = 0
         self.levA = 0
@@ -99,7 +100,9 @@ class MechanicalRotary:
         self._last = ch
 
         # Pick the correct function to call
-        if self.pushed_in:
+        if self.extra_in:
+            function = self.extra_turn
+        elif self.pushed_in:
             function = self.pushed_turn
         else:
             function = self.turn
@@ -123,12 +126,17 @@ class MechanicalRotary:
             self.release()
 
     def rotary_extra(self, ch: int, level: int, _tick: int) -> None:
+        self.extra_in = level == 0
+
         if ch == pinExt and level == 0:  # falling edge
             self.extra_push()
         elif ch == pinExt and level == 1:  # rising edge
             self.extra_release()
 
     def pushed_turn(self, _dir: Dir) -> None:
+        self.last_interaction = time.monotonic()
+
+    def extra_turn(self, _dir: Dir) -> None:
         self.last_interaction = time.monotonic()
 
     def turn(self, _dir: Dir) -> None:
@@ -175,7 +183,7 @@ class Rotary(LiveRotary, MechanicalRotary):
 
     def set_alarm_silence(self, value: float, *, reset: bool = True) -> None:
         if self._time_out_alarm is not None:
-            # If we are not reseting, do not touch anything
+            # If we are not resetting, do not touch anything
             if not reset:
                 return
 
