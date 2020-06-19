@@ -16,14 +16,11 @@ from processor.settings import get_live_settings
 from patient.rotary_lcd import RotaryLCD
 from processor.collector import Collector
 from processor.broadcast import Broadcast
-from patient.mac_address import get_box_name
 from processor.config import get_data_dir
 
 
 # Initialize LCD
 with ExitStack() as stack:
-    rotary = stack.enter_context(RotaryLCD(get_live_settings()))
-
     forever = threading.Event()
 
     def close(_number, _frame):
@@ -32,18 +29,7 @@ with ExitStack() as stack:
         signal.signal(signal.SIGTERM, signal.SIG_DFL)
         forever.set()
 
-    rotary.backlight.magenta()
-    rotary.lcd.upper("POVM Box name:")
-    rotary.lcd.lower(f"{get_box_name():<20}")
-    forever.wait(3)
-
-    rotary.backlight.green(light=True)
-    rotary.lcd.upper("Turn to select alarm ")
-    rotary.lcd.lower("Push and turn to set ")
-    forever.wait(2)
-
-    rotary.backlight.white()
-
+    rotary = stack.enter_context(RotaryLCD(get_live_settings(), event=forever))
     collector = stack.enter_context(Collector(rotary=rotary, port=args.port))
     stack.enter_context(Broadcast("patient_loop", port=args.port, live=5))
 

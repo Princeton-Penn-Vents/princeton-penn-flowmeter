@@ -71,6 +71,9 @@ class MechanicalRotary:
         self.pi.set_pull_up_down(pinExt, pigpio.PUD_UP)
         self.pi.set_glitch_filter(pinExt, glitchFilter)
 
+        # The callbacks get fired sometimes during startup
+        time.sleep(0.2)
+
         self._rotary_turnedA = self.pi.callback(
             pinA, pigpio.EITHER_EDGE, self.rotary_turned
         )

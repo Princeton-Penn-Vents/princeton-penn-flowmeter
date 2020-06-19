@@ -10,15 +10,21 @@ from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 from patient.buzzer import Buzzer
 from processor.config import config as _config
+from patient.mac_address import get_box_name
 
 import pigpio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import time
 import threading
 
 
 class RotaryLCD(Rotary):
-    def __init__(self, config: Dict[str, Setting], pi: pigpio.pi = None):
+    def __init__(
+        self,
+        config: Dict[str, Setting],
+        pi: pigpio.pi = None,
+        event: Optional[threading.Event] = None,
+    ):
         super().__init__(config, pi=pi)
 
         shade = _config["patient"]["brightness"].get(int)
@@ -30,6 +36,7 @@ class RotaryLCD(Rotary):
         self.lock = threading.Lock()
         self.orig_timer_setting = _config["patient"]["silence-timeout"].get(int)
         self.timer_setting = self.orig_timer_setting
+        self.waiter = threading.Event() if event is None else event
 
     def external_update(self) -> None:
         if (
@@ -45,6 +52,18 @@ class RotaryLCD(Rotary):
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()
+
+        self.backlight.magenta()
+        self.lcd.upper("POVM Box name:")
+        self.lcd.lower(f"{get_box_name():<20}")
+        self.waiter.wait(3)
+
+        self.backlight.green(light=True)
+        self.lcd.upper("Turn to select alarm ")
+        self.lcd.lower("Push and turn to set ")
+        self.waiter.wait(2)
+        self.backlight.white()
+
         super().__enter__()
 
         return self
