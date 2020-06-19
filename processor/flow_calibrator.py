@@ -21,7 +21,7 @@ def get_yaml(yml_file):
 
 class flow_calibrator:
     def __init__(
-        self, block=os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
+        self, block=os.path.join(os.path.dirname(__file__), "flowcalib_data", "flowcalib_ave200619.yaml")
     ) -> None:
         func = None
         if block == "simple":
@@ -60,7 +60,7 @@ class flow_calibrator:
 
 
 if __name__ == "__main__":
-    print("Checking default calibration")
+    print("Checking old software calibration")
     caliber = flow_calibrator("simple")
     fs = np.arange(0.0, 33000.0, 1000.0)
     for f in fs:
@@ -70,27 +70,27 @@ if __name__ == "__main__":
     print(fs)
     print(caliber.Q(fs))
 
+    print("Checking the default")
+    caliber_def = flow_calibrator()
+    print(caliber.Q(fs))
+
     fs = np.arange(0.0, 33000.0, 1000.0)
     res1 = caliber.Q(fs)
 
-    print("Checking the average input file")
-    caliber2 = flow_calibrator(
-        os.path.join(os.path.dirname(__file__), "flowcalib_ave.yaml")
-    )
-
-    res2 = caliber2.Q(fs)
-
-    print("Checking the detailed input file")
-    caliber3 = flow_calibrator(
-        os.path.join(os.path.dirname(__file__), "flowcalib_det.yaml")
-    )
-    res3 = caliber3.Q(fs)
+    
+    files=["flowcalib_all.yaml", "flowcalib_xometry.yaml", "flowcalib_ave200619.yaml"]
+    labels=["All flowblocks","Xometry flowblocks","Selected June 18 flowblocks"]
 
     import matplotlib.pyplot as plt
+    res_list=[]
+    for i,f in enumerate(files):
+        caliber_f = flow_calibrator(
+            os.path.join(os.path.dirname(__file__), "flowcalib_data", f )
+        )
+        res_list.append(caliber_f.Q(fs))
+        plt.plot(fs, res_list[-1], label=labels[i])
 
-    plt.plot(fs, res2, label="Spline + power of 2 above 100 L/min")
-    plt.plot(fs, res3, label="Spline from Philippe")
-    plt.plot(fs, res1, label="Current software")
+    plt.plot(fs, res1, label="Previous software calibration")
     plt.xlabel("measured f")
     plt.ylabel("Q (L/min)")
     plt.legend(loc="best")
