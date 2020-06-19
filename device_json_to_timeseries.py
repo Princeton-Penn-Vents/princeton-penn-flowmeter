@@ -22,7 +22,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 import json
-import math
 
 import numpy
 
@@ -62,8 +61,8 @@ with open(args.input) as fin:
         # have to fix it both here and there.
         t = j["t"] / 1000.0
         p = j["P"] * pressure_scale - pressure_offset
-        #this was the old flow calibration
-        #fO = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
+        # this was the old flow calibration
+        # fO = math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * flow_scale - flow_offset
         f = caliber.Q(j["F"])
 
         if starttime is None:
@@ -84,7 +83,7 @@ volume = analysis.flow_to_volume(
 volume -= numpy.min(volume)
 
 minbias_volume = analysis.flow_to_volume(
-    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.00001,
+    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.0004,
 )
 minbias_volume -= numpy.min(minbias_volume)
 

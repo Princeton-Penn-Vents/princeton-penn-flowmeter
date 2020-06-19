@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
+
+from __future__ import annotations
 
 import pigpio
 import time
-from typing import Union
+from typing import Union, Any
 import enum
 
 
@@ -20,7 +24,7 @@ class LCD:
     def __init__(self, *, pi: pigpio.pi = None):
         self.pi = pi
 
-    def __enter__(self) -> "LCD":
+    def __enter__(self) -> LCD:
         # Get pigio connection
         if self.pi is None:
             self.pi = pigpio.pi()
@@ -71,7 +75,17 @@ class LCD:
         b = text.encode("ascii")
         self.pi.i2c_write_device(self.hLCD, [0x40] + [*b])
 
-    def upper(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
+    def upper(
+        self, text: str, pos: Union[int, Align] = Align.LEFT, fill: str = ""
+    ) -> None:
+        self._either(0x80, text, pos, fill)
+
+    def lower(
+        self, text: str, pos: Union[int, Align] = Align.LEFT, fill: str = ""
+    ) -> None:
+        self._either(0xC0, text, pos, fill)
+
+    def _either(self, start: int, text: str, pos: Union[int, Align], fill: str) -> None:
         assert self.pi is not None, 'Must use "with" to use'
         if pos == Align.LEFT:
             pos = 0
@@ -80,26 +94,19 @@ class LCD:
         else:
             pos = 20 - len(text)
 
-        self.ctrl(0x80 + pos)
-        self.text(text)
-
-    def lower(self, text: str, pos: Union[int, Align] = Align.LEFT) -> None:
-        assert self.pi is not None, 'Must use "with" to use'
-        if pos == Align.LEFT:
-            pos = 0
-        elif pos == Align.CENTER:
-            pos = (20 - len(text)) // 2
+        if fill:
+            text = fill * pos + text + fill * (20 - len(text))
+            self.ctrl(start)
         else:
-            pos = 20 - len(text)
+            self.ctrl(start + pos)
 
-        self.ctrl(0xC0 + pos)
         self.text(text)
 
     def clear(self) -> None:
         self.ctrl(0x01)
         time.sleep(0.002)
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         assert self.pi is not None, 'Must use "with" to use'
         self.pi.i2c_close(self.hLCD)
 

@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
+# mypy: disallow_untyped_defs
+# mypy: disallow_incomplete_defs
 from __future__ import annotations
 
 from processor.setting import Setting
 from processor.display_settings import ResetSetting, AdvancedSetting, CurrentSetting
 from patient.rotary import Rotary, Dir
-from patient.lcd import LCD
+from patient.lcd import LCD, Align
 from patient.backlight import Backlight
 from patient.buzzer import Buzzer
 from processor.config import config as _config
+from patient.mac_address import get_box_name
 
 import pigpio
-from typing import Dict
-import enum
+from typing import Dict, Any, Optional
 import time
 import threading
 
 
-class AlarmLevel(enum.Enum):
-    LOUD = enum.auto()
-    QUIET = enum.auto()
-    OFF = enum.auto()
-
-
 class RotaryLCD(Rotary):
-    def __init__(self, config: Dict[str, Setting], pi: pigpio.pi = None):
+    def __init__(
+        self,
+        config: Dict[str, Setting],
+        pi: pigpio.pi = None,
+        event: Optional[threading.Event] = None,
+    ):
         super().__init__(config, pi=pi)
 
         shade = _config["patient"]["brightness"].get(int)
@@ -31,12 +32,18 @@ class RotaryLCD(Rotary):
         self.lcd = LCD(pi=pi)
         self.backlight = Backlight(shade=shade, pi=pi)
         self.buzzer = Buzzer(pi=pi)
-        self.alarm_level: AlarmLevel = AlarmLevel.OFF
         self.buzzer_volume: int = _config["patient"]["buzzer-volume"].get(int)
         self.lock = threading.Lock()
+        self.orig_timer_setting = _config["patient"]["silence-timeout"].get(int)
+        self.timer_setting = self.orig_timer_setting
+        self.waiter = threading.Event() if event is None else event
 
     def external_update(self) -> None:
-        if isinstance(self.value(), CurrentSetting):
+        if (
+            isinstance(self.value(), CurrentSetting)
+            or self.time_left() > 0
+            and not self.pushed_in
+        ):
             with self.lock:
                 self.upper_display()
                 self.lower_display()
@@ -45,11 +52,23 @@ class RotaryLCD(Rotary):
         self.lcd.__enter__()
         self.backlight.__enter__()
         self.buzzer.__enter__()
+
+        self.backlight.magenta()
+        self.lcd.upper("POVM Box name:")
+        self.lcd.lower(f"{get_box_name():<20}")
+        self.waiter.wait(3)
+
+        self.backlight.green(light=True)
+        self.lcd.upper("Turn to select alarm ")
+        self.lcd.lower("Push and turn to set ")
+        self.waiter.wait(2)
+        self.backlight.white()
+
         super().__enter__()
 
         return self
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, *exc: Any) -> None:
         self.backlight.cyan()
         self.lcd.clear()
         self.lcd.upper("Princeton Open Vent")
@@ -64,18 +83,9 @@ class RotaryLCD(Rotary):
             self.pi.stop()
             self.pi = None
 
-    def reset(self):
+    def reset(self) -> None:
         for value in self.config.values():
             value.reset()
-
-    def push(self) -> None:
-        if self.alarm_level == AlarmLevel.LOUD and self.alarms:
-            self.buzzer.clear()
-            self.backlight.orange()
-            self.alarm_level = AlarmLevel.QUIET
-        else:
-            self.alert()
-            super().push()
 
     def release(self) -> None:
         value = self.value()
@@ -99,25 +109,69 @@ class RotaryLCD(Rotary):
             self.lower_display()
             self.upper_display()
 
-    def alert(self) -> None:
+    def extra_push(self) -> None:
+        self.timer_setting = self.orig_timer_setting
+        self.set_alarm_silence(self.timer_setting)
+        super().extra_push()
+        self.alert(False)
+        self.lcd.upper("Silence duration", pos=Align.CENTER, fill=" ")
+        self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
+
+    def extra_release(self) -> None:
+        self.set_alarm_silence(self.timer_setting)
+        super().extra_release()
+        self.alert(False)
+        self.display()
+
+    def extra_turn(self, dir: Dir) -> None:
+        if dir == Dir.CLOCKWISE and self.timer_setting < 995:
+            self.timer_setting += 5
+        elif dir == Dir.COUNTERCLOCKWISE and self.timer_setting > 0:
+            self.timer_setting -= 5
+        self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
+
+    def alert(self, full: bool = True) -> None:
         with self.lock:
-            if self.alarms and self.alarm_level == AlarmLevel.OFF:
+            time_left = self.time_left()
+            if self.alarms and time_left < 0 and not self.extra_in:
                 self.backlight.red()
                 self.buzzer.buzz(self.buzzer_volume)
-                self.alarm_level = AlarmLevel.LOUD
             elif not self.alarms:
                 self.backlight.white()
                 self.buzzer.clear()
-                self.alarm_level = AlarmLevel.OFF
+            elif time_left > 0:
+                self.backlight.yellow()
+                self.buzzer.clear()
 
-            if isinstance(self.value(), AdvancedSetting):
-                self.upper_display()
-            else:
-                self.lower_display()
+            if full:
+                if time_left > 0:
+                    self.set_alarm_silence(time_left, reset=False)
+
+                if isinstance(self.value(), AdvancedSetting):
+                    self.upper_display()
+                else:
+                    self.lower_display()
 
         super().alert()
 
+    def _add_alarm_text(self, string: str) -> str:
+        time_left = self.time_left()
+        if time_left > 0:
+            char = "Q" if self.alarms else "S"
+            string = f"{string[:13]} {char}:{time_left:.0f}s"
+            string = f"{string:<20}"
+        elif self.alarms:
+            n = len(self.alarms)
+            if n == 1:
+                string = string[:14] + " ALARM"
+            else:
+                string = string[:13] + f" {n}ALRMS"
+
+        return string
+
     def upper_display(self) -> None:
+        if self.extra_in:
+            return
         current_name = self.value().lcd_name
         current_number = f"{self._current + 1}"
         if isinstance(self.value(), AdvancedSetting):
@@ -129,27 +183,22 @@ class RotaryLCD(Rotary):
 
         string = f"{current_number}: {current_name:<{length_available}}"
 
-        if self.alarms and isinstance(self.value(), AdvancedSetting):
-            n = len(self.alarms)
-            if n == 1:
-                string = string[:14] + " ALARM"
-            else:
-                string = string[:13] + " ALARMS"
+        if isinstance(self.value(), AdvancedSetting):
+            string = self._add_alarm_text(string)
 
         self.lcd.upper(string)
 
     def lower_display(self) -> None:
+        if self.extra_in:
+            return
         current_item = self.value()
         string = f"{current_item:<20}"
         if len(string) > 20:
             print(f"Warning: Truncating {string!r}")
             string = string[:20]
-        if self.alarms and not isinstance(self.value(), AdvancedSetting):
-            n = len(self.alarms)
-            if n == 1:
-                string = string[:14] + " ALARM"
-            else:
-                string = string[:13] + " ALARMS"
+
+        if not isinstance(self.value(), AdvancedSetting):
+            string = self._add_alarm_text(string)
 
         self.lcd.lower(string)
 

@@ -13,7 +13,6 @@ from zmq.decorators import context, socket
 import time
 from datetime import datetime
 from typing import Optional
-import math
 from patient.mac_address import get_mac_addr, get_box_name
 
 
@@ -45,8 +44,9 @@ class CollectorThread(threading.Thread):
         sub_socket.connect("tcp://localhost:5556")
         sub_socket.subscribe(b"")
 
-        #flow calibration
+        # flow calibration
         from processor.flow_calibrator import flow_calibrator
+
         caliber = flow_calibrator()
 
         # Up to 60 seconds of data (roughly, not promised)
@@ -67,11 +67,11 @@ class CollectorThread(threading.Thread):
                     p: float = 0
                 else:
                     f = caliber.Q(j["F"])
-#                   old calibration
-#                    f = (
-#                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-#                        - self._flow_offset
-#                    )
+                    #                   old calibration
+                    #                    f = (
+                    #                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
+                    #                        - self._flow_offset
+                    #                    )
                     p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})
@@ -147,11 +147,10 @@ class Collector(Generator):
         if "Current Setting" in self.rotary:
             setting = self.rotary["Current Setting"]
 
-            F = self.average_flow
-            P = self.average_pressure
-
             setting.from_processor(
-                F=list(F.values()), P=list(P.values()),
+                F=self.average_flow.get(2),
+                P=self.average_pressure.get(2),
+                RR=self.cumulative.get("RR"),
             )
             self.rotary.external_update()
 
