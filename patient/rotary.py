@@ -49,9 +49,6 @@ class MechanicalRotary:
         self._ts = time.monotonic()
         self._filter = 0.02
 
-    def last_interaction(self) -> float:
-        return self._last_interaction
-
     def __enter__(self: MT) -> MT:
         # Filter button pushes the normal way
         glitchFilter = 300
@@ -187,11 +184,20 @@ class Rotary(LiveRotary, MechanicalRotary):
         # Rate of changing screens on the display
         self._change_rate: Final[int] = 4
 
-        # Timestamp  at which to start the alarm again - will be silenced until this time
+        # Timestamp at which to start the alarm again - will be silenced until this time
         self._alarm_silence: float = time.monotonic()
 
         # Singleton Timer that will run alarm() when done.
         self._time_out_alarm: Optional[threading.Timer] = None
+
+        # Singleton Timer that will start an alarm if not cancelled
+        self._delay_timout_setter: Optional[threading.Timer] = None
+
+        # Lock this to modify the delay timer
+        self.delay_lock = threading.RLock()
+
+    def last_interaction(self) -> float:
+        return self._last_interaction
 
     def time_left(self) -> float:
         """
@@ -200,24 +206,39 @@ class Rotary(LiveRotary, MechanicalRotary):
         return self._alarm_silence - time.monotonic()
 
     def set_alarm_silence(self, value: float, *, reset: bool = True) -> None:
-        if self._time_out_alarm is not None:
-            # If we are not resetting, do not touch anything
-            if not reset:
-                return
+        with self.delay_lock:
+            if self._time_out_alarm is not None:
+                # If we are not resetting, do not touch anything
+                if not reset:
+                    return
 
-            self._time_out_alarm.cancel()
+                self._time_out_alarm.cancel()
 
-        def timeout() -> None:
-            self._time_out_alarm = None
-            logger.debug("Silence timed out")
-            self.alert()
+            def timeout() -> None:
+                self._time_out_alarm = None
+                logger.debug("Silence timed out")
+                self.alert()
 
-        self._alarm_silence = time.monotonic() + value
-        self._time_out_alarm = threading.Timer(value, timeout)
-        self._time_out_alarm.start()
-        logger.info(
-            f"Setting silence timeout to {value} s, ends at {self._alarm_silence}"
-        )
+            self._alarm_silence = time.monotonic() + value
+            self._time_out_alarm = threading.Timer(value, timeout)
+            self._time_out_alarm.start()
+            logger.info(
+                f"Setting silence timeout to {value} s, ends at {self._alarm_silence}"
+            )
+            if self._delay_timout_setter is not None:
+                self._delay_timout_setter = None
+
+    def delayed_set_alarm_silence(self, value: float, delay: float = 0.3) -> None:
+        "Activate alarm silence, but only after a time - can be canceled"
+        with self.delay_lock:
+            if self._delay_timout_setter is not None:
+                self._delay_timout_setter.cancel()
+                self._delay_timout_setter = None
+
+            self._delay_timout_setter = threading.Timer(
+                delay, self.set_alarm_silence, args=(value,)
+            )
+            self._delay_timout_setter.start()
 
     def turn(self, dir: Dir) -> None:
         self._slow_turn = (self._slow_turn + dir.value) % (
