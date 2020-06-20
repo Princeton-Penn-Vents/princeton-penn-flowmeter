@@ -41,13 +41,16 @@ class MechanicalRotary:
         self.pi = pi
         self.pushed_in = False
         self.extra_in = False
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         self.turns = 0
         self.levA = 0
         self.levB = 0
         self._last: Optional[int] = None
         self._ts = time.monotonic()
         self._filter = 0.02
+
+    def last_interaction(self) -> float:
+        return self._last_interaction
 
     def __enter__(self: MT) -> MT:
         # Filter button pushes the normal way
@@ -142,31 +145,31 @@ class MechanicalRotary:
             self.extra_release()
 
     def pushed_turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug(f"Push + turn {dir}")
 
     def extra_turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug(f"Extra + turn {dir}")
 
     def turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug(f"Turned {dir}")
 
     def push(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug("Pressed")
 
     def release(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug("Released")
 
     def extra_push(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug("Extra pressed")
 
     def extra_release(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_interaction = time.monotonic()
         logger.debug("Extra released")
 
 
