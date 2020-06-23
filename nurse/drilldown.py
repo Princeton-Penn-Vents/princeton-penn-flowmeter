@@ -527,6 +527,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.last_ts.setObjectName("LastTS")
         displays_layout.addWidget(self.last_ts)
 
+        self.last_interation = QtWidgets.QLabel("Last interation: ---")
+        self.last_interation.setObjectName("LastInteraction")
+        displays_layout.addWidget((self.last_interation))
+
         button_box = QtWidgets.QWidget()
         button_box.setObjectName("DrilldownExtras")
         buttons_layout = QtWidgets.QHBoxLayout(button_box)
@@ -753,7 +757,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
-                    self.status = self.gen.status
+                    if self.status != self.gen.status:
+                        self.status = self.gen.status
                     self.displays.update_cumulative()
                     self.displays.update_limits()
 
@@ -775,9 +780,23 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             break
                     else:
                         breath_str = "No detected breaths yet"
+
                     self.last_ts.setText(
                         f"Updated: {time_str} @ {date_str}\n{breath_str}"
                     )
+
+                    if (
+                        self.gen.last_interact is not None
+                        and len(self.gen.timestamps) > 0
+                    ):
+                        last_interaction = (
+                            self.gen.tardy
+                            + self.gen.timestamps[-1]
+                            - self.gen.last_interact
+                        )
+                        self.last_interation.setText(
+                            f"Last interaction: {last_interaction} s ago"
+                        )
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack

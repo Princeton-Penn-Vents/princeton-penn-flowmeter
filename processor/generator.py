@@ -27,7 +27,10 @@ if TYPE_CHECKING:
 class Status(enum.Enum):
     OK = enum.auto()
     ALERT = enum.auto()
+    SILENT = enum.auto()
+    ALERT_SILENT = enum.auto()
     DISCON = enum.auto()
+    NONE = enum.auto()
 
 
 T = TypeVar("T", bound="Generator")
@@ -121,7 +124,7 @@ class Generator(abc.ABC):
         self._last_get: Optional[float] = None
 
         # Status of the generator alarms, set in get_data
-        self.status: Status
+        self.status: Status = Status.NONE
 
         # Path to write data to (needs name change)
         self._logging: Optional[Path] = None
@@ -148,6 +151,12 @@ class Generator(abc.ABC):
 
         # Used by GUI to bundle information
         self.record = GenRecord(self.logger) if gen_record is None else gen_record
+
+        # Last interaction timestamp (only set on remote generators)
+        self.last_interact: Optional[float] = None
+
+        # Time left on alarm silence (only on remote generators)
+        self.time_left: Optional[float] = None
 
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
@@ -232,11 +241,10 @@ class Generator(abc.ABC):
 
             self._last_ana = time.monotonic()
 
-            if hasattr(self, "status"):
-                if self.alarms and self.status == Status.OK:
-                    self.status = Status.ALERT
-                elif not self.alarms and self.status == Status.ALERT:
-                    self.status = Status.OK
+            if self.time_left is not None and self.time_left > 0:
+                self.status = Status.ALERT_SILENT if self.alarms else Status.SILENT
+            else:
+                self.status = Status.ALERT if self.alarms else Status.OK
 
             if self.saver_cml:
                 self.saver_cml.save()
