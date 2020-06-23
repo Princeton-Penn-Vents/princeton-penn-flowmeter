@@ -26,6 +26,7 @@ from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
 from nurse.generator_dialog import GeneratorDialog
 from processor.config import config
+from processor.remote_generator import RemoteGenerator
 
 if TYPE_CHECKING:
     from nurse.main_window import MainStack
@@ -563,7 +564,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @property
     def status(self):
-        return Status[self.property("alert_status")]
+        return Status[self.property("alert_status") or "NONE"]
 
     @status.setter
     def status(self, value: Status):
@@ -786,16 +787,17 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     )
 
                     if (
-                        self.gen.last_interact is not None
-                        and len(self.gen.timestamps) > 0
+                        isinstance(self.gen, RemoteGenerator)
+                        and self.gen.last_interact is not None
+                        and self.gen.current_monotonic is not None
                     ):
                         last_interaction = (
                             self.gen.tardy
-                            + self.gen.timestamps[-1]
+                            + self.gen.current_monotonic
                             - self.gen.last_interact
                         )
                         self.last_interation.setText(
-                            f"Last interaction: {last_interaction} s ago"
+                            f"Last interaction: {last_interaction:.0f} s ago"
                         )
 
             patient = self.parent()

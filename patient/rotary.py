@@ -41,7 +41,7 @@ class MechanicalRotary:
         self.pi = pi
         self.pushed_in = False
         self.extra_in = False
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         self.turns = 0
         self.levA = 0
         self.levB = 0
@@ -142,31 +142,31 @@ class MechanicalRotary:
             self.extra_release()
 
     def pushed_turn(self, dir: Dir) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Push + turn {dir}")
 
     def extra_turn(self, dir: Dir) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Extra + turn {dir}")
 
     def turn(self, dir: Dir) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Turned {dir}")
 
     def push(self) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Pressed")
 
     def release(self) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Released")
 
     def extra_push(self) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Extra pressed")
 
     def extra_release(self) -> None:
-        self._last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Extra released")
 
 
@@ -197,7 +197,7 @@ class Rotary(LiveRotary, MechanicalRotary):
         self.delay_lock = threading.RLock()
 
     def last_interaction(self) -> float:
-        return self._last_interaction
+        return self._last_touched
 
     def time_left(self) -> float:
         """

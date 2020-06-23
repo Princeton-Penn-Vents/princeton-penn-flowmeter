@@ -36,6 +36,7 @@ class RemoteThread(threading.Thread):
         self.sid = 0
         self.last_interact: Optional[float] = None
         self.time_left: Optional[float] = None
+        self.monotime: Optional[float] = None
 
         super().__init__()
 
@@ -73,6 +74,9 @@ class RemoteThread(threading.Thread):
                 if "last interact" in root:
                     with self._remote_lock:
                         self.last_interact = root["last interact"]
+                if "monotime" in root:
+                    with self._remote_lock:
+                        self.monotime = root["monotime"]
                 if "time left" in root:
                     with self._remote_lock:
                         self.time_left = root["time left"]
@@ -99,6 +103,7 @@ class RemoteThread(threading.Thread):
             self.parent.last_update = self._last_update
             self.parent._last_get = self._last_get
             self.parent.last_interact = self.last_interact
+            self.parent.current_monotonic = self.monotime
             self.parent.time_left = self.time_left
 
             newel = new_elements(self.parent._time, self._time)
@@ -145,6 +150,15 @@ class RemoteGenerator(Generator):
         self.status = Status.DISCON
         self._last_ts: int = 0
 
+        # Last interaction timestamp (only set on remote generators)
+        self.last_interact: Optional[float] = None
+
+        # Time left on alarm silence (only on remote generators)
+        self.time_left: Optional[float] = None
+
+        # Current monotonic time from last access
+        self.current_monotonic: Optional[float] = None
+
         self._remote_thread: Optional[RemoteThread] = None
 
     def run(self) -> None:
@@ -160,6 +174,12 @@ class RemoteGenerator(Generator):
             with self.lock:
                 if np.any(self._time[:-1] > self._time[1:]):
                     self.logger.error("Time array is not sorted!")
+
+    def _set_alarms(self) -> None:
+        if self.time_left is not None and self.time_left > 0:
+            self.status = Status.ALERT_SILENT if self.alarms else Status.SILENT
+        else:
+            super()._set_alarms()
 
     @property
     def address(self) -> str:

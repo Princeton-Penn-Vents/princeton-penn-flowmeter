@@ -152,12 +152,6 @@ class Generator(abc.ABC):
         # Used by GUI to bundle information
         self.record = GenRecord(self.logger) if gen_record is None else gen_record
 
-        # Last interaction timestamp (only set on remote generators)
-        self.last_interact: Optional[float] = None
-
-        # Time left on alarm silence (only on remote generators)
-        self.time_left: Optional[float] = None
-
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
         self.saver_cml: Optional[CSVSaverCML] = None
@@ -241,16 +235,17 @@ class Generator(abc.ABC):
 
             self._last_ana = time.monotonic()
 
-            if self.time_left is not None and self.time_left > 0:
-                self.status = Status.ALERT_SILENT if self.alarms else Status.SILENT
-            else:
-                self.status = Status.ALERT if self.alarms else Status.OK
+            self._set_alarms()
 
             if self.saver_cml:
                 self.saver_cml.save()
 
         if self.saver_ts:
             self.saver_ts.save()
+
+    def _set_alarms(self):
+        "Overridden in remote generator to include silenced alarms. Collector doens't care."
+        self.status = Status.ALERT if self.alarms else Status.OK
 
     @abc.abstractmethod
     def _get_data(self):
