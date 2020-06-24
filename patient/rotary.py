@@ -228,7 +228,7 @@ class Rotary(LiveRotary, MechanicalRotary):
             if self._delay_timout_setter is not None:
                 self._delay_timout_setter = None
 
-    def delayed_set_alarm_silence(self, value: float, delay: float = 0.3) -> None:
+    def delayed_set_alarm_silence(self, value: float, *, delay: float) -> None:
         "Activate alarm silence, but only after a time - can be canceled"
         with self.delay_lock:
             if self._delay_timout_setter is not None:
