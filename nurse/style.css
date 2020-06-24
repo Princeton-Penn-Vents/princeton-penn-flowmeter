@@ -455,13 +455,14 @@ QLabel#LastTS {
 
 QLabel#LastInteraction {
   margin: 4px 6px 2px 6px;
-  color: floralwhite;
+  color: cornsilk;
+  font-size: 16pt;
 }
 
 QLabel#TimeLeft {
   margin: 4px 6px 2px 6px;
   color: yellow;
-  font-size: 24px;
+  font-size: 18pt;
   font-weight: bold;
 }
 
