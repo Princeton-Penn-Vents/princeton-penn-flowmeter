@@ -25,9 +25,21 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
         clicking on them opens a limit selection dialog that can adjust the graph limits for all sensors. The next item on the menu is a "+" symbol,
         and clicking on that will open the add sensor dialog (advanced, usually not needed). Finally, you will see the "?" button that brought you here.</p>
 
-        <p> The main screen has a grid of sensors. You can click the "i" to view information. You can click on the title to set it.
-        You can click/tap on a sensor to enter the "drilldown"
+        <p> The main screen has a grid of sensors. You can click the status button to view information. You can click on the title to set it.
+        After the title, you can see the box name. Cumulatve values are displayed on the right side of the graph. You can click/tap on a sensor to enter the "drilldown"
         for that sensor. You can drag one sensor on another to swap their positions.</p>
+
+        <p>
+        Status codes:
+        <\p>
+
+        <ul>
+          <li>OK: No alarms present</li>
+          <li>!: Alarm parameters exceeded (red)</li>
+          <li>S: Silent mode, no alarms present (dark yellow)</li>
+          <li>S!: Silent mode, one or more alarms present (bright yellow)</li>
+          <li>D: Disconnected (blue)</li>
+        </ul>
         """
         )
         main_help.setWordWrap(True)
@@ -37,10 +49,28 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
             r"""
         <p> In the drilldown screen, there are a few new items in the top bar: </p>
         <ul>
-        <li>Mode: can be set to Scroll or Overwrite</li>
-        <li>Freeze: Will stop the screen from updating when selected</li>
-        <li>Return to main window: Leave the drilldown</li>
+          <li>Mode: can be set to Scroll or Overwrite</li>
+          <li>Freeze: Will stop the screen from updating when selected</li>
+          <li>Return to main window: Leave the drilldown</li>
         </ul>
+
+        <p>
+        The main screen on the left is similar to the one shown on the main page, but
+        it allows direct manipulation (hover over an axes and turn the wheel, or drag).
+        If you click the small "A" button, you can reset to view all.
+        </p>
+
+        <p>
+        On the right side, you have the Volume vs. Pressure curve, a collection of cumulative
+        values, and some timing information, such as the last time the patient box was adjusted.
+        There is also a Notes field that can be used to enter information.
+        </p>
+
+        <p>
+        The final column on the far right side of the screen provides an overview of all
+        the boxes attached to the system. You can click on one to quickly switch, and the colors
+        match the alarm status for that box.
+        </p>
         """
         )
         drilldown_help.setWordWrap(True)
@@ -48,11 +78,22 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
 
         drilldown_rotary = QtWidgets.QLabel(
             r"""
-        <p> The patient box has a screen and a dial. To use the dial:
+        <p>
+        The patient box has a screen and a dial on the front, and a red silence button on the top.
+        The unique box name is displayed when the device is started (and can also be retrieved from
+        the final menu item). The main screen is a live monitor screen, and shows the 10 second averaged
+        Flow, Pressure, and Respiratory Rate. Alarms are shown on the far right of the screen, and the display
+        turns red and a buzzer sounds when an alarm is active, unless the silence countdown timer is active, in which
+        case the screen turns yellow and "S" for silence is replaced by "Q" for quiet.
+        <\p>
+        <p>
+        To control the patient box:
+        </p>
         <ul>
-        <li>Press to silence the buzzer</li>
         <li>Turn to select items from the menu (item number is shown in the top left)</li>
         <li>Press and turn to set a value</li>
+        <li>Press the silence button to put the device into silent mode for 120 seconds.</li>
+        <li>Turn the knob while holding the silence button to adjust the timer from 0 to 995 seconds.</li>
         <li>Reset menu item only: Press and turn to activate the reset; release while the meter is full to reset the alarm settings.</li>
         <li>Box name menu item only: Press and turn to see sub-menu items.</li>
         </ul>
