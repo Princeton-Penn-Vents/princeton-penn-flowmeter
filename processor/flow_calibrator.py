@@ -19,7 +19,9 @@ def get_yaml(yml_file):
     return qs, deltaPs
 
 
-DEFAULT_BLOCK = os.path.join(os.path.dirname(__file__), "flowcalib_data", "flowcalib_ave200619.yaml")
+DEFAULT_BLOCK = os.path.join(
+    os.path.dirname(__file__), "flowcalib_data", "flowcalib_ave200619.yaml"
+)
 
 
 class flow_calibrator:
@@ -78,15 +80,15 @@ if __name__ == "__main__":
     fs = np.arange(0.0, 33000.0, 1000.0)
     res1 = caliber.Q(fs)
 
-    
-    files=["flowcalib_all.yaml", "flowcalib_xometry.yaml", "flowcalib_ave200619.yaml"]
-    labels=["All flowblocks","Xometry flowblocks","Selected June 18 flowblocks"]
+    files = ["flowcalib_all.yaml", "flowcalib_xometry.yaml", "flowcalib_ave200619.yaml"]
+    labels = ["All flowblocks", "Xometry flowblocks", "Selected June 18 flowblocks"]
 
     import matplotlib.pyplot as plt
-    res_list=[]
-    for i,f in enumerate(files):
+
+    res_list = []
+    for i, f in enumerate(files):
         caliber_f = flow_calibrator(
-            os.path.join(os.path.dirname(__file__), "flowcalib_data", f )
+            os.path.join(os.path.dirname(__file__), "flowcalib_data", f)
         )
         res_list.append(caliber_f.Q(fs))
         plt.plot(fs, res_list[-1], label=labels[i])
