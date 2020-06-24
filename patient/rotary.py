@@ -51,7 +51,8 @@ class MechanicalRotary:
 
     def __enter__(self: MT) -> MT:
         # Filter button pushes the normal way
-        glitchFilter = 300
+        glitchFilterSW = 1_000  # microseconds
+        glitchFilterExt = 10_000  # microseconds
 
         # Get pigio connection
         if self.pi is None:
@@ -65,11 +66,11 @@ class MechanicalRotary:
 
         self.pi.set_mode(pinSW, pigpio.INPUT)
         self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinSW, glitchFilter)
+        self.pi.set_glitch_filter(pinSW, glitchFilterSW)
 
         self.pi.set_mode(pinExt, pigpio.INPUT)
         self.pi.set_pull_up_down(pinExt, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinExt, glitchFilter)
+        self.pi.set_glitch_filter(pinExt, glitchFilterExt)
 
         # The callbacks get fired sometimes during startup
         time.sleep(0.2)
