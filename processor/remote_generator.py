@@ -115,8 +115,6 @@ class RemoteThread(threading.Thread):
 
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON
-            elif self.parent.status == Status.DISCON:
-                self.parent.status = Status.OK
 
             # These log and perform (simple, please!) callbacks
             if self.mac is not None:
