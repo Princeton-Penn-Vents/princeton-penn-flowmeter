@@ -20,7 +20,7 @@ from nurse.qt import (
     DraggableMixin,
 )
 
-from nurse.common import GraphInfo
+from nurse.common import GraphInfo, HOVER_STRINGS
 from nurse.header import DrilldownHeaderWidget
 from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
@@ -74,15 +74,19 @@ class DisplayBox(QtWidgets.QFrame):
         super().__init__()
         self.key = key
         self.fmt = fmt
+        self.window = config["global"]["avg-window"].get(int)
         layout = QtWidgets.QVBoxLayout(self)
 
         upper_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(upper_layout)
 
-        upper_layout.addWidget(DrilldownLabel(label))
+        title = DrilldownLabel(label)
+        title.setToolTip(HOVER_STRINGS[key])
+        upper_layout.addWidget(title)
         upper_layout.addStretch()
 
         self.cumulative = DrilldownCumulative()
+        self.cumulative.setToolTip(HOVER_STRINGS[key])
         upper_layout.addWidget(self.cumulative)
 
         self.since = DrilldownSince()
@@ -92,16 +96,19 @@ class DisplayBox(QtWidgets.QFrame):
         layout.addLayout(lower_layout)
 
         self.lower_limit = DrilldownLimit()
+        self.lower_limit.setToolTip("Lower limit for alarm")
         lower_layout.addWidget(self.lower_limit)
 
         lower_layout.addStretch()
 
         if self.key.startswith("Avg "):
             self.avg_time = DrilldownLimit()
+            self.avg_time.setToolTip("Time averaged over in seconds")
             lower_layout.addWidget(self.avg_time)
             lower_layout.addStretch()
 
         self.upper_limit = DrilldownLimit()
+        self.upper_limit.setToolTip("Upper limit for alarm")
         lower_layout.addWidget(self.upper_limit)
 
         self.update_cumulative()
@@ -117,11 +124,9 @@ class DisplayBox(QtWidgets.QFrame):
         if gen is None:
             value = None
         elif self.key == "Avg Flow":
-            avg_window = config["global"]["avg-window"].get(int)
-            value = gen.average_flow[avg_window]
+            value = gen.average_flow[self.window]
         elif self.key == "Avg Pressure":
-            avg_window = config["global"]["avg-window"].get(int)
-            value = gen.average_pressure[avg_window]
+            value = gen.average_pressure[self.window]
         else:
             value = gen.cumulative.get(self.key)
 
