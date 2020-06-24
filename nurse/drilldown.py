@@ -245,6 +245,7 @@ class PatientTitle(QtWidgets.QWidget):
         layout = HBoxLayout(self)
 
         self.name_lbl = QtWidgets.QPushButton("i")
+        self.name_lbl.setToolTip("Click for details")
         self.name_lbl.clicked.connect(self.click_number)
         layout.addWidget(self.name_lbl)
 
@@ -441,6 +442,9 @@ class AlarmBox(QtWidgets.QPushButton):
     def update_gen(self):
         if self.gen.record.title:
             self.title.setText(self.gen.record.title)
+            self.title.setToolTip(
+                f"{self.gen.record.title}\n{self.gen.record.box_name}"
+            )
             self.stack.setCurrentIndex(1)
         else:
             upper, lower = self.gen.record.stacked_name.split("\n")
@@ -598,6 +602,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
     def status(self, value: Status):
         if value.name != self.property("alert_status"):
             self.setProperty("alert_status", value.name)
+            self.title.name_lbl.setText(value.value)
             self.title.repolish()
 
     @Slot()

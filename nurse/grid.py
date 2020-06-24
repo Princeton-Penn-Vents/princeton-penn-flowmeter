@@ -79,6 +79,7 @@ class NumbersWidget(QtWidgets.QWidget):
 class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, gen: GeneratorGUI):
         super().__init__()
+        self.setToolTip("Click for details")
         self.gen = gen
         record = self.gen.record
 
@@ -135,6 +136,7 @@ class PatientSensor(DraggableSensor):
     def status(self, value: Status):
         if value.name != self.property("alert_status"):
             self.setProperty("alert_status", value.name)
+            self.title_widget.name_btn.setText(value.value)
             self.title_widget.repolish()
 
             self.style().unpolish(self)
