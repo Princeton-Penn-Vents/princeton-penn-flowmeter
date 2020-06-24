@@ -37,6 +37,7 @@ class RotaryLCD(Rotary):
         self.orig_timer_setting = _config["patient"]["silence-timeout"].get(int)
         self.timer_setting = self.orig_timer_setting
         self.waiter = threading.Event() if event is None else event
+        self.silence_holddown = _config["patient"]["silence-holddown"].get(float)
 
     def external_update(self) -> None:
         if (
@@ -111,14 +112,19 @@ class RotaryLCD(Rotary):
 
     def extra_push(self) -> None:
         self.timer_setting = self.orig_timer_setting
-        self.set_alarm_silence(self.timer_setting)
+        self.delayed_set_alarm_silence(999, delay=self.silence_holddown)
         super().extra_push()
         self.alert(False)
         self.lcd.upper("Silence duration", pos=Align.CENTER, fill=" ")
         self.lcd.lower(f"to {self.timer_setting} s", pos=Align.CENTER, fill=" ")
 
     def extra_release(self) -> None:
-        self.set_alarm_silence(self.timer_setting)
+        with self.delay_lock:
+            if self._delay_timout_setter is None:
+                self.set_alarm_silence(self.timer_setting)
+            else:
+                self._delay_timout_setter.cancel()
+                self._delay_timout_setter = None
         super().extra_release()
         self.alert(False)
         self.display()

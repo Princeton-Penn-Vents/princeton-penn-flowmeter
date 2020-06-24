@@ -27,7 +27,10 @@ if TYPE_CHECKING:
 class Status(enum.Enum):
     OK = enum.auto()
     ALERT = enum.auto()
+    SILENT = enum.auto()
+    ALERT_SILENT = enum.auto()
     DISCON = enum.auto()
+    NONE = enum.auto()
 
 
 T = TypeVar("T", bound="Generator")
@@ -121,7 +124,7 @@ class Generator(abc.ABC):
         self._last_get: Optional[float] = None
 
         # Status of the generator alarms, set in get_data
-        self.status: Status
+        self.status: Status = Status.NONE
 
         # Path to write data to (needs name change)
         self._logging: Optional[Path] = None
@@ -232,17 +235,17 @@ class Generator(abc.ABC):
 
             self._last_ana = time.monotonic()
 
-            if hasattr(self, "status"):
-                if self.alarms and self.status == Status.OK:
-                    self.status = Status.ALERT
-                elif not self.alarms and self.status == Status.ALERT:
-                    self.status = Status.OK
+            self._set_alarms()
 
             if self.saver_cml:
                 self.saver_cml.save()
 
         if self.saver_ts:
             self.saver_ts.save()
+
+    def _set_alarms(self):
+        "Overridden in remote generator to include silenced alarms. Collector doens't care."
+        self.status = Status.ALERT if self.alarms else Status.OK
 
     @abc.abstractmethod
     def _get_data(self):

@@ -2,6 +2,7 @@ from patient.rotary_live import LiveRotary
 from processor.setting import SelectionSetting, IncrSetting
 from processor.display_settings import AdvancedSetting, CurrentSetting
 from processor.generator import Generator
+import time
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
@@ -15,8 +16,25 @@ class RedrawSettings(QtCore.QObject):
 class RotaryGUI(LiveRotary):
     signal = RedrawSettings()
 
+    def __init__(self, *args, **kwargs):
+        self._last_changed = time.monotonic()
+        super().__init__(*args, **kwargs)
+
     def external_update(self) -> None:
         self.signal.changed.emit()
+
+    def touched(self) -> None:
+        self._last_changed = time.monotonic()
+
+    def changed(self) -> None:
+        self.touched()
+        super().changed()
+
+    def last_interaction(self) -> float:
+        return self._last_changed
+
+    def time_left(self) -> float:
+        return 0.0
 
 
 class SelectionSettingGUI(QtWidgets.QComboBox):
@@ -50,9 +68,14 @@ class AdvancedSettingGUI(QtWidgets.QComboBox):
         self.setEditable(False)
 
         rotary.signal.changed.connect(self.redraw)
+        self.currentIndexChanged.connect(self.touched)
+
+    @Slot(int)
+    def touched(self, _: int) -> None:
+        self.rotary.touched()
 
     @Slot()
-    def redraw(self):
+    def redraw(self) -> None:
         setting = self.setting
         for i in range(len(setting)):
             self.setItemText(i, f"{setting.print_setting(i)}")

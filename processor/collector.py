@@ -95,6 +95,9 @@ class CollectorThread(threading.Thread):
                         "date": datetime.now().timestamp(),
                         "mac": get_mac_addr(),
                         "name": get_box_name(),
+                        "last interact": self.parent.rotary.last_interaction(),
+                        "time left": self.parent.rotary.time_left(),
+                        "monotime": time.monotonic(),
                     }
 
                     if self._sn is not None:

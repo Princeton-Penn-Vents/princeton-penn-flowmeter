@@ -41,7 +41,7 @@ class MechanicalRotary:
         self.pi = pi
         self.pushed_in = False
         self.extra_in = False
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         self.turns = 0
         self.levA = 0
         self.levB = 0
@@ -51,7 +51,8 @@ class MechanicalRotary:
 
     def __enter__(self: MT) -> MT:
         # Filter button pushes the normal way
-        glitchFilter = 300
+        glitchFilterSW = 1_000  # microseconds
+        glitchFilterExt = 10_000  # microseconds
 
         # Get pigio connection
         if self.pi is None:
@@ -65,11 +66,11 @@ class MechanicalRotary:
 
         self.pi.set_mode(pinSW, pigpio.INPUT)
         self.pi.set_pull_up_down(pinSW, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinSW, glitchFilter)
+        self.pi.set_glitch_filter(pinSW, glitchFilterSW)
 
         self.pi.set_mode(pinExt, pigpio.INPUT)
         self.pi.set_pull_up_down(pinExt, pigpio.PUD_UP)
-        self.pi.set_glitch_filter(pinExt, glitchFilter)
+        self.pi.set_glitch_filter(pinExt, glitchFilterExt)
 
         # The callbacks get fired sometimes during startup
         time.sleep(0.2)
@@ -142,31 +143,31 @@ class MechanicalRotary:
             self.extra_release()
 
     def pushed_turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Push + turn {dir}")
 
     def extra_turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Extra + turn {dir}")
 
     def turn(self, dir: Dir) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug(f"Turned {dir}")
 
     def push(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Pressed")
 
     def release(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Released")
 
     def extra_push(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Extra pressed")
 
     def extra_release(self) -> None:
-        self.last_interaction = time.monotonic()
+        self._last_touched = time.monotonic()
         logger.debug("Extra released")
 
 
@@ -184,11 +185,20 @@ class Rotary(LiveRotary, MechanicalRotary):
         # Rate of changing screens on the display
         self._change_rate: Final[int] = 4
 
-        # Timestamp  at which to start the alarm again - will be silenced until this time
+        # Timestamp at which to start the alarm again - will be silenced until this time
         self._alarm_silence: float = time.monotonic()
 
         # Singleton Timer that will run alarm() when done.
         self._time_out_alarm: Optional[threading.Timer] = None
+
+        # Singleton Timer that will start an alarm if not cancelled
+        self._delay_timout_setter: Optional[threading.Timer] = None
+
+        # Lock this to modify the delay timer
+        self.delay_lock = threading.RLock()
+
+    def last_interaction(self) -> float:
+        return self._last_touched
 
     def time_left(self) -> float:
         """
@@ -197,24 +207,39 @@ class Rotary(LiveRotary, MechanicalRotary):
         return self._alarm_silence - time.monotonic()
 
     def set_alarm_silence(self, value: float, *, reset: bool = True) -> None:
-        if self._time_out_alarm is not None:
-            # If we are not resetting, do not touch anything
-            if not reset:
-                return
+        with self.delay_lock:
+            if self._time_out_alarm is not None:
+                # If we are not resetting, do not touch anything
+                if not reset:
+                    return
 
-            self._time_out_alarm.cancel()
+                self._time_out_alarm.cancel()
 
-        def timeout() -> None:
-            self._time_out_alarm = None
-            logger.debug("Silence timed out")
-            self.alert()
+            def timeout() -> None:
+                self._time_out_alarm = None
+                logger.debug("Silence timed out")
+                self.alert()
 
-        self._alarm_silence = time.monotonic() + value
-        self._time_out_alarm = threading.Timer(value, timeout)
-        self._time_out_alarm.start()
-        logger.info(
-            f"Setting silence timeout to {value} s, ends at {self._alarm_silence}"
-        )
+            self._alarm_silence = time.monotonic() + value
+            self._time_out_alarm = threading.Timer(value, timeout)
+            self._time_out_alarm.start()
+            logger.info(
+                f"Setting silence timeout to {value} s, ends at {self._alarm_silence}"
+            )
+            if self._delay_timout_setter is not None:
+                self._delay_timout_setter = None
+
+    def delayed_set_alarm_silence(self, value: float, *, delay: float) -> None:
+        "Activate alarm silence, but only after a time - can be canceled"
+        with self.delay_lock:
+            if self._delay_timout_setter is not None:
+                self._delay_timout_setter.cancel()
+                self._delay_timout_setter = None
+
+            self._delay_timout_setter = threading.Timer(
+                delay, self.set_alarm_silence, args=(value,)
+            )
+            self._delay_timout_setter.start()
 
     def turn(self, dir: Dir) -> None:
         self._slow_turn = (self._slow_turn + dir.value) % (

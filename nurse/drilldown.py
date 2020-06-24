@@ -26,6 +26,7 @@ from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
 from nurse.generator_dialog import GeneratorDialog
 from processor.config import config
+from processor.remote_generator import RemoteGenerator
 
 if TYPE_CHECKING:
     from nurse.main_window import MainStack
@@ -129,19 +130,37 @@ class DisplayBox(QtWidgets.QFrame):
 
             self.cumulative.setText(format(value, self.fmt))
             if f"{self.key} Max" in gen.alarms:
-                self.status = Status.ALERT
+                self.status = (
+                    Status.ALERT_SILENT
+                    if isinstance(gen, RemoteGenerator)
+                    and gen.time_left is not None
+                    and gen.time_left > 0
+                    else Status.ALERT
+                )
                 item = gen.alarms[f"{self.key} Max"]
                 if "first timestamp" in item:
                     over = (gen.realtime[-1] - item["first timestamp"]) + gen.tardy
                     self.since.setText(f"Over for {over:.0f} s")
             elif f"{self.key} Min" in gen.alarms:
-                self.status = Status.ALERT
+                self.status = (
+                    Status.ALERT_SILENT
+                    if isinstance(gen, RemoteGenerator)
+                    and gen.time_left is not None
+                    and gen.time_left > 0
+                    else Status.ALERT
+                )
                 item = gen.alarms[f"{self.key} Min"]
                 if "first timestamp" in item:
                     under = (gen.realtime[-1] - item["first timestamp"]) + gen.tardy
                     self.since.setText(f"Under for {under:.0f} s")
             else:
-                self.status = Status.OK
+                self.status = (
+                    Status.SILENT
+                    if isinstance(gen, RemoteGenerator)
+                    and gen.time_left is not None
+                    and gen.time_left > 0
+                    else Status.OK
+                )
                 self.since.setText("")
         else:
             self.cumulative.setText("---")
@@ -527,6 +546,15 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.last_ts.setObjectName("LastTS")
         displays_layout.addWidget(self.last_ts)
 
+        self.last_interation = QtWidgets.QLabel("Last interation: ---")
+        self.last_interation.setObjectName("LastInteraction")
+        displays_layout.addWidget(self.last_interation)
+
+        self.time_left = QtWidgets.QLabel("")
+        self.time_left.setObjectName("TimeLeft")
+        displays_layout.addWidget(self.time_left)
+        self.time_left.setVisible(False)
+
         button_box = QtWidgets.QWidget()
         button_box.setObjectName("DrilldownExtras")
         buttons_layout = QtWidgets.QHBoxLayout(button_box)
@@ -559,7 +587,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
     @property
     def status(self):
-        return Status[self.property("alert_status")]
+        return Status[self.property("alert_status") or "NONE"]
 
     @status.setter
     def status(self, value: Status):
@@ -753,7 +781,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
                     self.phase.setData(self.gen.pressure, self.gen.volume)
 
-                    self.status = self.gen.status
+                    if self.status != self.gen.status:
+                        self.status = self.gen.status
                     self.displays.update_cumulative()
                     self.displays.update_limits()
 
@@ -775,9 +804,38 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             break
                     else:
                         breath_str = "No detected breaths yet"
+
                     self.last_ts.setText(
                         f"Updated: {time_str} @ {date_str}\n{breath_str}"
                     )
+
+                    if (
+                        isinstance(self.gen, RemoteGenerator)
+                        and self.gen.last_interact is not None
+                        and self.gen.current_monotonic is not None
+                    ):
+                        last_interaction = (
+                            self.gen.tardy
+                            + self.gen.current_monotonic
+                            - self.gen.last_interact
+                        )
+                        self.last_interation.setText(
+                            f"Last interaction: {last_interaction:.0f} s ago"
+                        )
+
+                    if (
+                        isinstance(self.gen, RemoteGenerator)
+                        and self.gen.time_left is not None
+                        and self.gen.time_left > 0
+                    ):
+                        self.time_left.setText(
+                            f"Silenced, time remaining: {self.gen.time_left:.0f} s"
+                        )
+                        if not self.time_left.isVisible():
+                            self.time_left.setVisible(True)
+
+                    elif self.time_left.isVisible():
+                        self.time_left.setVisible(False)
 
             patient = self.parent()
             main_stack = patient.parent().parent().main_stack

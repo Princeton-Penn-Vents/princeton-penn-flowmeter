@@ -74,3 +74,11 @@ class LocalRotary:
     def external_update(self) -> None:
         "Update the display after a live setting (CurrentSetting) is changed externally"
         pass
+
+    def time_left(self) -> float:
+        "Amount of time left on timer"
+        raise NotImplementedError()
+
+    def last_interaction(self) -> float:
+        "Timestamp of last interaction"
+        raise NotImplementedError()

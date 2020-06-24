@@ -225,6 +225,42 @@ PatientDrilldownWidget[alert_status="ALERT"] > PatientTitle > QLineEdit {
   background-color: #602020;
 }
 
+PatientSensor[alert_status="ALERT_SILENT"] > PatientTitleWidget > QPushButton,
+PatientDrilldownWidget[alert_status="ALERT_SILENT"] > PatientTitle > QPushButton,
+AlarmBox[alert_status="ALERT_SILENT"] {
+  background-color: #EDED37;
+}
+
+PatientSensor[alert_status="ALERT_SILENT"] > PatientTitleWidget > QPushButton:hover,
+PatientDrilldownWidget[alert_status="ALERT_SILENT"] > PatientTitle > QPushButton:hover,
+AlarmBox[alert_status="ALERT_SILENT"]:hover,
+AlarmBox[alert_status="ALERT_SILENT_ACTIVE"] {
+  background-color: #ADAD37;
+}
+
+PatientSensor[alert_status="ALERT_SILENT"] > PatientTitleWidget > QLineEdit,
+PatientDrilldownWidget[alert_status="ALERT_SILENT"] > PatientTitle > QLineEdit {
+  background-color: #606020;
+}
+
+PatientSensor[alert_status="SILENT"] > PatientTitleWidget > QPushButton,
+PatientDrilldownWidget[alert_status="SILENT"] > PatientTitle > QPushButton,
+AlarmBox[alert_status="SILENT"] {
+  background-color: #606020;
+}
+
+PatientSensor[alert_status="SILENT"] > PatientTitleWidget > QPushButton:hover,
+PatientDrilldownWidget[alert_status="SILENT"] > PatientTitle > QPushButton:hover,
+AlarmBox[alert_status="SILENT"]:hover,
+AlarmBox[alert_status="SILENT_ACTIVE"] {
+  background-color: #707040;
+}
+
+PatientSensor[alert_status="SILENT"] > PatientTitleWidget > QLineEdit,
+PatientDrilldownWidget[alert_status="SILENT"] > PatientTitle > QLineEdit {
+  background-color: #303000;
+}
+
 
 PatientSensor[alert_status="DISCON"] > PatientTitleWidget > QPushButton,
 PatientDrilldownWidget[alert_status="DISCON"] > PatientTitle > QPushButton,
@@ -393,6 +429,10 @@ DisplayBox[alert_status="ALERT"] {
   background-color: darkred;
 }
 
+DisplayBox[alert_status="ALERT_SILENT"] {
+  background-color: #606020;
+}
+
 DisplayBox[alert_status="ALERT"] > DrilldownCumulative {
   text-decoration: underline;
 }
@@ -411,6 +451,18 @@ QWidget#DrilldownExtras > QPushButton:hover {
 QLabel#LastTS {
   margin: 4px 6px 2px 6px;
   color: floralwhite;
+}
+
+QLabel#LastInteraction {
+  margin: 4px 6px 2px 6px;
+  color: floralwhite;
+}
+
+QLabel#TimeLeft {
+  margin: 4px 6px 2px 6px;
+  color: yellow;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 

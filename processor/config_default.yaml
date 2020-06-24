@@ -14,12 +14,13 @@ global:
   run-every: 0.5 # seconds
   window-size: 1500 # 30 seconds @ 50 hertz
   datadir: . # relative, with home, or absolute
-  avg-window: 10 # seconds
+  avg-window: 10 # seconds (pick from limited list)
 
 patient:
   buzzer-volume: 0 # max 255 (200 ideal) TODO: set to 200
   brightness: 200 # max 255
   silence-timeout: 120 # seconds
+  silence-holddown: 0.2 # seconds
 
 rotary-live:
   Reset Setting:
