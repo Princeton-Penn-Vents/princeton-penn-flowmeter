@@ -330,7 +330,7 @@ class Generator(abc.ABC):
             #     self._volume_unshifted_min = min(
             #         self._volume_unshifted_min, np.min(self._volume)
             #     )
-            self._volume_unshifted_min = np.min(self._volume)
+            self._volume_unshifted_min = np.min(self._volume[-25 * 50 :])
             #
             # END
 

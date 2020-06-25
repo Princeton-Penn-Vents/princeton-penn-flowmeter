@@ -698,7 +698,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 clipToView=True,
             )
             graphs[key].invertX()
-            graphs[key].setRange(xRange=(30, 0))
+            graphs[key].setRange(
+                xRange=(28, 0)
+            )  # Actually shows a bit more that the range
             graphs[key].setLabel("left", gis.graph_names[key], gis.units[key])
             if j != len(gis.graph_labels):
                 graph_layout.nextRow()
@@ -752,10 +754,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     avg_window = config["global"]["avg-window"].get(int)
 
                     for key in gis.graph_labels:
+                        yvalues = getattr(self.gen, key)[-30 * 50 :]
                         if scroll:
-                            self.curves[key].setData(
-                                self.gen.time, getattr(self.gen, key)
-                            )
+                            xvalues = self.gen.time[-30 * 50 :]
+                            self.curves[key].setData(xvalues, yvalues)
                             x, _y = self.curves2[key].getData()
                             if x is not None and len(x) > 0:
                                 self.curves2[key].setData(
@@ -764,19 +766,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 )
 
                         else:
-                            last = self.gen.realtime[-1]
-                            breakpt = np.searchsorted(
-                                self.gen.realtime, last - last % 30
-                            )
+                            xvalues = self.gen.realtime[-30 * 50 :]
+                            last = xvalues[-1]
+                            breakpt = np.searchsorted(xvalues, last - last % 30)
                             gap = 25
 
                             self.curves[key].setData(
-                                30 - (self.gen.realtime[breakpt:] % 30),
-                                getattr(self.gen, key)[breakpt:],
+                                30 - (xvalues[breakpt:] % 30), yvalues[breakpt:],
                             )
                             self.curves2[key].setData(
-                                30 - (self.gen.realtime[gap:breakpt] % 30),
-                                getattr(self.gen, key)[gap:breakpt],
+                                30 - (xvalues[gap:breakpt] % 30), yvalues[gap:breakpt],
                             )
 
                         val_key = f"Avg {key.capitalize()}"
