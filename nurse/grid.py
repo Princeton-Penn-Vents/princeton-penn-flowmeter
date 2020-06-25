@@ -18,7 +18,7 @@ from nurse.qt import (
     BoxName,
 )
 
-from nurse.common import GraphInfo, INFO_STRINGS
+from nurse.common import GraphInfo, INFO_STRINGS, HOVER_STRINGS
 from nurse.dragdrop import DraggableSensor
 from nurse.generator_dialog import GeneratorDialog
 from nurse.gen_record_gui import GeneratorGUI
@@ -40,12 +40,17 @@ class NumbersWidget(QtWidgets.QWidget):
 
         for info in INFO_STRINGS:
             val_widget = NumberLabel("---")
+            val_widget.setToolTip(HOVER_STRINGS[info])
             val_widget.setMinimumWidth(56)
             self.val_widgets[info] = val_widget
-            layout.addRow(
-                info.split()[-1][0] if info.startswith("Avg") else info.split()[0],
-                self.val_widgets[info],
+            title = QtWidgets.QLabel(
+                info.split()[-1][0] if info.startswith("Avg") else info.split()[0]
             )
+            title.setToolTip(HOVER_STRINGS[info])
+            layout.addRow(
+                title, self.val_widgets[info],
+            )
+
             self.set_value(info, None)
 
     def set_value(self, info_str: str, value: float = None, ok: bool = True) -> None:
@@ -74,6 +79,7 @@ class NumbersWidget(QtWidgets.QWidget):
 class PatientTitleWidget(QtWidgets.QWidget):
     def __init__(self, gen: GeneratorGUI):
         super().__init__()
+        self.setToolTip("Click for details")
         self.gen = gen
         record = self.gen.record
 
@@ -130,6 +136,7 @@ class PatientSensor(DraggableSensor):
     def status(self, value: Status):
         if value.name != self.property("alert_status"):
             self.setProperty("alert_status", value.name)
+            self.title_widget.name_btn.setText(value.value)
             self.title_widget.repolish()
 
             self.style().unpolish(self)

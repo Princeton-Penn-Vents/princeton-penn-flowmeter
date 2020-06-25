@@ -20,6 +20,17 @@ INFO_STRINGS = {
     "I:E time ratio": ".1f",
 }
 
+HOVER_STRINGS = {
+    "Avg Flow": "Flow in L/m averaged over the last 10 seconds",
+    "Avg Pressure": "Pressure in cm H20 averaged over the last 10 seconds",
+    "RR": "Respiratory rate, in breaths per minute",
+    "TVe": "Expiratory tidal volume, in ML",
+    "TVi": "Expiratory tidal volume, in ML",
+    "PIP": "Peak inspiratory pressure, in cm H2O",
+    "PEEP": "Positive end-expiratory pressure, in cm H2O",
+    "I:E time ratio": "The inspiratory over expiratory time ratio",
+}
+
 
 class GraphInfo:
     def __init__(self):

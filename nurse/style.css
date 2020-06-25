@@ -165,10 +165,9 @@ PopdownTitle[graph="volume"] {
 
 PatientSensor > PatientTitleWidget > QPushButton {
   color: white;
-  font: bold italic;
-  font-family: Times;
-  font-size: 20px;
-  width: 20px;
+  font: bold;
+  font-size: 16px;
+  width: 26px;
   height: 20px;
   border: none;
   border-radius: 10px;
@@ -346,10 +345,9 @@ PatientDrilldownWidget > PatientTitle > QLineEdit {
 
 PatientDrilldownWidget > PatientTitle > QPushButton {
   margin: 5px;
-  font-size: 36px;
-  font: bold italic;
-  font-family: Times;
-  width: 36px;
+  font-size: 28px;
+  font: bold;
+  width: 42px;
   height: 36px;
   border-radius: 18px;
 }

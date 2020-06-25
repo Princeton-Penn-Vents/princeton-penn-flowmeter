@@ -25,12 +25,12 @@ if TYPE_CHECKING:
 
 
 class Status(enum.Enum):
-    OK = enum.auto()
-    ALERT = enum.auto()
-    SILENT = enum.auto()
-    ALERT_SILENT = enum.auto()
-    DISCON = enum.auto()
-    NONE = enum.auto()
+    OK = "OK"
+    ALERT = "!"
+    SILENT = "S"
+    ALERT_SILENT = "S!"
+    DISCON = "D"
+    NONE = "?"
 
 
 T = TypeVar("T", bound="Generator")
