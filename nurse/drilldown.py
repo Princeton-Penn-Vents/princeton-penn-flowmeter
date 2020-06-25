@@ -698,8 +698,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 clipToView=True,
             )
             graphs[key].invertX()
-            graphs[key].setRange(xRange=(30, 0))
-            graphs[key].setLabel("left", gis.graph_names[key], gis.units[key])
+            graphs[key].setRange(
+                xRange=(28, 0)
+            )  # Actually shows a bit more that the range
+            graphs[key].setLabel(
+                "left", gis.graph_names[key], "L" if key == "volume" else gis.units[key]
+            )
             if j != len(gis.graph_labels):
                 graph_layout.nextRow()
 
@@ -723,10 +727,23 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         # Phase plot
         self.phase_graph = phase_layout.addPlot(x=None, y=None, name="Phase")
-        self.phase = self.phase_graph.plot(
-            x=None, y=None, pen=pg.mkPen(color=(200, 200, 0))
+        self.phase_graph.setRange(
+            xRange=gis.yLims["pressure"],
+            yRange=tuple(v / 1000 for v in gis.yLims["volume"]),
         )
-        self.phase_graph.setLabel("left", "Volume", units="mL")
+        self.phases = list(
+            reversed(
+                [
+                    self.phase_graph.plot(
+                        x=None,
+                        y=None,
+                        pen=pg.mkPen(color=(i * 50, i * 50, i * 10), width=3),
+                    )
+                    for i in range(1, 6)
+                ]
+            )
+        )
+        self.phase_graph.setLabel("left", "Volume", units="L")
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
     @Slot()
@@ -739,11 +756,20 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 if first or not self.parent().header.freeze_btn.checkState():
                     avg_window = config["global"]["avg-window"].get(int)
 
+                    select = (
+                        slice(np.searchsorted(-self.gen.time, -30), None)
+                        if len(self.gen.time)
+                        else slice(None)
+                    )
+                    xvalues = self.gen.time[select]
+
                     for key in gis.graph_labels:
+                        yvalues = getattr(self.gen, key)[select]
+                        if key == "volume":
+                            yvalues = yvalues / 1000
+
                         if scroll:
-                            self.curves[key].setData(
-                                self.gen.time, getattr(self.gen, key)
-                            )
+                            self.curves[key].setData(xvalues, yvalues)
                             x, _y = self.curves2[key].getData()
                             if x is not None and len(x) > 0:
                                 self.curves2[key].setData(
@@ -752,19 +778,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 )
 
                         else:
-                            last = self.gen.realtime[-1]
-                            breakpt = np.searchsorted(
-                                self.gen.realtime, last - last % 30
-                            )
+                            realtime = self.gen.realtime[select]
+                            last = realtime[-1]
+                            breakpt = np.searchsorted(realtime, last - last % 30)
                             gap = 25
 
                             self.curves[key].setData(
-                                30 - (self.gen.realtime[breakpt:] % 30),
-                                getattr(self.gen, key)[breakpt:],
+                                30 - (realtime[breakpt:] % 30), yvalues[breakpt:],
                             )
                             self.curves2[key].setData(
-                                30 - (self.gen.realtime[gap:breakpt] % 30),
-                                getattr(self.gen, key)[gap:breakpt],
+                                30 - (realtime[gap:breakpt] % 30), yvalues[gap:breakpt],
                             )
 
                         val_key = f"Avg {key.capitalize()}"
@@ -789,7 +812,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 [self.gen.average_pressure[avg_window]] * 2,
                             )
 
-                    self.phase.setData(self.gen.pressure, self.gen.volume)
+                    for i, phase in enumerate(self.phases):
+                        range = slice(-(i + 1) * 50 * 3 - 1, -i * 50 * 3)
+                        phase.setData(
+                            self.gen.pressure[range], self.gen.volume[range] / 1000
+                        )
 
                     if self.status != self.gen.status:
                         self.status = self.gen.status

@@ -12,7 +12,7 @@ global:
   save-every: 20 # seconds
   cumulative-every: 10 # seconds
   run-every: 0.5 # seconds
-  window-size: 1500 # 30 seconds @ 50 hertz
+  window-size: 1600 # 30 seconds @ 50 hertz + 100 extra (2 seconds)
   datadir: . # relative, with home, or absolute
   avg-window: 10 # seconds (pick from limited list)
 
