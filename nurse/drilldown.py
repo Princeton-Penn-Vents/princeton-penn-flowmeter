@@ -723,8 +723,20 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         # Phase plot
         self.phase_graph = phase_layout.addPlot(x=None, y=None, name="Phase")
-        self.phase = self.phase_graph.plot(
-            x=None, y=None, pen=pg.mkPen(color=(200, 200, 0))
+        self.phase_graph.setRange(
+            xRange=gis.yLims["pressure"], yRange=gis.yLims["volume"]
+        )
+        self.phases = list(
+            reversed(
+                [
+                    self.phase_graph.plot(
+                        x=None,
+                        y=None,
+                        pen=pg.mkPen(color=(i * 50, i * 50, i * 10), width=3),
+                    )
+                    for i in range(1, 6)
+                ]
+            )
         )
         self.phase_graph.setLabel("left", "Volume", units="mL")
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
@@ -789,7 +801,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 [self.gen.average_pressure[avg_window]] * 2,
                             )
 
-                    self.phase.setData(self.gen.pressure, self.gen.volume)
+                    for i, phase in enumerate(self.phases):
+                        range = slice(-(i + 1) * 50 * 2 - 1, -i * 50 * 2)
+                        phase.setData(self.gen.pressure[range], self.gen.volume[range])
 
                     if self.status != self.gen.status:
                         self.status = self.gen.status
