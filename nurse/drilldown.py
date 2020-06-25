@@ -701,7 +701,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             graphs[key].setRange(
                 xRange=(28, 0)
             )  # Actually shows a bit more that the range
-            graphs[key].setLabel("left", gis.graph_names[key], gis.units[key])
+            graphs[key].setLabel(
+                "left", gis.graph_names[key], "L" if key == "volume" else gis.units[key]
+            )
             if j != len(gis.graph_labels):
                 graph_layout.nextRow()
 
@@ -726,7 +728,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         # Phase plot
         self.phase_graph = phase_layout.addPlot(x=None, y=None, name="Phase")
         self.phase_graph.setRange(
-            xRange=gis.yLims["pressure"], yRange=gis.yLims["volume"]
+            xRange=gis.yLims["pressure"],
+            yRange=tuple(v / 1000 for v in gis.yLims["volume"]),
         )
         self.phases = list(
             reversed(
@@ -740,7 +743,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 ]
             )
         )
-        self.phase_graph.setLabel("left", "Volume", units="mL")
+        self.phase_graph.setLabel("left", "Volume", units="L")
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
     @Slot()
@@ -753,10 +756,19 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                 if first or not self.parent().header.freeze_btn.checkState():
                     avg_window = config["global"]["avg-window"].get(int)
 
+                    select = (
+                        slice(np.searchsorted(-self.gen.time, -30), None)
+                        if len(self.gen.time)
+                        else slice(None)
+                    )
+                    xvalues = self.gen.time[select]
+
                     for key in gis.graph_labels:
-                        yvalues = getattr(self.gen, key)[-30 * 50 :]
+                        yvalues = getattr(self.gen, key)[select]
+                        if key == "volume":
+                            yvalues = yvalues / 1000
+
                         if scroll:
-                            xvalues = self.gen.time[-30 * 50 :]
                             self.curves[key].setData(xvalues, yvalues)
                             x, _y = self.curves2[key].getData()
                             if x is not None and len(x) > 0:
@@ -766,16 +778,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 )
 
                         else:
-                            xvalues = self.gen.realtime[-30 * 50 :]
-                            last = xvalues[-1]
-                            breakpt = np.searchsorted(xvalues, last - last % 30)
+                            realtime = self.gen.realtime[select]
+                            last = realtime[-1]
+                            breakpt = np.searchsorted(realtime, last - last % 30)
                             gap = 25
 
                             self.curves[key].setData(
-                                30 - (xvalues[breakpt:] % 30), yvalues[breakpt:],
+                                30 - (realtime[breakpt:] % 30), yvalues[breakpt:],
                             )
                             self.curves2[key].setData(
-                                30 - (xvalues[gap:breakpt] % 30), yvalues[gap:breakpt],
+                                30 - (realtime[gap:breakpt] % 30), yvalues[gap:breakpt],
                             )
 
                         val_key = f"Avg {key.capitalize()}"
@@ -801,8 +813,10 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             )
 
                     for i, phase in enumerate(self.phases):
-                        range = slice(-(i + 1) * 50 * 2 - 1, -i * 50 * 2)
-                        phase.setData(self.gen.pressure[range], self.gen.volume[range])
+                        range = slice(-(i + 1) * 50 * 3 - 1, -i * 50 * 3)
+                        phase.setData(
+                            self.gen.pressure[range], self.gen.volume[range] / 1000
+                        )
 
                     if self.status != self.gen.status:
                         self.status = self.gen.status

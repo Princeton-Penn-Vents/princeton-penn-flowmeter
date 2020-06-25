@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import pyqtgraph as pg
+import numpy as np
 
 from datetime import datetime
 
 from typing import Dict, Any, Optional
-
 
 from nurse.qt import (
     QtWidgets,
@@ -226,10 +226,15 @@ class PatientSensor(DraggableSensor):
             # Fill in the data
             for key in gis.graph_labels:
                 if self.isVisible():
-                    select = self.gen.time < 15 if len(self.gen.time) else slice(None)
-                    self.curves[key].setData(
-                        self.gen.time[select], getattr(self.gen, key)[select]
+                    select = (
+                        slice(np.searchsorted(-self.gen.time, -15), None)
+                        if len(self.gen.time)
+                        else slice(None)
                     )
+                    xvalues = self.gen.time[select]
+                    yvalues = getattr(self.gen, key)[select]
+
+                    self.curves[key].setData(xvalues, yvalues)
                 else:
                     self.curves[key].setData(x=None, y=None)
 
