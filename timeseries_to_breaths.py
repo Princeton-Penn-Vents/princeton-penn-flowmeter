@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse
+from processor.argparse import ArgumentParser
 
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 parser.add_argument("input", help="Calibrated timeseries CSV file")
 parser.add_argument(
     "--drop-header",
@@ -10,6 +10,8 @@ parser.add_argument(
     help="If enabled, the header line will be dropped",
 )
 args = parser.parse_args()
+
+from processor.config import config
 
 import csv
 
@@ -80,7 +82,10 @@ flow = numpy.array(flow)
 volume = numpy.array(volume)
 minbias_volume = numpy.array(minbias_volume)
 
-breaths = analysis.measure_breaths(time, flow, minbias_volume, pressure)
+breath_thresh = config["global"]["breath-thresh"].as_number()
+breaths = analysis.measure_breaths(
+    time, flow, minbias_volume, pressure, breath_thresh=breath_thresh
+)
 
 breaths, updated, new_breaths = analysis.combine_breaths([], breaths)
 

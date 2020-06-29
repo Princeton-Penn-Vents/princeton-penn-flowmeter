@@ -123,8 +123,10 @@ def smooth_derivative(times, values, sig=0.2):
     return centers[good], intercept[good], slope[good]
 
 
-def find_roots(times, values, derivative, threshold=0.02):
-    values_threshold = threshold * np.max(abs(values))
+def find_roots(
+    times, values, derivative, threshold: float = 0.02, *, breath_thresh: float
+):
+    values_threshold = threshold * max(np.max(abs(values)), breath_thresh)
     derivative_threshold = threshold * np.max(abs(derivative))
 
     (A,) = np.nonzero(
@@ -222,7 +224,7 @@ def find_breaths(A, B, C, D):
     return outs
 
 
-def measure_breaths(time, flow, volume, pressure):
+def measure_breaths(time, flow, volume, pressure, *, breath_thresh: float):
     try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(
@@ -231,7 +233,9 @@ def measure_breaths(time, flow, volume, pressure):
         if len(smooth_time_f) < 4:
             return []
 
-        turning_points = find_roots(smooth_time_f, smooth_flow, smooth_dflow)
+        turning_points = find_roots(
+            smooth_time_f, smooth_flow, smooth_dflow, breath_thresh=breath_thresh
+        )
 
         breath_times = find_breaths(*turning_points)
 
