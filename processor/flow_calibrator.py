@@ -5,6 +5,10 @@ import scipy.interpolate
 import yaml
 import os
 from typing import Union
+from pathlib import Path
+
+DIR = Path(__file__).parent.resolve()
+DEFAULT_BLOCK = str(DIR / "flowcalib_data" / "flowcalib_ave200619.yml")
 
 
 def get_yaml(yml_file):
@@ -19,13 +23,8 @@ def get_yaml(yml_file):
     return qs, deltaPs
 
 
-DEFAULT_BLOCK = os.path.join(
-    os.path.dirname(__file__), "flowcalib_data", "flowcalib_ave200619.yaml"
-)
-
-
 class flow_calibrator:
-    def __init__(self, block=DEFAULT_BLOCK) -> None:
+    def __init__(self, block: str = DEFAULT_BLOCK) -> None:
         func = None
         if block == "simple":
             func = self.simple
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     fs = np.arange(0.0, 33000.0, 1000.0)
     res1 = caliber.Q(fs)
 
-    files = ["flowcalib_all.yaml", "flowcalib_xometry.yaml", "flowcalib_ave200619.yaml"]
+    files = ["flowcalib_all.yml", "flowcalib_xometry.yml", "flowcalib_ave200619.yml"]
     labels = ["All flowblocks", "Xometry flowblocks", "Selected June 18 flowblocks"]
 
     import matplotlib.pyplot as plt
