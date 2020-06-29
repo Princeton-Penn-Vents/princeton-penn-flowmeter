@@ -16,7 +16,7 @@ config = confuse.Configuration("povm", "povm")
 config.clear()
 
 # Defaults stored here
-config_default = DIR / "config_default.yaml"
+config_default = DIR / "config_default.yml"
 config.set_file(config_default)
 
 
