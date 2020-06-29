@@ -85,7 +85,7 @@ class MechanicalRotary:
             pinSW, pigpio.EITHER_EDGE, self.rotary_switch
         )
         self._rotary_extra = self.pi.callback(
-            pinExt, pigpio.EITHER_EDGE, self.rotary_extra
+            pinExt, pigpio.EITHER_EDGE, self.rotary_switch
         )
 
         return self
@@ -95,6 +95,7 @@ class MechanicalRotary:
         self._rotary_turnedA.cancel()
         self._rotary_turnedB.cancel()
         self._rotary_switch.cancel()
+        self._rotary_extra.cancel()
 
     def rotary_turned(self, ch: int, level: int, _tick: int) -> None:
         # Store last reading
@@ -126,21 +127,24 @@ class MechanicalRotary:
                 function(Dir.CLOCKWISE)
 
     def rotary_switch(self, ch: int, level: int, _tick: int) -> None:
-        # Allow rotations to tell if this is pushed in or out
-        self.pushed_in = level == 0
 
-        if ch == pinSW and level == 0:  # falling edge
-            self.push()
-        elif ch == pinSW and level == 1:  # rising edge
-            self.release()
+        if ch == pinSW:
+            # Allow rotations to tell if this is pushed in or out
+            self.pushed_in = level == 0
 
-    def rotary_extra(self, ch: int, level: int, _tick: int) -> None:
-        self.extra_in = level == 0
+            if level == 0:  # falling edge
+                self.push()
+            elif level == 1:  # rising edge
+                self.release()
 
-        if ch == pinExt and level == 0:  # falling edge
-            self.extra_push()
-        elif ch == pinExt and level == 1:  # rising edge
-            self.extra_release()
+        elif ch == pinExt:
+            # Allow rotations to tell if this is pushed in or out
+            self.extra_in = level == 0
+
+            if level == 0:  # falling edge
+                self.extra_push()
+            elif level == 1:  # rising edge
+                self.extra_release()
 
     def pushed_turn(self, dir: Dir) -> None:
         self._last_touched = time.monotonic()
