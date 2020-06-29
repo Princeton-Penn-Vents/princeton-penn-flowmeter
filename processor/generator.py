@@ -142,6 +142,9 @@ class Generator(abc.ABC):
         # A quick way to get the debug status
         self._debug = config["global"]["debug"].get(bool)
 
+        # The breath threshold
+        self.breath_thresh: float = config["global"]["breath-thresh"].as_number()
+
         # An incrementing unique ID (for logging, perhaps)
         self.gen_id: Final[int] = self._total_generators
         self._total_generators += 1
@@ -362,7 +365,11 @@ class Generator(abc.ABC):
 
         if len(realtime) > 0:
             breaths = processor.analysis.measure_breaths(
-                realtime, self.flow, self._minbias_volume, self.pressure
+                realtime,
+                self.flow,
+                self._minbias_volume,
+                self.pressure,
+                breath_thresh=self.breath_thresh,
             )
 
             if len(breaths) > 0:
