@@ -67,6 +67,9 @@ class RotaryLCD(Rotary):
 
         super().__enter__()
 
+        # Start with a 10 second silence countdown - reset is unlikely to be needed
+        self.set_alarm_silence(10, reset=False)
+
         return self
 
     def __exit__(self, *exc: Any) -> None:
