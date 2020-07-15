@@ -77,6 +77,7 @@ DEVICE_SDP3: "Final" = 0x21  # grounded ADDR pin
 
 DEVICE_SCD3: "Final" = 0x61  # grounded ADDR pin
 
+
 def getADC(spi: spidev.SpiDev, channel: int) -> int:
     # Check channel valid
     # if ((channel > 7) or (channel < 0)):
@@ -148,7 +149,7 @@ def read_loop(
     pi.i2c_write_device(hSCD3, [0xD1, 0x00])
     dataSCD3 = pi.i2c_read_device(hSCD3, nbytesFW)
     bdataSCD3 = dataSCD3[1]
-    if(dataSCD3[0] != nbytesFW):
+    if dataSCD3[0] != nbytesFW:
         return
     fw = (bdataSCD3[0] << 8) | bdataSCD3[1]
     print("fw", fw)
@@ -162,13 +163,22 @@ def read_loop(
     pi.i2c_write_device(hSCD3, [0x03, 0x00])
     dataSCD3 = pi.i2c_read_device(hSCD3, nbytesCO2)
     bdataSCD3 = dataSCD3[1]
-    if(dataSCD3[0] != nbytesCO2):
+    if dataSCD3[0] != nbytesCO2:
         return
-    co2 = struct.unpack('>f',bytes([bdataSCD3[0],bdataSCD3[1],bdataSCD3[3],bdataSCD3[4]]))[0] 
-    tp = struct.unpack('>f',bytes([bdataSCD3[6],bdataSCD3[7],bdataSCD3[9],bdataSCD3[10]]))[0] 
-    hd = struct.unpack('>f',bytes([bdataSCD3[12],bdataSCD3[13],bdataSCD3[14],bdataSCD3[15]]))[0] 
-    print("CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(co2,tp,hd))
-
+    co2 = struct.unpack(
+        ">f", bytes([bdataSCD3[0], bdataSCD3[1], bdataSCD3[3], bdataSCD3[4]])
+    )[0]
+    tp = struct.unpack(
+        ">f", bytes([bdataSCD3[6], bdataSCD3[7], bdataSCD3[9], bdataSCD3[10]])
+    )[0]
+    hd = struct.unpack(
+        ">f", bytes([bdataSCD3[12], bdataSCD3[13], bdataSCD3[14], bdataSCD3[15]])
+    )[0]
+    print(
+        "CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(
+            co2, tp, hd
+        )
+    )
 
     # SDP3 handle
     print("SDP3 handle {}".format(hSDP3))
@@ -182,7 +192,7 @@ def read_loop(
     pi.i2c_write_device(hSDP3, [0xE1, 0x02])
     dataSDP3 = pi.i2c_read_device(hSDP3, nbytesPN)
     bdataSDP3 = dataSDP3[1]
-    if(dataSDP3[0] != nbytesPN):
+    if dataSDP3[0] != nbytesPN:
         return
     pnmsw = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=False)
     pnlsw = int.from_bytes(bdataSDP3[3:5], byteorder="big", signed=False)
@@ -202,7 +212,7 @@ def read_loop(
     # get initial values of differential pressure, temperature and the differential pressure scale factor
     dataSDP3 = pi.i2c_read_device(hSDP3, nbytesSF)
     bdataSDP3 = dataSDP3[1]
-    if(dataSDP3[0] != nbytesSF):
+    if dataSDP3[0] != nbytesSF:
         return
     dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
     temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
@@ -259,9 +269,9 @@ def read_loop(
 
         tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
         btmpdataSDP3 = tmpdataSDP3[1]
-        if(tmpdataSDP3[0] != nbytes):
+        if tmpdataSDP3[0] != nbytes:
             return
-#        tmpdp = struct.unpack('>h',bytes([btmpdataSDP3[0],btmpdataSDP3[1]]))[0] 
+        #        tmpdp = struct.unpack('>h',bytes([btmpdataSDP3[0],btmpdataSDP3[1]]))[0]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
 
         d = {"v": 1, "t": ts, "P": ADCavg, "F": tmpdp}  # type: Dict[str, Any]
@@ -303,20 +313,33 @@ def read_loop(
             pi.i2c_write_device(hSCD3, [0x02, 0x02])
             dataSCD3 = pi.i2c_read_device(hSCD3, nbytesRDY)
             bdataSCD3 = dataSCD3[1]
-            if(dataSCD3[0] != nbytesRDY):
+            if dataSCD3[0] != nbytesRDY:
                 return
             rdy = (bdataSCD3[0] << 8) | bdataSCD3[1]
-            #print("rdy", rdy) # if rdy, then read
-            if (rdy):
+            # print("rdy", rdy) # if rdy, then read
+            if rdy:
                 pi.i2c_write_device(hSCD3, [0x03, 0x00])
                 dataSCD3 = pi.i2c_read_device(hSCD3, nbytesCO2)
                 bdataSCD3 = dataSCD3[1]
-                if(dataSCD3[0] != nbytesCO2):
+                if dataSCD3[0] != nbytesCO2:
                     return
-                co2 = struct.unpack('>f',bytes([bdataSCD3[0],bdataSCD3[1],bdataSCD3[3],bdataSCD3[4]]))[0] 
-                tp = struct.unpack('>f',bytes([bdataSCD3[6],bdataSCD3[7],bdataSCD3[9],bdataSCD3[10]]))[0] 
-                hd = struct.unpack('>f',bytes([bdataSCD3[12],bdataSCD3[13],bdataSCD3[14],bdataSCD3[15]]))[0] 
-                print("Time={} CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(time.time()*1000,co2,tp,hd))
+                co2 = struct.unpack(
+                    ">f",
+                    bytes([bdataSCD3[0], bdataSCD3[1], bdataSCD3[3], bdataSCD3[4]]),
+                )[0]
+                tp = struct.unpack(
+                    ">f",
+                    bytes([bdataSCD3[6], bdataSCD3[7], bdataSCD3[9], bdataSCD3[10]]),
+                )[0]
+                hd = struct.unpack(
+                    ">f",
+                    bytes([bdataSCD3[12], bdataSCD3[13], bdataSCD3[14], bdataSCD3[15]]),
+                )[0]
+                print(
+                    "Time={} CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(
+                        time.time() * 1000, co2, tp, hd
+                    )
+                )
                 d.update({"CO2": co2, "Tp": tp, "H": hd})
 
         ds = json.dumps(d)
