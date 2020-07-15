@@ -72,7 +72,7 @@ class GenRecordGUI(GenRecord):
         if self._mac is not None:
             dirpath = get_data_dir() / "nurse_layout"
             dirpath.mkdir(exist_ok=True)
-            self._path = dirpath / f"{self.mac}.yml"
+            self._path = dirpath / f"{self.safemac}.yml"
             return self._path
         else:
             raise NoMacError
