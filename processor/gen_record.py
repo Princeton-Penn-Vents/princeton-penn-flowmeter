@@ -18,6 +18,14 @@ class GenRecord:
     _nurse_name: str = ""
 
     @property
+    def safemac(self) -> str:
+        """Returns a safe filename (Windows does not allow colons)"""
+        keepcharacters = (".", "_")
+        return "".join(
+            c for c in self.mac if c.isalnum() or c in keepcharacters
+        ).rstrip()
+
+    @property
     def mac(self) -> str:
         """
         The mac address. Returns <unknown> if the address is not known.
