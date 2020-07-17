@@ -223,6 +223,43 @@ sudo killall pigpiod
 
 </details>
 
+<details><summary>Setup a Windows monitoring station</summary>
+
+From a fresh install, setup the machine with Windows. Keep the machine *off*
+the internet during the setup procedure! Microsoft will *require* an account
+otherwise.
+
+Install all updates; you should be on at least Windows 10 version 1909. I
+recommend upgraded the built-in Edge browswer to the Chromium based Edge
+browser, as well.
+
+Download the Windows package manager, available in releases here: <https://github.com/microsoft/winget-cli>
+Install it.
+
+Install the following from cmd/PowerShell (your choice):
+
+* `winget install Git.Git`
+* `winget install Microsoft.Terminal`
+* `wingit install Anaconda.Miniconda3`
+
+You will have a terminal for git and a different one for conda.
+
+In the git terminal, download the repository as normal (it's a bash shell, it
+even has vim).
+
+In the conda terminal, change to the repository directory and add the
+environment:
+
+```cmd
+cd princeton-penn-flowmeter
+conda env create
+```
+
+Finally, and assuming all paths are "normal", drag the patientmonitor.bat to
+the desktop (I also drag out the terminals that are useful there, too).
+
+</details>
+
 ---
 
 ## Common test procedures:
