@@ -6,6 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--name", default="data.out", help="Base filename to record to")
 parser.add_argument("--file", help="DEPRECATED: do no use")
+parser.add_argument("--co2", action="store_true", help="Also read CO2 sensor")
 parser.add_argument(
     "--dir", help="Directory to record to (device_log will be appended)"
 )
@@ -22,11 +23,12 @@ import time
 import signal
 import pigpio
 import spidev
+import struct
 import json
 import zmq
 import threading
 from pathlib import Path
-from typing import Optional, TextIO, Iterator, TYPE_CHECKING, Dict, Any
+from typing import Optional, TextIO, Iterator, TYPE_CHECKING, Dict, Any, List
 from contextlib import contextmanager, ExitStack
 
 if TYPE_CHECKING:
@@ -55,6 +57,9 @@ nbytesDP: "Final" = 3
 hystTEMP: "Final" = 1.0  # change temperature is difference is higher than hystTemp
 minTEMP: "Final" = 42.0
 operTEMP: "Final" = 45.0
+nbytesFW: "Final" = 3
+nbytesRDY: "Final" = 3
+nbytesCO2: "Final" = 18
 maxTEMP: "Final" = 48.0
 dcSTEP: "Final" = 1
 dcMAX: "Final" = 9000
@@ -70,6 +75,7 @@ def sgn(a: float) -> float:
 chanMP3V5004: "Final" = 0
 
 DEVICE_SDP3: "Final" = 0x21  # grounded ADDR pin
+DEVICE_SCD3: "Final" = 0x61  # grounded ADDR pin
 
 
 def getADC(spi: spidev.SpiDev, channel: int) -> int:
@@ -127,15 +133,59 @@ def read_loop(
     spi: spidev.SpiDev,
     pi: pigpio.pi,
     hSDP3: "pigpio.Handle",
+    hSCD3: "Optional[pigpio.Handle]",
     running: threading.Event,
     myfile: Optional[TextIO],
-):
-    dcTEMP = 3300
+) -> None:
+    if hSCD3 is not None:
+        # SCD3 handle
+        print("SCD3 handle {}".format(hSCD3))
+
+        # first issue stop command
+        pi.i2c_write_device(hSCD3, [0x01, 0x04])
+
+        time.sleep(0.02)
+
+        # read firmware version
+        pi.i2c_write_device(hSCD3, [0xD1, 0x00])
+        dataSCD3 = pi.i2c_read_device(hSCD3, nbytesFW)
+        bdataSCD3 = dataSCD3[1]
+        if dataSCD3[0] != nbytesFW:
+            return
+        fw = (bdataSCD3[0] << 8) | bdataSCD3[1]
+        print("fw", fw)
+
+        # start continuous measurement without without pressure compensation
+        pi.i2c_write_device(hSCD3, [0x00, 0x10, 0x00, 0x00, 0x81])
+
+        time.sleep(0.02)
+
+        # read first measurement
+        pi.i2c_write_device(hSCD3, [0x03, 0x00])
+        dataSCD3 = pi.i2c_read_device(hSCD3, nbytesCO2)
+        bdataSCD3 = dataSCD3[1]
+        if dataSCD3[0] != nbytesCO2:
+            return
+        (co2,) = struct.unpack(
+            ">f", bytes([bdataSCD3[0], bdataSCD3[1], bdataSCD3[3], bdataSCD3[4]])
+        )
+        (tp,) = struct.unpack(
+            ">f", bytes([bdataSCD3[6], bdataSCD3[7], bdataSCD3[9], bdataSCD3[10]])
+        )
+        (hd,) = struct.unpack(
+            ">f", bytes([bdataSCD3[12], bdataSCD3[13], bdataSCD3[14], bdataSCD3[15]])
+        )
+        print(
+            "CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(
+                co2, tp, hd
+            )
+        )
+
+    # SDP3 handle
+    print("SDP3 handle {}".format(hSDP3))
 
     # first issue stop command
     pi.i2c_write_device(hSDP3, [0x3F, 0xF9])
-    # read product number and serial number
-    print("handle {}".format(hSDP3))
 
     time.sleep(0.5)
 
@@ -143,6 +193,9 @@ def read_loop(
     pi.i2c_write_device(hSDP3, [0xE1, 0x02])
     dataSDP3 = pi.i2c_read_device(hSDP3, nbytesPN)
     bdataSDP3 = dataSDP3[1]
+    if dataSDP3[0] != nbytesPN:
+        return
+
     pnmsw = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=False)
     pnlsw = int.from_bytes(bdataSDP3[3:5], byteorder="big", signed=False)
     pn = (pnmsw << 16) | pnlsw
@@ -160,12 +213,16 @@ def read_loop(
 
     # get initial values of differential pressure, temperature and the differential pressure scale factor
     dataSDP3 = pi.i2c_read_device(hSDP3, nbytesSF)
+    if dataSDP3[0] != nbytesSF:
+        return
     bdataSDP3 = dataSDP3[1]
     dp = int.from_bytes(bdataSDP3[0:2], byteorder="big", signed=True)
     temp = (bdataSDP3[3] << 8) | bdataSDP3[4]
     dpsf = float((bdataSDP3[6] << 8) | bdataSDP3[7])
     print("Time", time.time(), "dp", dp, "temp", temp, "dpsf", dpsf)
 
+    # setup PWM heating
+    dcTEMP = 3300
     curTEMP = temp / 200.0
     pi.set_PWM_range(pinPWM, dcRANGE)
     pi.set_PWM_dutycycle(pinPWM, dcTEMP)
@@ -181,12 +238,14 @@ def read_loop(
         )
     )
 
-    NReadout = 0
-    ADCsamples = []
-
+    # initialize take-back-half servo
     last_errorTEMP = 1.0  # + sign helps with cold start
     first_crossTEMP = True
     dcTEMP_at_cross: int = 0
+
+    # initialize ADC sampling
+    NReadout = 0
+    ADCsamples: List[float] = []
 
     for _ in frequency(1.0 / (ReadoutHz * oversampleADC), running):  # Readout in Hz
 
@@ -211,6 +270,8 @@ def read_loop(
             nbytes = nbytesDP
 
         tmpdataSDP3 = pi.i2c_read_device(hSDP3, nbytes)
+        if tmpdataSDP3[0] != nbytes:
+            return
         btmpdataSDP3 = tmpdataSDP3[1]
         tmpdp = int.from_bytes(btmpdataSDP3[0:2], byteorder="big", signed=True)
 
@@ -248,6 +309,44 @@ def read_loop(
 
             if myfile is not None:
                 d["file"] = myfile.name
+
+            if hSCD3 is not None:
+                # read CO2 data ready status
+                pi.i2c_write_device(hSCD3, [0x02, 0x02])
+                dataSCD3 = pi.i2c_read_device(hSCD3, nbytesRDY)
+                bdataSCD3 = dataSCD3[1]
+                if dataSCD3[0] != nbytesRDY:
+                    return
+                rdy = (bdataSCD3[0] << 8) | bdataSCD3[1]
+                # print("rdy", rdy) # if rdy, then read
+                if rdy:
+                    pi.i2c_write_device(hSCD3, [0x03, 0x00])
+                    dataSCD3 = pi.i2c_read_device(hSCD3, nbytesCO2)
+                    bdataSCD3 = dataSCD3[1]
+                    if dataSCD3[0] != nbytesCO2:
+                        return
+                    (co2,) = struct.unpack(
+                        ">f",
+                        bytes([bdataSCD3[0], bdataSCD3[1], bdataSCD3[3], bdataSCD3[4]]),
+                    )
+                    (tp,) = struct.unpack(
+                        ">f",
+                        bytes(
+                            [bdataSCD3[6], bdataSCD3[7], bdataSCD3[9], bdataSCD3[10]]
+                        ),
+                    )
+                    (hd,) = struct.unpack(
+                        ">f",
+                        bytes(
+                            [bdataSCD3[12], bdataSCD3[13], bdataSCD3[14], bdataSCD3[15]]
+                        ),
+                    )
+                    print(
+                        "Time={} CO2 concentration={:.2f} Temperature={:.2f} Humidity={:.2f}".format(
+                            time.time() * 1000, co2, tp, hd
+                        )
+                    )
+                    d.update({"CO2": co2, "Tp": tp, "H": hd})
 
         ds = json.dumps(d)
         pub_socket.send_string(ds)
@@ -289,8 +388,10 @@ with ExitStack() as stack:
     while not running.is_set():
         # Get I2C bus handle
         hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
+        hSCD3 = pi.i2c_open(1, DEVICE_SCD3) if arg.co2 else None
+
         try:
-            read_loop(spiMCP3008, pi, hSDP3, running, myfile)
+            read_loop(spiMCP3008, pi, hSDP3, hSCD3, running, myfile)
         except pigpio.error:
             # 1 second of "fake" readings
             for i in range(int(ReadoutHz)):
@@ -305,3 +406,5 @@ with ExitStack() as stack:
                     break
         finally:
             pi.i2c_close(hSDP3)
+            if hSCD3 is not None:
+                pi.i2c_close(hSCD3)
