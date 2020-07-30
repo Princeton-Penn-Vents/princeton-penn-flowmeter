@@ -140,8 +140,8 @@ def find_roots(
         & (0.5 * (values[:-1] + values[1:]) >= values_threshold)
     )
     (C,) = np.nonzero(
-        (values[:-1] >= 0)
-        & (values[1:] < 0)
+        (values[:-1] >= -0.5*values_threshold)
+        & (values[1:] < -0.5*values_threshold)
         & (0.5 * (derivative[:-1] + derivative[1:]) < -derivative_threshold)
     )
     (D,) = np.nonzero(
