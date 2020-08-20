@@ -570,8 +570,15 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         displays_layout.addWidget(button_box)
 
         all_alarms = QtWidgets.QPushButton("Alarms")
+        all_alarms.setToolTip("Frozen details of the current active alarms")
+
         all_cumulative = QtWidgets.QPushButton("Quantities")
+        all_cumulative.setToolTip("Frozen cummulative quanities")
+
         all_rotary = QtWidgets.QPushButton("Settings")
+        all_rotary.setToolTip(
+            "Frozen details of the current settings on the patient box"
+        )
 
         all_alarms.clicked.connect(self.display_alarms)
         all_cumulative.clicked.connect(self.display_cumulative)
@@ -618,7 +625,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         box = DraggableMsg(self)
         box.move(self.geometry().center() - box.geometry().center())
-        box.setWindowTitle("Computed values")
+        box.setWindowTitle("Static computed values")
         box.setTextFormat(Qt.RichText)
         box.setText(cumulative)
         box.setWindowFlags(Qt.Popup)
@@ -640,7 +647,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         box = DraggableMsg(self)
         box.move(self.geometry().center() - box.geometry().center())
-        box.setWindowTitle("Active alarms")
+        box.setWindowTitle("Active alarms (static)")
         box.setTextFormat(Qt.RichText)
         box.setText(active_alarms)
         box.setWindowFlags(Qt.Popup)
@@ -655,7 +662,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         box = DraggableMsg(self)
         box.move(self.geometry().center() - box.geometry().center())
-        box.setWindowTitle("Currently set alarm limits")
+        box.setWindowTitle("Static alarm limits on the patient box")
         box.setTextFormat(Qt.RichText)
         box.setText(rotary_text)
         box.setWindowFlags(Qt.Popup)
