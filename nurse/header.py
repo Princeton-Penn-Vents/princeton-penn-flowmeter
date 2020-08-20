@@ -62,6 +62,7 @@ class LimitButton(QtWidgets.QPushButton):
     def __init__(self, key):
         gis = GraphInfo()
         super().__init__(f"{key.capitalize()}({gis.units[key]})")
+        self.setToolTip(f"Adjust the vertical display range for {key.capitalize()}")
         self.key = key
 
         self.setProperty("graph", key)
@@ -120,12 +121,12 @@ class MainHeaderWidget(HeaderWidget):
         layout.addWidget(graph_info)
 
         self.add_btn = HeaderButton("+")
-        self.add_btn.setToolTip("Add a device")
+        self.add_btn.setToolTip("Add a device manually")
         layout.addWidget(self.add_btn)
 
         self.help_btn = HeaderButton("?")
         self.help_btn.setObjectName("help_btn")
-        self.help_btn.setToolTip("Get help")
+        self.help_btn.setToolTip("Get help with the current screen")
         self.help_btn.clicked.connect(self.call_for_help)
         layout.addWidget(self.help_btn)
 
@@ -134,7 +135,7 @@ class MainHeaderWidget(HeaderWidget):
 
         self.fs_exit = HeaderButton("X")
         self.fs_exit.setObjectName("exit_btn")
-        self.fs_exit.setToolTip("Exit")
+        self.fs_exit.setToolTip("Exit (may auto-restart on some systems)")
         self.fs_exit.setVisible(False)
         layout.addWidget(self.fs_exit)
 
@@ -160,19 +161,22 @@ class DrilldownHeaderWidget(HeaderWidget):
 
         self.mode_btn = QtWidgets.QPushButton("Mode: Scroll")
         self.mode_btn.setObjectName("mode_btn")
+        self.mode_btn.setToolTip("Toggle visual graph update system between two styles")
         self.mode_btn.clicked.connect(self.mode_btn_callback)
         layout.addWidget(self.mode_btn)
 
         self.freeze_btn = QtWidgets.QCheckBox("Freeze")
+        self.freeze_btn.setToolTip("Stop refreshing display (toggle)")
         layout.addWidget(self.freeze_btn)
 
-        self.return_btn = QtWidgets.QPushButton("Return to main view")
+        self.return_btn = QtWidgets.QPushButton("Return to overview")
         self.return_btn.setObjectName("return_btn")
+        self.return_btn.setToolTip("Go back to main overview screen")
         layout.addWidget(self.return_btn, 0, Qt.AlignVCenter)
 
         self.help_btn = HeaderButton("?")
         self.help_btn.setObjectName("help_btn")
-        self.help_btn.setToolTip("Get help")
+        self.help_btn.setToolTip("Get help with the current screen")
         self.help_btn.clicked.connect(self.call_for_help)
         layout.addWidget(self.help_btn)
 
