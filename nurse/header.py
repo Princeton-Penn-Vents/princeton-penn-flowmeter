@@ -8,6 +8,10 @@ from nurse.limits_dialog import LimitDialog, NoLimitDialog
 from nurse.help_dialog import HelpDialog
 
 
+class WindowTitle(QtWidgets.QLabel):
+    pass
+
+
 class HeaderButton(QtWidgets.QPushButton):
     pass
 
@@ -107,9 +111,9 @@ class MainHeaderWidget(HeaderWidget):
         super().__init__(*args, **kwargs)
         layout = HBoxLayout(self)
 
-        princeton_logo = PrincetonLogoWidget()
-        layout.addWidget(princeton_logo)
-
+        layout.addWidget(PrincetonLogoWidget())
+        layout.addStretch()
+        layout.addWidget(WindowTitle("Overview Screen"))
         layout.addStretch()
 
         graph_info = GraphLabelWidget()
@@ -151,6 +155,8 @@ class DrilldownHeaderWidget(HeaderWidget):
 
         layout.addWidget(PrincetonLogoWidget())
         layout.addStretch()
+        layout.addWidget(WindowTitle("Selected Patient View"))
+        layout.addStretch()
 
         self.mode_btn = QtWidgets.QPushButton("Mode: Scroll")
         self.mode_btn.setObjectName("mode_btn")
@@ -186,6 +192,6 @@ class DrilldownHeaderWidget(HeaderWidget):
 
     @Slot()
     def call_for_help(self):
-        help = HelpDialog(self, 0)
+        help = HelpDialog(self, 1)
         help.setWindowFlags(Qt.Popup)
         help.show()

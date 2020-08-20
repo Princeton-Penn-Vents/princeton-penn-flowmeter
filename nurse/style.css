@@ -109,6 +109,11 @@ HeaderWidget > PrincetonLogoWidget > QLabel {
   font-size: 18px;
 }
 
+HeaderWidget > WindowTitle {
+  font-size: 24px;
+  font-weight: bold;
+}
+
 HeaderButton {
   min-width: 28px;
 }

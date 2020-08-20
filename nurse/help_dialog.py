@@ -43,7 +43,7 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
         """
         )
         main_help.setWordWrap(True)
-        tabs.addTab(main_help, "Main screen")
+        tabs.addTab(main_help, "Overview screen")
 
         drilldown_help = QtWidgets.QLabel(
             r"""
@@ -74,7 +74,7 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
         """
         )
         drilldown_help.setWordWrap(True)
-        tabs.addTab(drilldown_help, "Drilldown")
+        tabs.addTab(drilldown_help, "Selected patient view")
 
         drilldown_rotary = QtWidgets.QLabel(
             r"""
@@ -84,7 +84,8 @@ class HelpDialog(QtWidgets.QDialog, DraggableMixin):
         the final menu item). The main screen is a live monitor screen, and shows the 10 second averaged
         Flow, Pressure, and Respiratory Rate. Alarms are shown on the far right of the screen, and the display
         turns red and a buzzer sounds when an alarm is active, unless the silence countdown timer is active, in which
-        case the screen turns yellow and "S" for silence is replaced by "Q" for quiet.
+        case the screen turns yellow and "S" for silence is replaced by "Q" for quiet. A number is shown here if more
+        than one alarm is active.
         <\p>
         <p>
         To control the patient box:
