@@ -94,7 +94,7 @@ class CurrentSetting(DisplaySetting):
     def __str__(self) -> str:
         if self._RR is None:
             return "RR: ---"
-        return f"RR: {self._RR:.0f} bpm"
+        return f"RR: {self._RR:.0f}"
 
     def print_setting(self) -> str:
         return f"{self.lcd_name} {self}"
