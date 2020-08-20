@@ -26,7 +26,7 @@ class LimitDialog(QtWidgets.QDialog):
         super().__init__(parent)
         gis = GraphInfo()
         self.key = name
-        self.setWindowTitle(f"Change {name} limits")
+        self.setWindowTitle(f"Change {name} visual display range")
         self.orig_lower: float = gis.yLims[self.key][0]
         self.orig_upper: float = gis.yLims[self.key][1]
 
@@ -44,11 +44,11 @@ class LimitDialog(QtWidgets.QDialog):
         layout.addLayout(form_layout)
 
         self.upper = LimitSpinBox(self.key, True)
-        form_layout.addRow("Upper:", self.upper)
+        form_layout.addRow("Upper display:", self.upper)
         self.upper.valueChanged.connect(self.change_value)
 
         self.lower = LimitSpinBox(self.key, False)
-        form_layout.addRow("Lower:", self.lower)
+        form_layout.addRow("Lower display:", self.lower)
         self.lower.valueChanged.connect(self.change_value)
 
         buttons = QtWidgets.QDialogButtonBox(
