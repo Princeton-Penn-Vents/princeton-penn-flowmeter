@@ -555,7 +555,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.last_ts.setObjectName("LastTS")
         displays_layout.addWidget(self.last_ts)
 
-        self.last_interation = QtWidgets.QLabel("Last interation: ---")
+        self.last_interation = QtWidgets.QLabel("Last interaction at bedside: ---")
         self.last_interation.setObjectName("LastInteraction")
         displays_layout.addWidget(self.last_interation)
 
@@ -857,7 +857,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             - self.gen.last_interact
                         )
                         self.last_interation.setText(
-                            f"Last interaction: {last_interaction:.0f} s ago"
+                            f"Last interaction at bedside: {last_interaction:.0f} s ago"
                         )
 
                     if (
