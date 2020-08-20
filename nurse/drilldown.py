@@ -4,6 +4,8 @@ import pyqtgraph as pg
 
 from typing import Optional, Any, Dict, TYPE_CHECKING
 import logging
+import subprocess
+import os
 
 import numpy as np
 
@@ -487,7 +489,11 @@ class LogTextEdit(QtWidgets.QPlainTextEdit):
 
 
 class DraggableMsg(QtWidgets.QMessageBox, DraggableMixin):
-    pass
+    def __init__(self, parent: QtWidgets.QWidget):
+        super().__init__(parent)
+        self.move(parent.geometry().center() - self.geometry().center())
+        self.setTextFormat(Qt.RichText)
+        self.setWindowFlags(Qt.Popup)
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
@@ -566,27 +572,39 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         button_box = QtWidgets.QWidget()
         button_box.setObjectName("DrilldownExtras")
-        buttons_layout = QtWidgets.QHBoxLayout(button_box)
         displays_layout.addWidget(button_box)
+
+        stacked_button_box = QtWidgets.QVBoxLayout(button_box)
+
+        buttons_layout = QtWidgets.QHBoxLayout()
+        stacked_button_box.addLayout(buttons_layout)
 
         all_alarms = QtWidgets.QPushButton("Alarms")
         all_alarms.setToolTip("Frozen details of the current active alarms")
+        all_alarms.clicked.connect(self.display_alarms)
+        buttons_layout.addWidget(all_alarms, 1)
 
         all_cumulative = QtWidgets.QPushButton("Quantities")
         all_cumulative.setToolTip("Frozen cummulative quanities")
+        all_cumulative.clicked.connect(self.display_cumulative)
+        buttons_layout.addWidget(all_cumulative, 1)
 
         all_rotary = QtWidgets.QPushButton("Settings")
         all_rotary.setToolTip(
             "Frozen details of the current settings on the patient box"
         )
-
-        all_alarms.clicked.connect(self.display_alarms)
-        all_cumulative.clicked.connect(self.display_cumulative)
         all_rotary.clicked.connect(self.display_rotary)
-
-        buttons_layout.addWidget(all_alarms, 1)
-        buttons_layout.addWidget(all_cumulative, 1)
         buttons_layout.addWidget(all_rotary, 1)
+
+        buttons_2_layout = QtWidgets.QHBoxLayout()
+        stacked_button_box.addLayout(buttons_2_layout)
+
+        all_logs = QtWidgets.QPushButton("Log files")
+        all_logs.setToolTip("Open the current logging directory")
+        all_logs.clicked.connect(self.display_logs)
+        buttons_2_layout.addWidget(all_logs, 1)
+
+        # If a past history data viewer was added, it could be added here too
 
         lim_help = QtWidgets.QLabel("All alarm limits are set on the device")
         displays_layout.addWidget(lim_help)
@@ -624,11 +642,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             cumulative = "No computed values yet"
 
         box = DraggableMsg(self)
-        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Static computed values")
-        box.setTextFormat(Qt.RichText)
         box.setText(cumulative)
-        box.setWindowFlags(Qt.Popup)
         box.show()
 
     @Slot()
@@ -646,11 +661,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             active_alarms = "No alarms currently."
 
         box = DraggableMsg(self)
-        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Active alarms (static)")
-        box.setTextFormat(Qt.RichText)
         box.setText(active_alarms)
-        box.setWindowFlags(Qt.Popup)
         box.show()
 
     @Slot()
@@ -661,12 +673,28 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         )
 
         box = DraggableMsg(self)
-        box.move(self.geometry().center() - box.geometry().center())
         box.setWindowTitle("Static alarm limits on the patient box")
-        box.setTextFormat(Qt.RichText)
         box.setText(rotary_text)
-        box.setWindowFlags(Qt.Popup)
         box.show()
+
+    @Slot()
+    def display_logs(self):
+        assert self.gen is not None
+        if self.gen.saver_cml is not None:
+            filepath = self.gen.saver_cml.filepath.parent
+
+            startfile = getattr(os, "startfile", None)
+            if startfile is not None:
+                startfile(filepath, "open")
+            else:  # if sys.platform.startswith('darwin') if we need xdg-open instead
+                subprocess.check_call(["open", filepath])
+        else:
+            box = DraggableMsg(self)
+            box.setWindowTitle("Debug mode")
+            box.setText(
+                "This was opened with the --debug flag. Logs are not being kept."
+            )
+            box.show()
 
     @Slot()
     def external_update_boxname(self):
