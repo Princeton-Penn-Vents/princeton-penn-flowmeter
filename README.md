@@ -61,7 +61,7 @@ sudo apt upgrade
 sudo apt install python3-pyqt5 python3-zmq # Required on the base system, included in NOOBs
 sudo apt install python3-scipy
 sudo python3 -m pip install pyqtgraph pyzmq confuse zeroconf
-sudo pytohn3 -m pip install "setuptools>=44" getmac setuptools_scm[toml]
+sudo python3 -m pip install "setuptools>=44" getmac setuptools_scm[toml]
 ```
 
 For development, these quality-of-life additions help:
