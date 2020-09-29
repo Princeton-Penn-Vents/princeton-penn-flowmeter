@@ -168,7 +168,7 @@ class Collector(Generator):
         self.rotary.alarms = self.alarms
 
     @property
-    def pressure(self):
+    def pressure(self) -> np.ndarray:
         return np.asarray(self._pressure)
 
     def run(self) -> None:
