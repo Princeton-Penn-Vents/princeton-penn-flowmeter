@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 import numpy as np
+
+from typing import Union, List
 
 
 class Rolling:
     def __init__(self, init=None, *, window_size: int, dtype=None):
+        # Remembers the number of entries
+        self.nentries: int = 0
+
         if dtype is None:
             if init:
                 dtype = np.asarray(init).dtype
@@ -20,6 +27,7 @@ class Rolling:
     def clear(self) -> None:
         self._start = 0
         self._current_size = 0
+        self.nentries = 0
 
     @property
     def window_size(self) -> int:
@@ -29,6 +37,7 @@ class Rolling:
         """
         High performance version of inject.
         """
+        self.nentries += 1
 
         fill_start = (
             self._start
@@ -45,7 +54,7 @@ class Rolling:
             self._start += 1
             self._start %= self._window_size
 
-    def inject(self, values: np.ndarray) -> None:
+    def inject(self, values: Union[List[float], np.ndarray]) -> None:
         """
         Add a value or an array of values to the end of the rolling buffer.  It
         is currently invalid to input a 2D array.
@@ -55,6 +64,8 @@ class Rolling:
 
         # Make sure input is an array, truncate if larger than rolling buffer
         values = np.asarray(values)
+        self.nentries += values.size
+
         if values.size > self._window_size:
             values = values[-self._window_size :]
         if values.ndim > 1:
@@ -91,7 +102,7 @@ class Rolling:
         ) % self._window_size
 
     def explain(self) -> str:
-        "Gives a nice text display of the internal structure"
+        """Gives a nice text display of the internal structure"""
         mask = np.ones_like(self._values, dtype=np.bool)
         mask[: self._current_size] = False
         mask[self._window_size : self._window_size + self._current_size] = False
@@ -100,11 +111,17 @@ class Rolling:
 
     def __repr__(self) -> str:
         r = repr(np.asarray(self))
-        start = "Rolling(" + "\n" if "\n" in r else ""
-        return start + r[6:-1] + f", window_size={self._window_size})"
+        start = "Rolling(" + ("\n" if "\n" in r else "")
+        return start + r[6:-1] + f", window_size={self._window_size}) # {self.nentries}"
 
     def __str__(self) -> str:
         return str(np.array(self))
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Rolling):
+            return len(self) == len(other) and np.allclose(self, other)
+        else:
+            return NotImplemented
 
     def __array__(self) -> np.ndarray:
         data = self._values[self._start : self._start + self._current_size]
@@ -117,8 +134,25 @@ class Rolling:
     def __len__(self) -> int:
         return self._current_size
 
+    def inject_sync(self, other: Rolling):
+        """
+        One way sync. Adds new elements from a matching rolling array.
+        """
 
-def get_last(rolling, n):
+        # How many new elements are in the "other"?
+        num_new_el = max(other.nentries - self.nentries, 0)
+
+        # If there are more new elements than the window, keep track of the extras
+        # (since they will not be included in the slice of the window)
+        limited_slice = min(num_new_el, self.window_size)
+        self.nentries += num_new_el - limited_slice
+
+        # Always protect `-n:`, as it doesn't work if n is 0
+        if limited_slice:
+            self.inject(other[-limited_slice:])
+
+
+def get_last(rolling: Union[Rolling, np.ndarry], n: int) -> np.ndarray:
     """
     Get the last N items or less if less available.abs
     """
@@ -126,10 +160,12 @@ def get_last(rolling, n):
     if n < len(rolling):
         n = len(rolling)
 
-    return rolling[-n:]
+    return rolling[-n:] if n else rolling[:0]
 
 
-def new_elements(rolling, addition) -> int:
+def new_elements(
+    rolling: Union[Rolling, np.ndarry], addition: Union[Rolling, np.ndarry]
+) -> int:
     """
     Given two sorted arrays, find the number of elements in the second array
     that are past the end of the first array.
