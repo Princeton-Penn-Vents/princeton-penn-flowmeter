@@ -13,6 +13,7 @@ global:
   cumulative-every: 10 # seconds
   run-every: 0.5 # seconds
   window-size: 1600 # 30 seconds @ 50 hertz + 100 extra (2 seconds)
+  extras-window-size: 160 # reads out ~every second - CO2 (if present), temp, etc.
   datadir: . # relative, with home, or absolute
   avg-window: 10 # seconds (pick from limited list)
   breath-thresh: 20 # ml

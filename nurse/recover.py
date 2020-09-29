@@ -21,7 +21,8 @@ def collect_restore() -> Dict[str, Restore]:
             if "ip_address" in d and d.get("active"):
                 i, j = d.get("position", (0, 0))
                 results[filepath.stem] = Restore(
-                    ip_address=d["ip_address"], position=(i, j),
+                    ip_address=d["ip_address"],
+                    position=(i, j),
                 )
 
     return results

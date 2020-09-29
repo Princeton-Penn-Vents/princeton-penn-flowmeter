@@ -78,12 +78,20 @@ if args.deglitch_pressure:
     pressure = analysis.pressure_deglitch_smooth(numpy.array(pressure))
 
 volume = analysis.flow_to_volume(
-    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.004,
+    numpy.array(time),
+    None,
+    numpy.array(flow),
+    None,
+    critical_frequency=0.004,
 )
 volume -= numpy.min(volume)
 
 minbias_volume = analysis.flow_to_volume(
-    numpy.array(time), None, numpy.array(flow), None, critical_frequency=0.0004,
+    numpy.array(time),
+    None,
+    numpy.array(flow),
+    None,
+    critical_frequency=0.0004,
 )
 minbias_volume -= numpy.min(minbias_volume)
 

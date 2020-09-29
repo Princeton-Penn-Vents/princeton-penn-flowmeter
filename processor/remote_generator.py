@@ -6,28 +6,23 @@ from processor.analysis import pressure_deglitch_smooth
 import numpy as np
 import zmq
 from zmq.decorators import context, socket
-import threading
 import time
 from datetime import datetime
 from typing import Optional, Dict
 import logging
 
-from processor.rolling import Rolling, new_elements
+from processor.rolling import new_elements
 from processor.generator import Status, Generator
 from processor.gen_record import GenRecord
+from processor.thread_base import ThreadBase
 
 
-class RemoteThread(threading.Thread):
+class RemoteThread(ThreadBase):
     def __init__(self, parent: RemoteGenerator):
         self.parent = parent
         self._address = self.parent.address
         self.status = Status.DISCON
 
-        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
-        self._flow = Rolling(window_size=parent.window_size)
-        self._pressure = Rolling(window_size=parent.window_size)
-
-        self._remote_lock = threading.Lock()
         self._last_update: Optional[datetime] = None
         self._last_get: Optional[float] = None
         self.rotary_dict: Dict[str, Dict[str, float]] = {}
@@ -38,7 +33,7 @@ class RemoteThread(threading.Thread):
         self.time_left: Optional[float] = None
         self.monotime: Optional[float] = None
 
-        super().__init__()
+        super().__init__(parent)
 
     def run(self) -> None:
         try:
@@ -60,28 +55,28 @@ class RemoteThread(threading.Thread):
                 self._last_update = datetime.now()
                 root = sub_socket.recv_json()
                 if "mac" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.mac = root["mac"]
                 if "name" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.box_name = root["name"]
                 if "sid" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.sid = root["sid"]
                 if "rotary" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.rotary_dict = root["rotary"]
                 if "last interact" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.last_interact = root["last interact"]
                 if "monotime" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.monotime = root["monotime"]
                 if "time left" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self.time_left = root["time left"]
                 if "t" in root:
-                    with self._remote_lock:
+                    with self.lock:
                         self._time.inject_value(root["t"])
                         self._flow.inject_value(root["f"])
                         self._pressure.inject_value(root["p"])
@@ -93,13 +88,24 @@ class RemoteThread(threading.Thread):
                             )
                             self.status = Status.OK
 
+                if "C" in root:
+                    with self.lock:
+                        self._heat_temp.inject_value(root["C"])
+                        self._heat_duty.inject_value(root["D"])
+
+                if "CO2" in root:
+                    with self.lock:
+                        self._co2.inject_value(root["CO2"])
+                        self._co2_temp.inject_value(root["Tp"])
+                        self._humidity.inject_value(root["H"])
+
             if number_events == 0 and self.status != Status.DISCON:
-                with self._remote_lock:
+                with self.lock:
                     self.status = Status.DISCON
                     self.parent.logger.info(f"Dropped connection to {self._address}")
 
     def access_collected_data(self) -> None:
-        with self.parent.lock, self._remote_lock:
+        with self.parent.lock, self.lock:
             self.parent.last_update = self._last_update
             self.parent._last_get = self._last_get
             self.parent.last_interact = self.last_interact

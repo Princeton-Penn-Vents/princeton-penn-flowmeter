@@ -48,7 +48,8 @@ class NumbersWidget(QtWidgets.QWidget):
             )
             title.setToolTip(HOVER_STRINGS[info])
             layout.addRow(
-                title, self.val_widgets[info],
+                title,
+                self.val_widgets[info],
             )
 
             self.set_value(info, None)
@@ -207,7 +208,9 @@ class PatientSensor(DraggableSensor):
 
             graph.getAxis("left").setStyle(
                 tickTextOffset=2,
-                textFillLimits=[(2, 1),],  # Never have less than two ticks
+                textFillLimits=[
+                    (2, 1),
+                ],  # Never have less than two ticks
             )
 
             if i != len(gis.graph_labels) - 1:
@@ -254,7 +257,9 @@ class PatientSensor(DraggableSensor):
                     value = self.gen.cumulative.get(key)
 
                 self.values.set_value(
-                    key, value=value, ok=key not in alarming_quanities,
+                    key,
+                    value=value,
+                    ok=key not in alarming_quanities,
                 )
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent):
