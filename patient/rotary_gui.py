@@ -1,12 +1,12 @@
 from patient.rotary_live import LiveRotary
 from processor.setting import SelectionSetting, IncrSetting
-from processor.display_settings import AdvancedSetting, CurrentSetting
+from processor.display_settings import AdvancedSetting, CurrentSetting, CO2Setting
 from processor.generator import Generator
 import time
 
 from nurse.qt import QtCore, QtWidgets, Slot, Signal, update_textbox
 
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 
 class RedrawSettings(QtCore.QObject):
@@ -102,7 +102,7 @@ class IncrSettingGUI(QtWidgets.QDoubleSpinBox):
 
 
 class CurrentSettingGUI(QtWidgets.QLabel):
-    def __init__(self, rotary: RotaryGUI, setting: CurrentSetting):
+    def __init__(self, rotary: RotaryGUI, setting: Union[CurrentSetting, CO2Setting]):
         super().__init__(f"{setting.print_setting()}")
         self.setting = setting
         self.rotary = rotary
@@ -167,7 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 widget = IncrSettingGUI(rotary, setting)
             elif isinstance(setting, SelectionSetting):
                 widget = SelectionSettingGUI(rotary, setting)
-            elif isinstance(setting, CurrentSetting):
+            elif isinstance(setting, (CurrentSetting, CO2Setting)):
                 widget = CurrentSettingGUI(rotary, setting)
             else:
                 raise RuntimeError("Invalid type of rotary item")

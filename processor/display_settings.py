@@ -66,6 +66,40 @@ class AdvancedSetting(SelectionSetting):
         return res
 
 
+class CO2Setting(DisplaySetting):
+    STATIC_UPPER = False
+
+    def __init__(self, *, name: str):
+
+        self._co2: Optional[float] = None
+        self._temp: Optional[float] = None
+        self._humidity: Optional[float] = None
+
+        super().__init__(name=name)
+
+    def from_processor(
+        self, co2: Optional[float], temp: Optional[float], humidity: Optional[float]
+    ):
+
+        self._co2 = co2
+        self._temp = temp
+        self._humidity = humidity
+
+    @property
+    def lcd_name(self):
+        if self._co2 is None:
+            return self._name
+        return f"CO2: {self._co2:5.1f} H:{self._humidity:4.1f}"
+
+    def __str__(self) -> str:
+        if self._co2 is None:
+            return "No sensor"
+        return f"T: {self._temp: 5.2f}"
+
+    def print_setting(self) -> str:
+        return f"{self.lcd_name} {self}"
+
+
 class CurrentSetting(DisplaySetting):
     STATIC_UPPER = False
 

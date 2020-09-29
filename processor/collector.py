@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from processor.generator import Generator
-from processor.rolling import new_elements
-from processor.config import config
-from processor.rotary import LocalRotary
-from processor.thread_base import ThreadBase
-import numpy as np
-
-import zmq
-from zmq.decorators import context, socket
-import time
 from datetime import datetime
 from typing import Optional
+import time
+
+from zmq.decorators import context, socket
+import numpy as np
+import zmq
+
+from processor.config import config
+from processor.display_settings import CurrentSetting, CO2Setting
+from processor.generator import Generator
+from processor.rolling import new_elements
+from processor.rotary import LocalRotary
+from processor.thread_base import ThreadBase
+
 from patient.mac_address import get_mac_addr, get_box_name
 
 
@@ -162,13 +165,24 @@ class Collector(Generator):
         super()._analyze_timeseries()
 
         if "Current Setting" in self.rotary:
-            setting = self.rotary["Current Setting"]
+            cur_setting: CurrentSetting = self.rotary["Current Setting"]
 
-            setting.from_processor(
+            cur_setting.from_processor(
                 F=self.average_flow.get(2),
                 P=self.average_pressure.get(2),
                 RR=self.cumulative.get("RR"),
             )
+
+        if "CO2 Setting" in self.rotary:
+            if len(self._co2):
+                co2_setting: CO2Setting = self.rotary["CO2 Setting"]
+                co2_setting.from_processor(
+                    co2=float(np.mean(self._co2[-5:])),
+                    temp=float(np.mean(self._co2_temp[-5:])),
+                    humidity=float(np.mean(self._humidity[-5:])),
+                )
+
+        if "Current Setting" in self.rotary or "CO2 Setting" in self.rotary:
             self.rotary.external_update()
 
         self.rotary.alarms = self.alarms
