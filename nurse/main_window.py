@@ -180,7 +180,9 @@ class MainStack(QtWidgets.QWidget):
     def add_new_generator(self, i: int):
         local_logger = make_nested_logger(self.next_graph)
         gen = LocalGeneratorGUI(
-            i=i + 1, logger=local_logger, gen_record=GenRecordGUI(local_logger),
+            i=i + 1,
+            logger=local_logger,
+            gen_record=GenRecordGUI(local_logger),
         )
         gen.run()
         self.add_item(gen)

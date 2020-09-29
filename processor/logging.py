@@ -28,7 +28,8 @@ def init_logger(logstr: Optional[str] = None) -> None:
 
     logger = logging.getLogger("povm")
     formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S",
+        "%(asctime)s - %(levelname)s - %(message)s",
+        "%Y-%m-%d %H:%M:%S",
     )
 
     if logstr is None or config["global"]["debug"].get(bool):
@@ -57,7 +58,8 @@ def make_nested_logger(nested: int) -> logging.Logger:
 
     nested_logger: logging.Logger = logging.getLogger(f"povm-{nested:02}")
     formatter = logging.Formatter(
-        f"%(asctime)s - %(levelname)s - {nested:02} - %(message)s", "%Y-%m-%d %H:%M:%S",
+        f"%(asctime)s - %(levelname)s - {nested:02} - %(message)s",
+        "%Y-%m-%d %H:%M:%S",
     )
     nested_logger.setLevel(logger.level)
 

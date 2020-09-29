@@ -48,13 +48,14 @@ def get_setting(c: ConfigView) -> Tuple[Optional[int], Setting]:
     elif type_name == "Current":
         return (
             order,
-            CurrentSetting(name="Current:",),
+            CurrentSetting(name="Current:"),
         )
     elif type_name == "Reset":
         return (
             order,
             ResetSetting(
-                name=c["name"].get(), rate=c["rate"].get(int) if "rate" in c else 1,
+                name=c["name"].get(),
+                rate=c["rate"].get(int) if "rate" in c else 1,
             ),
         )
     elif type_name == "Advanced":

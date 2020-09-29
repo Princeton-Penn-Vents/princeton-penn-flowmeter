@@ -75,7 +75,10 @@ if __name__ == "__main__":
         "--window", action="store_true", help="Open in window instead of fullscreen"
     )
     parser.add_argument(
-        "--displays", "-n", type=int, help="# of displays (Dynamic if not given)",
+        "--displays",
+        "-n",
+        type=int,
+        help="# of displays (Dynamic if not given)",
     )
 
     args, unparsed_args = parser.parse_known_args()

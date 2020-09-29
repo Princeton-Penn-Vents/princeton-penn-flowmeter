@@ -9,7 +9,8 @@ from processor.config import config
 
 
 def pressure_deglitch_smooth(
-    original_pressure, deglitch_cut=0.1,
+    original_pressure,
+    deglitch_cut=0.1,
 ):
     # 1/4 P[i-2] + 1/4 P[i-1] + 0 P[i] + 1/4 P[i+1] + 1/4 P[i+2] kernel
     pressure_average = 0.25 * (
@@ -598,11 +599,17 @@ def cumulative(cumulative, updated, new_breaths):
                 updated_fields.add("breath volume rate")
             if "inhale time" in breath:
                 cumulative["inhale time"] = moving_average(
-                    cumulative, updated_fields, "inhale time", breath["inhale time"],
+                    cumulative,
+                    updated_fields,
+                    "inhale time",
+                    breath["inhale time"],
                 )
             if "exhale time" in breath:
                 cumulative["exhale time"] = moving_average(
-                    cumulative, updated_fields, "exhale time", breath["exhale time"],
+                    cumulative,
+                    updated_fields,
+                    "exhale time",
+                    breath["exhale time"],
                 )
             if "inhale time" in cumulative and "exhale time" in cumulative:
                 cumulative["I:E time ratio"] = (

@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from processor.generator import Generator
-from processor.rolling import Rolling, new_elements
+from processor.rolling import new_elements
 from processor.config import config
 from processor.rotary import LocalRotary
+from processor.thread_base import ThreadBase
 import numpy as np
 
-import threading
 import zmq
 from zmq.decorators import context, socket
 import time
@@ -16,24 +16,19 @@ from typing import Optional
 from patient.mac_address import get_mac_addr, get_box_name
 
 
-class CollectorThread(threading.Thread):
+class CollectorThread(ThreadBase):
     def __init__(self, parent: Collector):
         self.parent = parent
+
         self._sn: Optional[int] = None
         self._file: Optional[str] = None
-
-        self._time = Rolling(window_size=parent.window_size, dtype=np.int64)
-        self._flow = Rolling(window_size=parent.window_size)
-        self._pressure = Rolling(window_size=parent.window_size)
 
         self._flow_scale = config["device"]["flow"]["scale"].as_number()
         self._flow_offset = config["device"]["flow"]["offset"].as_number()
         self._pressure_scale = config["device"]["pressure"]["scale"].as_number()
         self._pressure_offset = config["device"]["pressure"]["offset"].as_number()
 
-        self._collector_lock = threading.Lock()
-
-        super().__init__()
+        super().__init__(parent)
 
     @context()
     @socket(zmq.SUB)
@@ -67,11 +62,6 @@ class CollectorThread(threading.Thread):
                     p: float = 0
                 else:
                     f = caliber.Q(j["F"])
-                    #                   old calibration
-                    #                    f = (
-                    #                        math.copysign(abs(j["F"]) ** (4 / 7), j["F"]) * self._flow_scale
-                    #                        - self._flow_offset
-                    #                    )
                     p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})
@@ -82,10 +72,28 @@ class CollectorThread(threading.Thread):
                 if "file" in j:
                     self._file = j["file"]
 
-                with self._collector_lock:
+                with self.lock:
                     self._time.inject_value(t)
                     self._flow.inject_value(f)
                     self._pressure.inject_value(p)
+
+                    extras = {}
+                    if "C" in j:
+                        extras["C"] = j["C"]
+                        extras["D"] = j["D"]
+                        self._heat_temp.inject_value(j["C"])
+                        self._heat_duty.inject_value(j["D"])
+                    if "CO2" in j:
+                        extras["CO2"] = j["CO2"]
+                        extras["Tp"] = j["Tp"]
+                        extras["H"] = j["H"]
+                        self._co2.inject_value(j["CO2"])
+                        self._co2_temp.inject_value(j["Tp"])
+                        self._humidity.inject_value(j["H"])
+
+                # This runs every ~1 second, since it is only about that frequent from the device
+                if extras:
+                    pub_socket.send_json(extras)
 
             # Send rotary every ~1 second, regardless of status of input
             if time.monotonic() > (last + 1) or self.parent.rotary._changed.is_set():
@@ -118,7 +126,7 @@ class CollectorThread(threading.Thread):
                 self.parent.rotary._changed.clear()
 
     def access_collected_data(self) -> None:
-        with self.parent.lock, self._collector_lock:
+        with self.parent.lock, self.lock:
             newel = new_elements(self.parent._time, self._time)
 
             if newel:

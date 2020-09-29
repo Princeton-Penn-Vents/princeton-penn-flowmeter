@@ -819,10 +819,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                             gap = 25
 
                             self.curves[key].setData(
-                                30 - (realtime[breakpt:] % 30), yvalues[breakpt:],
+                                30 - (realtime[breakpt:] % 30),
+                                yvalues[breakpt:],
                             )
                             self.curves2[key].setData(
-                                30 - (realtime[gap:breakpt] % 30), yvalues[gap:breakpt],
+                                30 - (realtime[gap:breakpt] % 30),
+                                yvalues[gap:breakpt],
                             )
 
                         val_key = f"Avg {key.capitalize()}"
