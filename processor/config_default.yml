@@ -37,3 +37,8 @@ rotary-live:
   Current Setting:
     type: Current
     order: 0
+
+  CO2 Setting:
+    type: CO2
+    order: -3
+    name: CO2 sensor

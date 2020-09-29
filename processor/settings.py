@@ -6,6 +6,7 @@ from processor.display_settings import (
     AdvancedSetting,
     CurrentSetting,
     ResetSetting,
+    CO2Setting,
 )
 from processor.config import config
 
@@ -49,6 +50,11 @@ def get_setting(c: ConfigView) -> Tuple[Optional[int], Setting]:
         return (
             order,
             CurrentSetting(name="Current:"),
+        )
+    elif type_name == "CO2":
+        return (
+            order,
+            CO2Setting(name="Current:"),
         )
     elif type_name == "Reset":
         return (

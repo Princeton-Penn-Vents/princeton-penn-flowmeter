@@ -33,7 +33,7 @@ class LocalRotary:
         return {
             k: v.to_dict()
             for k, v in self.config.items()
-            if k not in ["Current Setting", "Reset Setting"]
+            if k not in ["C02 Setting", "Current Setting", "Reset Setting"]
         }
 
     @property
