@@ -36,7 +36,7 @@ class Listener(ServiceListener):
     def __init__(self):
         self.detected: Set[Detector] = set()
         self.inject: Callable[[], None] = lambda: None
-        self.queue: queue.Queue = queue.Queue()
+        self.queue: queue.Queue[Detector] = queue.Queue()
 
     def _injects(self, addrs: Set[Detector]):
         new = addrs - self.detected
