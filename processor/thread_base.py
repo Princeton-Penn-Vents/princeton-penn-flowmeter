@@ -18,8 +18,8 @@ class ThreadBase(threading.Thread):
         self._heat_temp = Rolling(window_size=parent.extras_window_size)
         self._heat_duty = Rolling(window_size=parent.extras_window_size)
         self._co2 = Rolling(window_size=parent.extras_window_size)
-        self._humidity = Rolling(window_size=parent.extras_window_size)
         self._co2_temp = Rolling(window_size=parent.extras_window_size)
+        self._humidity = Rolling(window_size=parent.extras_window_size)
 
         self.lock = threading.Lock()
 

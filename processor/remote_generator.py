@@ -119,6 +119,12 @@ class RemoteThread(ThreadBase):
                 self.parent._flow.inject(self._flow[-newel:])
                 self.parent._pressure.inject(self._pressure[-newel:])
 
+            self.parent._heat_temp.inject_sync(self._heat_temp)
+            self.parent._heat_duty.inject_sync(self._heat_duty)
+            self.parent._co2.inject_sync(self._co2)
+            self.parent._co2_temp.inject_sync(self._co2_temp)
+            self.parent._humidity.inject_sync(self._humidity)
+
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON
 
