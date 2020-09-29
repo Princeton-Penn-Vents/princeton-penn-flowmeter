@@ -1,6 +1,8 @@
 from numpy.testing import assert_allclose
 import numpy as np
 
+import pytest
+
 from processor.rolling import Rolling, new_elements
 
 
@@ -155,3 +157,28 @@ def test_new_elements():
 
     r = Rolling(window_size=5)
     assert new_elements(r, [3, 8, 9]) == 3
+
+
+@pytest.mark.parametrize("init", [None, [1, 2, 3], list(range(10))])
+def test_sync(init):
+    r = Rolling(init, window_size=5)
+    b = Rolling(init, window_size=5)
+
+    b.inject_sync(r)
+    assert r == b
+
+    r.inject_value(4)
+    b.inject_sync(r)
+    assert r == b
+
+    r.inject([5, 6, 7, 2])
+    b.inject_sync(r)
+    assert r == b
+
+    r.inject([5, 6, 7, 2])
+    b.inject_sync(r)
+    assert r == b
+
+    r.inject_value(4)
+    b.inject_sync(r)
+    assert r == b
