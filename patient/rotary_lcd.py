@@ -4,7 +4,12 @@
 from __future__ import annotations
 
 from processor.setting import Setting
-from processor.display_settings import ResetSetting, AdvancedSetting, CurrentSetting
+from processor.display_settings import (
+    ResetSetting,
+    AdvancedSetting,
+    CurrentSetting,
+    CO2Setting,
+)
 from patient.rotary import Rotary, Dir
 from patient.lcd import LCD, Align
 from patient.backlight import Backlight
@@ -41,7 +46,7 @@ class RotaryLCD(Rotary):
 
     def external_update(self) -> None:
         if (
-            isinstance(self.value(), CurrentSetting)
+            isinstance(self.value(), (CurrentSetting, CO2Setting))
             or self.time_left() > 0
             and not self.pushed_in
         ):
