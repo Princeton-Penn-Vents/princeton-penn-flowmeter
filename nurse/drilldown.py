@@ -223,6 +223,39 @@ class AllDisplays(QtWidgets.QWidget):
             box.update_limits()
 
 
+class CO2Displays(QtWidgets.QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QtWidgets.QHBoxLayout(self)
+
+        self.co2 = QtWidgets.QLabel("CO2:\n")
+        layout.addWidget(self.co2)
+
+        self.co2_temp = QtWidgets.QLabel("CO2 Temp:\n")
+        layout.addWidget(self.co2_temp)
+
+        self.humidity = QtWidgets.QLabel("Humidity:\n")
+        layout.addWidget(self.humidity)
+
+        self.setVisible(False)
+
+    def update_co2(self) -> None:
+        gen: Optional[GeneratorGUI] = self.parent().gen if self.parent() else None
+
+        if gen is not None:
+            if len(gen._co2):
+                co2 = np.mean(gen._co2[-5:])
+                co2_temp = np.mean(gen._co2_temp[-5:])
+                humidity = np.mean(gen._humidity[-5:])
+
+                self.co2.setText(f"CO2:\n{co2:.0f}")
+                self.co2_temp.setText(f"Temp:\n{co2_temp:.1f}")
+                self.humidity.setText(f"Humidity:\n{humidity:.2f}")
+
+                if not self.isVisible():
+                    self.setVisible(True)
+
+
 class DisplayText(QtWidgets.QTextEdit):
     def __init__(self):
         super().__init__()
@@ -611,6 +644,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         displays_layout.addStretch()
 
+        self.co2_widget = CO2Displays()
+        nurse_layout.addWidget(self.co2_widget)
+
         nurse_layout.addWidget(BoxHeader("Notes:"))
         self.log_edit = LogTextEdit()
         nurse_layout.addWidget(self.log_edit, 1)
@@ -861,6 +897,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         self.status = self.gen.status
                     self.displays.update_cumulative()
                     self.displays.update_limits()
+                    self.co2_widget.update_co2()
 
                     time_str = (
                         "now" if self.gen.tardy < 1 else f"{self.gen.tardy:.0f}s ago"
