@@ -290,7 +290,7 @@ class PatientTitle(QtWidgets.QWidget):
 
 
 class DrilldownWidget(QtWidgets.QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
 
         layout = VBoxLayout(self)
@@ -468,14 +468,14 @@ class AlarmBox(QtWidgets.QPushButton):
 
 
 class LogTextEdit(QtWidgets.QPlainTextEdit):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.text_changed = False
         self.textChanged.connect(self.update_notes)
 
     @Slot()
-    def update_notes(self):
+    def update_notes(self) -> None:
         self.text_changed = True
 
     @property
@@ -497,13 +497,13 @@ class DraggableMsg(QtWidgets.QMessageBox, DraggableMixin):
 
 
 class PatientDrilldownWidget(QtWidgets.QFrame):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.curves: Dict[str, pg.PlotCurveItem] = {}
         self.curves2: Dict[str, pg.PlotCurveItem] = {}
-        self.upper = {}
-        self.lower = {}
-        self.current = {}
+        self.upper: Dict[str, pg.PlotDataItem] = {}
+        self.lower: Dict[str, pg.PlotDataItem] = {}
+        self.current: Dict[str, pg.PlotDataItem] = {}
         self.gen: Optional[GeneratorGUI] = None
 
         layout = HBoxLayout(self)
@@ -599,7 +599,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         buttons_2_layout = QtWidgets.QHBoxLayout()
         stacked_button_box.addLayout(buttons_2_layout)
 
-        all_logs = QtWidgets.QPushButton("Log files")
+        all_logs = QtWidgets.QPushButton("Patient data files")
         all_logs.setToolTip("Open the current logging directory")
         all_logs.clicked.connect(self.display_logs)
         buttons_2_layout.addWidget(all_logs, 1)
@@ -620,18 +620,18 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.qTimer.timeout.connect(self.update_plot)
 
     @property
-    def status(self):
+    def status(self) -> Status:
         return Status[self.property("alert_status") or "NONE"]
 
     @status.setter
-    def status(self, value: Status):
+    def status(self, value: Status) -> None:
         if value.name != self.property("alert_status"):
             self.setProperty("alert_status", value.name)
             self.title.name_lbl.setText(value.value)
             self.title.repolish()
 
     @Slot()
-    def display_cumulative(self):
+    def display_cumulative(self) -> None:
         if self.gen is not None:
             cumulative = "\n".join(
                 rf"<p>{k}: {v:.2f}</p>" for k, v in self.gen.cumulative.items()
@@ -647,7 +647,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.show()
 
     @Slot()
-    def display_alarms(self):
+    def display_alarms(self) -> None:
         assert self.gen is not None
 
         def expand(s: Dict[str, Any]) -> str:
@@ -666,7 +666,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.show()
 
     @Slot()
-    def display_rotary(self):
+    def display_rotary(self) -> None:
         assert self.gen is not None
         rotary_text = "\n".join(
             rf"<p>{v.name}: {v.value} {v.unit}</p>" for v in self.gen.rotary.values()
@@ -678,7 +678,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         box.show()
 
     @Slot()
-    def display_logs(self):
+    def display_logs(self) -> None:
         assert self.gen is not None
         if self.gen.saver_cml is not None:
             filepath = self.gen.saver_cml.filepath.parent
@@ -697,26 +697,28 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             box.show()
 
     @Slot()
-    def external_update_boxname(self):
+    def external_update_boxname(self) -> None:
         assert self.gen is not None
         text = self.gen.record.box_name
         if self.box_name.text() != text:
             self.box_name.setText(text)
 
     @Slot()
-    def external_update_sid(self):
+    def external_update_sid(self) -> None:
         assert self.gen is not None
         text = f"Sensor ID: {self.gen.record.sid:016X}"
         if self.sensor_id.text() != text:
             self.sensor_id.setText(text)
 
     @Slot()
-    def external_update_notes(self):
+    def external_update_notes(self) -> None:
         assert self.gen is not None
         text = self.gen.record.notes
         self.log_edit.setPlainText(text)
 
-    def set_plot(self, graph_layout, phase_layout):
+    def set_plot(
+        self, graph_layout: pg.GraphicsLayout, phase_layout: pg.GraphicsView
+    ) -> None:
         gis = GraphInfo()
 
         graphs = {}
@@ -782,7 +784,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.phase_graph.setLabel("bottom", "Pressure", units="cm H2O")
 
     @Slot()
-    def update_plot(self, first: bool = False):
+    def update_plot(self, first: bool = False) -> None:
         if self.isVisible() and self.gen is not None:
             gis = GraphInfo()
             scroll = self.parent().header.mode_scroll
