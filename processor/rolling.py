@@ -7,9 +7,6 @@ from typing import Union, List
 
 class Rolling:
     def __init__(self, init=None, *, window_size: int, dtype=None):
-        # Remembers the number of entries
-        self.nentries: int = 0
-
         if dtype is None:
             if init:
                 dtype = np.asarray(init).dtype
@@ -27,7 +24,6 @@ class Rolling:
     def clear(self) -> None:
         self._start = 0
         self._current_size = 0
-        self.nentries = 0
 
     @property
     def window_size(self) -> int:
@@ -37,7 +33,6 @@ class Rolling:
         """
         High performance version of inject.
         """
-        self.nentries += 1
 
         fill_start = (
             self._start
@@ -64,7 +59,6 @@ class Rolling:
 
         # Make sure input is an array, truncate if larger than rolling buffer
         values = np.asarray(values)
-        self.nentries += values.size
 
         if values.size > self._window_size:
             values = values[-self._window_size :]
@@ -112,7 +106,7 @@ class Rolling:
     def __repr__(self) -> str:
         r = repr(np.asarray(self))
         start = "Rolling(" + ("\n" if "\n" in r else "")
-        return start + r[6:-1] + f", window_size={self._window_size}) # {self.nentries}"
+        return start + r[6:-1] + f", window_size={self._window_size})"
 
     def __str__(self) -> str:
         return str(np.array(self))
@@ -133,23 +127,6 @@ class Rolling:
 
     def __len__(self) -> int:
         return self._current_size
-
-    def inject_sync(self, other: Rolling):
-        """
-        One way sync. Adds new elements from a matching rolling array.
-        """
-
-        # How many new elements are in the "other"?
-        num_new_el = max(other.nentries - self.nentries, 0)
-
-        # If there are more new elements than the window, keep track of the extras
-        # (since they will not be included in the slice of the window)
-        limited_slice = min(num_new_el, self.window_size)
-        self.nentries += num_new_el - limited_slice
-
-        # Always protect `-n:`, as it doesn't work if n is 0
-        if limited_slice:
-            self.inject(other[-limited_slice:])
 
     def inject_batch(self, other: Rolling, newel: int) -> None:
         """
