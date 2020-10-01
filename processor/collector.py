@@ -139,10 +139,12 @@ class CollectorThread(ThreadBase):
             self.parent._pressure.inject_batch(self._pressure, newel)
 
             newel = self.parent._heat_time.new_elements(self._heat_time)
+            self.parent._heat_time.inject_batch(self._heat_time, newel)
             self.parent._heat_temp.inject_batch(self._heat_temp, newel)
             self.parent._heat_duty.inject_batch(self._heat_duty, newel)
 
             newel = self.parent._co2_time.new_elements(self._co2_time)
+            self.parent._co2_time.inject_batch(self._co2_time, newel)
             self.parent._co2.inject_batch(self._co2, newel)
             self.parent._co2_temp.inject_batch(self._co2_temp, newel)
             self.parent._humidity.inject_batch(self._humidity, newel)

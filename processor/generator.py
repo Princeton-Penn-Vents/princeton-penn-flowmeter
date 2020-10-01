@@ -17,7 +17,7 @@ from processor.rotary import LocalRotary
 from processor.settings import get_remote_settings
 from processor.config import config
 from processor.rolling import Rolling
-from processor.saver import CSVSaverTS, CSVSaverCML, JSONSSaverBreaths
+from processor.saver import CSVSaverTS, CSVSaverCML, JSONSSaverBreaths, FieldInfo
 from processor.gen_record import GenRecord
 
 if TYPE_CHECKING:
@@ -183,6 +183,8 @@ class Generator(abc.ABC):
 
         # Saver instances
         self.saver_ts: Optional[CSVSaverTS] = None
+        self.saver_heat: Optional[CSVSaverTS] = None
+        self.saver_co2: Optional[CSVSaverTS] = None
         self.saver_cml: Optional[CSVSaverCML] = None
         self.saver_breaths: Optional[JSONSSaverBreaths] = None
 
@@ -198,8 +200,39 @@ class Generator(abc.ABC):
             log_path = Path(handler.baseFilename).parent
 
             self.saver_ts = CSVSaverTS(
-                self, log_path / "ts.csv", config["global"]["save-every"].as_number()
+                (
+                    FieldInfo("t", "_time"),
+                    FieldInfo("f", "_flow", ".2"),
+                    FieldInfo("p", "_pressure", ".3"),
+                ),
+                self,
+                log_path / "ts.csv",
+                config["global"]["save-every"].as_number(),
             )
+
+            self.saver_heat = CSVSaverTS(
+                (
+                    FieldInfo("t", "_heat_time"),
+                    FieldInfo("C", "_heat_temp", ".4"),
+                    FieldInfo("D", "_heat_duty", ".4"),
+                ),
+                self,
+                log_path / "heat.csv",
+                config["global"]["save-every"].as_number(),
+            )
+
+            self.saver_co2 = CSVSaverTS(
+                (
+                    FieldInfo("t", "_co2_time"),
+                    FieldInfo("CO2", "_co2", ".5"),
+                    FieldInfo("Tp", "_co2_temp", ".3"),
+                    FieldInfo("H", "_humidity", ".3"),
+                ),
+                self,
+                log_path / "co2.csv",
+                config["global"]["save-every"].as_number(),
+            )
+
             self.saver_cml = CSVSaverCML(
                 self,
                 log_path / "cml.csv",
@@ -224,6 +257,10 @@ class Generator(abc.ABC):
 
         if self.saver_ts is not None:
             self.saver_ts.enter()
+        if self.saver_heat is not None:
+            self.saver_heat.enter()
+        if self.saver_co2 is not None:
+            self.saver_co2.enter()
         if self.saver_cml is not None:
             self.saver_cml.enter()
         if self.saver_breaths is not None:
@@ -271,6 +308,12 @@ class Generator(abc.ABC):
 
         if self.saver_ts:
             self.saver_ts.save()
+
+        if self.saver_heat:
+            self.saver_heat.save()
+
+        if self.saver_co2:
+            self.saver_co2.save()
 
     def _set_alarms(self):
         "Overridden in remote generator to include silenced alarms. Collector doens't care."
@@ -569,6 +612,10 @@ class Generator(abc.ABC):
 
         if self.saver_ts is not None:
             self.saver_ts.close()
+        if self.saver_heat is not None:
+            self.saver_heat.close()
+        if self.saver_co2 is not None:
+            self.saver_co2.close()
         if self.saver_cml is not None:
             self.saver_cml.close()
         if self.saver_breaths is not None:

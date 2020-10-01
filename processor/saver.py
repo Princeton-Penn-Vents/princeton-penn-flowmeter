@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Sequence, Iterator
 from datetime import datetime
 import numpy as np
 import json
@@ -37,29 +37,48 @@ class Saver:
         self.file.write(f"# Nursetime: {datetime.now().isoformat()}\n")
 
 
+class FieldInfo(NamedTuple):
+    id: str
+    name: str
+    fmt: str = ""
+
+
 class CSVSaverTS(Saver):
-    def __init__(self, gen: Generator, filepath: Path, save_every: float):
+    def __init__(
+        self,
+        fields: Sequence[FieldInfo],
+        gen: Generator,
+        filepath: Path,
+        save_every: float,
+    ):
         super().__init__(gen, filepath, save_every)
         self._last_timestamp = 0
+        self.fields = fields
 
     def header(self) -> None:
         super().header()
-        self.file.write("t, f, p\n")
+        values = (f.id for f in self.fields)
+        print(*values, sep=", ", file=self.file)
 
     def save(self) -> None:
-        if len(self.parent._time) < 1:
+
+        time_name = self.fields[0].name
+        parent_time = getattr(self.parent, time_name)
+
+        if len(parent_time) < 1:
             return
 
-        ind = np.searchsorted(self.parent._time, self._last_timestamp)
+        ind = np.searchsorted(parent_time, self._last_timestamp)
+        slices: Iterator[np.ndarray] = (
+            getattr(self.parent, f.name)[ind:] for f in self.fields
+        )
 
-        for t, f, p in zip(
-            self.parent._time[ind:],
-            self.parent._flow[ind:],
-            self.parent._pressure[ind:],
-        ):
-            self.file.write(f"{t},{f:.2},{p:.3}\n")
+        for items in zip(*slices):
+            item_format = zip(items, (f.fmt for f in self.fields))
+            values = (format(item, fmt) for item, fmt in item_format)
+            print(*values, sep=", ", file=self.file)
 
-        self._last_timestamp = self.parent._time[-1]
+        self._last_timestamp = parent_time[-1]
         super().save()
 
 
