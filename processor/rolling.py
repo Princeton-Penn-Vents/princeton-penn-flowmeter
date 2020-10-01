@@ -151,6 +151,13 @@ class Rolling:
         if limited_slice:
             self.inject(other[-limited_slice:])
 
+    def inject_batch(self, other: Rolling, newel: int) -> None:
+        """
+        Inject "newel" items from other to self.
+        """
+        if newel:
+            self.inject(other[-newel:])
+
 
 def get_last(rolling: Union[Rolling, np.ndarry], n: int) -> np.ndarray:
     """
