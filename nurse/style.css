@@ -397,6 +397,13 @@ AlarmBox[alert_status="OK_ACTIVE"] {
 
 /* Drilldown display grid */
 
+CO2Displays > QLabel {
+  border: 2px solid grey;
+  font-size: 18pt;
+  font-weight: bold;
+  color: #C0C0C0;
+}
+
 DisplayBox {
   border: 2px solid grey;
 }
