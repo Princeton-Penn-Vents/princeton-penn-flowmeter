@@ -131,11 +131,9 @@ class CollectorThread(ThreadBase):
     def access_collected_data(self) -> None:
         with self.parent.lock, self.lock:
             newel = new_elements(self.parent._time, self._time)
-
-            if newel:
-                self.parent._time.inject(self._time[-newel:])
-                self.parent._flow.inject(self._flow[-newel:])
-                self.parent._pressure.inject(self._pressure[-newel:])
+            self.parent._time.inject_batch(self._time, newel)
+            self.parent._flow.inject_batch(self._flow, newel)
+            self.parent._pressure.inject_batch(self._pressure, newel)
 
             self.parent._heat_temp.inject_sync(self._heat_temp)
             self.parent._heat_duty.inject_sync(self._heat_duty)
