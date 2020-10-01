@@ -67,13 +67,19 @@ class Generator(abc.ABC):
         # The pressure
         self._pressure = Rolling(window_size=self.window_size)
 
+        # Heating timestamps
+        self._heat_time = Rolling(window_size=self.extras_window_size, dtype=np.int64)
+
         # The heating element temp
         self._heat_temp = Rolling(window_size=self.extras_window_size)
 
         # The heating element duty cycle
         self._heat_duty = Rolling(window_size=self.extras_window_size)
 
-        # The C02 levels (if hardware present)
+        # CO2 timestamps
+        self._co2_time = Rolling(window_size=self.extras_window_size, dtype=np.int64)
+
+        # The CO2 levels (if hardware present)
         self._co2 = Rolling(window_size=self.extras_window_size)
 
         # The humidity levels (if hardware present)

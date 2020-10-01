@@ -75,7 +75,7 @@ class RemoteThread(ThreadBase):
                 if "time left" in root:
                     with self.lock:
                         self.time_left = root["time left"]
-                if "t" in root:
+                if "f" in root:
                     with self.lock:
                         self._time.inject_value(root["t"])
                         self._flow.inject_value(root["f"])
@@ -90,11 +90,13 @@ class RemoteThread(ThreadBase):
 
                 if "C" in root:
                     with self.lock:
+                        self._heat_time.inject_value(root["t"])
                         self._heat_temp.inject_value(root["C"])
                         self._heat_duty.inject_value(root["D"])
 
                 if "CO2" in root:
                     with self.lock:
+                        self._co2_time.inject_value(root["t"])
                         self._co2.inject_value(root["CO2"])
                         self._co2_temp.inject_value(root["Tp"])
                         self._humidity.inject_value(root["H"])
@@ -117,11 +119,14 @@ class RemoteThread(ThreadBase):
             self.parent._flow.inject_batch(self._flow, newel)
             self.parent._pressure.inject_batch(self._pressure, newel)
 
-            self.parent._heat_temp.inject_sync(self._heat_temp)
-            self.parent._heat_duty.inject_sync(self._heat_duty)
-            self.parent._co2.inject_sync(self._co2)
-            self.parent._co2_temp.inject_sync(self._co2_temp)
-            self.parent._humidity.inject_sync(self._humidity)
+            newel = new_elements(self.parent._heat_time, self._heat_time)
+            self.parent._heat_temp.inject_batch(self._heat_temp, newel)
+            self.parent._heat_duty.inject_batch(self._heat_duty, newel)
+
+            newel = new_elements(self.parent._co2_time, self._co2_time)
+            self.parent._co2.inject_batch(self._co2, newel)
+            self.parent._co2_temp.inject_batch(self._co2_temp, newel)
+            self.parent._humidity.inject_batch(self._humidity, newel)
 
             if self.status == Status.DISCON:
                 self.parent.status = Status.DISCON

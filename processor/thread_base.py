@@ -15,8 +15,11 @@ class ThreadBase(threading.Thread):
         self._flow = Rolling(window_size=parent.window_size)
         self._pressure = Rolling(window_size=parent.window_size)
 
+        self._heat_time = Rolling(window_size=parent.extras_window_size, dtype=np.int64)
         self._heat_temp = Rolling(window_size=parent.extras_window_size)
         self._heat_duty = Rolling(window_size=parent.extras_window_size)
+
+        self._co2_time = Rolling(window_size=parent.extras_window_size, dtype=np.int64)
         self._co2 = Rolling(window_size=parent.extras_window_size)
         self._co2_temp = Rolling(window_size=parent.extras_window_size)
         self._humidity = Rolling(window_size=parent.extras_window_size)
