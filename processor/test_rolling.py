@@ -1,9 +1,7 @@
 from numpy.testing import assert_allclose
 import numpy as np
 
-import pytest
-
-from processor.rolling import Rolling, new_elements
+from processor.rolling import Rolling
 
 
 def test_rolling_single():
@@ -148,37 +146,23 @@ def test_getitem():
 
 def test_new_elements():
     r = Rolling([1, 2, 3, 4, 5], window_size=5)
-    assert new_elements(r, [4, 5, 6, 7]) == 2
-    assert new_elements(r, [5, 6, 7]) == 2
-    assert new_elements(r, [4, 5]) == 0
-    assert new_elements(r, [2, 3]) <= 0
-    assert new_elements(r, [8, 9]) == 2
-    assert new_elements(r, [3, 8, 9]) == 2
+    assert r.new_elements([4, 5, 6, 7]) == 2
+    assert r.new_elements([5, 6, 7]) == 2
+    assert r.new_elements([4, 5]) == 0
+    assert r.new_elements([2, 3]) <= 0
+    assert r.new_elements([8, 9]) == 2
+    assert r.new_elements([3, 8, 9]) == 2
 
     r = Rolling(window_size=5)
-    assert new_elements(r, [3, 8, 9]) == 3
+    assert r.new_elements([3, 8, 9]) == 3
 
 
-@pytest.mark.parametrize("init", [None, [1, 2, 3], list(range(10))])
-def test_sync(init):
-    r = Rolling(init, window_size=5)
-    b = Rolling(init, window_size=5)
+def test_batch():
+    r = Rolling([1, 2, 3, 4, 5], window_size=6)
+    arr = np.array([5, 6, 7, 8])
+    newel = r.new_elements(arr)
+    assert newel == 3
 
-    b.inject_sync(r)
-    assert r == b
+    r.inject_batch(arr, newel)
 
-    r.inject_value(4)
-    b.inject_sync(r)
-    assert r == b
-
-    r.inject([5, 6, 7, 2])
-    b.inject_sync(r)
-    assert r == b
-
-    r.inject([5, 6, 7, 2])
-    b.inject_sync(r)
-    assert r == b
-
-    r.inject_value(4)
-    b.inject_sync(r)
-    assert r == b
+    assert_allclose(r[:], [3, 4, 5, 6, 7, 8])

@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Optional, Dict
 import logging
 
-from processor.rolling import new_elements
 from processor.generator import Status, Generator
 from processor.gen_record import GenRecord
 from processor.thread_base import ThreadBase
@@ -114,16 +113,16 @@ class RemoteThread(ThreadBase):
             self.parent.current_monotonic = self.monotime
             self.parent.time_left = self.time_left
 
-            newel = new_elements(self.parent._time, self._time)
+            newel = self.parent._time.new_elements(self._time)
             self.parent._time.inject_batch(self._time, newel)
             self.parent._flow.inject_batch(self._flow, newel)
             self.parent._pressure.inject_batch(self._pressure, newel)
 
-            newel = new_elements(self.parent._heat_time, self._heat_time)
+            newel = self.parent._heat_time.new_elements(self._heat_time)
             self.parent._heat_temp.inject_batch(self._heat_temp, newel)
             self.parent._heat_duty.inject_batch(self._heat_duty, newel)
 
-            newel = new_elements(self.parent._co2_time, self._co2_time)
+            newel = self.parent._co2_time.new_elements(self._co2_time)
             self.parent._co2.inject_batch(self._co2, newel)
             self.parent._co2_temp.inject_batch(self._co2_temp, newel)
             self.parent._humidity.inject_batch(self._humidity, newel)

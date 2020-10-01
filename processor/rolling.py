@@ -135,34 +135,20 @@ class Rolling:
         if newel:
             self.inject(other[-newel:])
 
+    def new_elements(self, addition: Union[Rolling, np.ndarry]) -> int:
+        """
+        Given two sorted arrays, find the number of elements in the second array
+        that are past the end of the first array.
 
-def get_last(rolling: Union[Rolling, np.ndarry], n: int) -> np.ndarray:
-    """
-    Get the last N items or less if less available.abs
-    """
+        WARNING: Be sure to protect when this returns 0 or use inject_batch!
+        """
 
-    if n < len(rolling):
-        n = len(rolling)
+        if len(self) < 1:
+            return len(addition)
 
-    return rolling[-n:] if n else rolling[:0]
-
-
-def new_elements(
-    rolling: Union[Rolling, np.ndarry], addition: Union[Rolling, np.ndarry]
-) -> int:
-    """
-    Given two sorted arrays, find the number of elements in the second array
-    that are past the end of the first array.
-
-    WARNING: Be sure to protect when this returns 0; do *not* inject!
-    """
-
-    if len(rolling) < 1:
-        return len(addition)
-
-    final_value = rolling[-1]
-    ind = np.searchsorted(addition, final_value)
-    if ind == len(addition):
-        return 0
-    else:
-        return len(addition) - ind - (final_value == addition[ind])
+        final_value = self[-1]
+        ind = np.searchsorted(addition, final_value)
+        if ind == len(addition):
+            return 0
+        else:
+            return len(addition) - ind - (final_value == addition[ind])

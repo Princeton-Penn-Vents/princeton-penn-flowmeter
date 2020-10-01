@@ -4,7 +4,6 @@ import numpy as np
 import logging
 
 from sim.start_sims import start_sims
-from processor.rolling import new_elements
 from processor.generator import Generator, Status
 from processor.gen_record import GenRecord
 
@@ -24,7 +23,7 @@ class LocalGenerator(Generator):
         events = t - self._time[-1] if len(self._time) else self._start_time
         times, flow, pressure = self._sim.get_from_timestamp(t, events)
 
-        to_add = new_elements(self._time, times)
+        to_add = self._time.new_elements(times)
         if to_add:
             self._time.inject(times[-to_add:])
             self._flow.inject(flow[-to_add:])
