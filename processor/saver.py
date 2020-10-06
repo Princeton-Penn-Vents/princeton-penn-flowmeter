@@ -28,6 +28,7 @@ class Saver:
         self.header()
 
     def save(self) -> None:
+        self.file.flush()
         self.last_save = time.monotonic()
 
     def close(self) -> None:
