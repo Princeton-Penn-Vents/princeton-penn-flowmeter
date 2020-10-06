@@ -68,7 +68,7 @@ class CSVSaverTS(Saver):
         if len(parent_time) < 1:
             return
 
-        ind = np.searchsorted(parent_time, self._last_timestamp)
+        ind = np.searchsorted(parent_time, self._last_timestamp, side="right")
         slices: Iterator[np.ndarray] = (
             getattr(self.parent, f.name)[ind:] for f in self.fields
         )
