@@ -233,29 +233,29 @@ Install all updates; you should be on at least Windows 10 version 1909. I
 recommend upgraded the built-in Edge browswer to the Chromium based Edge
 browser, as well.
 
-Download the Windows package manager, available in releases here: <https://github.com/microsoft/winget-cli>
-Install it.
+Download the Windows package manager, available in releases here:
+<https://github.com/microsoft/winget-cli> Install it.
 
-Install the following from cmd/PowerShell (your choice):
+Install the following from cmd/PowerShell (your choice, but run as administrator):
 
-* `winget install Git.Git`
-* `winget install Microsoft.Terminal`
-* `wingit install Anaconda.Miniconda3`
-
-You will have a terminal for git and a different one for conda.
-
-In the git terminal, download the repository as normal (it's a bash shell, it
-even has vim).
-
-In the conda terminal, change to the repository directory and add the
-environment:
-
-```cmd
-cd princeton-penn-flowmeter
-conda env create
+```
+winget install Git.Git
+winget install Microsoft.WindowsTerminal
+winget install Anaconda.Miniconda3
 ```
 
-Finally, and assuming all paths are "normal", drag the patientmonitor.bat to
+
+You have a conda terminal in your start menu now. From that terminal, download the
+repository and setup:
+
+```cmd
+git clone git://github.com/Princeton-Penn-Vents/princeton-penn-flowmeter.git
+cd princeton-penn-flowmeter
+conda env create
+explorer .
+```
+
+Finally, and assuming all paths are "normal", copy/drag the patientmonitor.bat to
 the desktop (I also drag out the terminals that are useful there, too).
 
 </details>
