@@ -6,6 +6,7 @@ from typing import Optional, Any, Dict, TYPE_CHECKING
 import logging
 import subprocess
 import os
+import sys
 
 import numpy as np
 
@@ -722,8 +723,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             startfile = getattr(os, "startfile", None)
             if startfile is not None:
                 startfile(filepath, "open")
-            else:  # if sys.platform.startswith('darwin') if we need xdg-open instead
+            elif sys.platform.startswith("darwin"):
                 subprocess.check_call(["open", filepath])
+            else:
+                subprocess.check_call(["xdg-open", filepath])
+
         else:
             box = DraggableMsg(self)
             box.setWindowTitle("Debug mode")
