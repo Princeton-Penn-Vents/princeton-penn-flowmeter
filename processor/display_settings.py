@@ -38,7 +38,7 @@ class AdvancedSetting(SelectionSetting):
                 return "No sensor detected"
         elif self._value == 3:
             if self.file:
-                return Path(self.file).name[-20:]
+                return Path(self.file).name[-24:-4]
             else:
                 return "Not recording"
         elif self._value == 4:
