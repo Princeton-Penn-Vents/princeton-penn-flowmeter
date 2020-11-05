@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 import logging
+from datetime import datetime
 
 from processor.config import config, get_data_dir
 
@@ -11,14 +12,14 @@ def open_next(mypath: Path) -> Path:
     """
     Open the next available file
     """
-    i = 0
+    dt = datetime.now().isoformat(timespec="seconds")
     while True:
-        name = "{n}{i:04}{s}".format(n=mypath.stem, i=i, s=mypath.suffix)
+        name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
         new_file_path = mypath.with_name(name)
         if not new_file_path.exists():
             return new_file_path
         else:
-            i += 1
+            dt = datetime.now().isoformat(timespec="microseconds")
 
 
 def init_logger(logstr: Optional[str] = None) -> None:
