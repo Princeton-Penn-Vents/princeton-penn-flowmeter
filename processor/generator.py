@@ -523,11 +523,32 @@ class Generator(abc.ABC):
             return timestamps
 
     @property
+    def co2_time(self) -> np.ndarray:
+        """
+        The co2 time array, with the most recent time as 0, with an adjustment based on `last_update`. Mostly for plotting.
+        """
+        co2_timestamps = np.asarray(self._co2_time)
+        timestamps = self.timestamps
+
+        if len(co2_timestamps) > 0 and len(timestamps) > 0:
+            return -(co2_timestamps - timestamps[-1]) / 1000 + self.tardy
+        else:
+            return co2_timestamps
+
+    @property
     def realtime(self) -> np.ndarray:
         """
         The actual time in seconds (arbitrary monotonic device clock)
         """
         return self.timestamps / 1000
+
+    @property
+    def co2_realtime(self) -> np.ndarray:
+        """
+        The actual time for the CO2 time
+        """
+
+        return np.asarray(self._co2_time) / 1000
 
     @property
     def timestamps(self) -> np.ndarray:
@@ -542,6 +563,14 @@ class Generator(abc.ABC):
         Raw flow data.
         """
         return np.asarray(self._flow)
+
+    @property
+    def co2(self) -> np.ndarray:
+        """
+        The CO2 values, if present.
+        """
+
+        return np.asarray(self._co2)
 
     @property
     @abc.abstractmethod
