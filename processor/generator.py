@@ -329,6 +329,8 @@ class Generator(abc.ABC):
         """
         Quick analysis that's easier to run often, makes volume (run by `analyze` too)
         """
+        avg_window = config["global"]["avg-window"].get(int)
+
         realtime = self.realtime
         if len(realtime) > 0:
             if self._logging is not None:
@@ -386,7 +388,7 @@ class Generator(abc.ABC):
                     processor.analysis.co2_alarm(
                         self._avg_alarms,
                         self.rotary,
-                        self.co2,  # TODO: impose time window!
+                        self.co2[self.co2_time < avg_window],
                         self.realtime[-1],
                         self.logger,
                     )

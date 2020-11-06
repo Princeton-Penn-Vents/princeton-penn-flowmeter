@@ -934,6 +934,12 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 [0, avg_window],
                                 [self.gen.average_pressure[avg_window]] * 2,
                             )
+                        elif key == "co2":
+                            avg_co2 = float(np.mean(yvalues[xvalues < avg_window]))
+                            self.current[key].setData(
+                                [0, avg_window],
+                                [avg_co2] * 2,
+                            )
 
                     for i, phase in enumerate(self.phases):
                         range = slice(-(i + 1) * 50 * 3 - 1, -i * 50 * 3)
