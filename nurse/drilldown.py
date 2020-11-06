@@ -538,6 +538,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         self.upper: Dict[str, pg.PlotDataItem] = {}
         self.lower: Dict[str, pg.PlotDataItem] = {}
         self.current: Dict[str, pg.PlotDataItem] = {}
+        self.co2_plot: Optional[pg.PlotItem] = None
+        self.graphs: Dict[str, pg.PlotItem] = {}
         self.gen: Optional[GeneratorGUI] = None
 
         layout = HBoxLayout(self)
@@ -568,16 +570,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         warning_layout.addStretch()
 
         self.graphview = pg.GraphicsView(parent=self)
-        graph_layout = pg.GraphicsLayout()
-        self.graphview.setCentralWidget(graph_layout)
+        self.graph_layout = pg.GraphicsLayout()
+        self.graphview.setCentralWidget(self.graph_layout)
         left_layout.addWidget(self.graphview, 4)
 
         phaseview = pg.GraphicsView(parent=self)
-        phase_layout = pg.GraphicsLayout()
-        phaseview.setCentralWidget(phase_layout)
+        self.phase_layout = pg.GraphicsLayout()
+        phaseview.setCentralWidget(self.phase_layout)
         right_layout.addWidget(phaseview, 2)
 
-        self.set_plot(graph_layout, phase_layout)
+        self.set_plots()
 
         side_by_side_layout = HBoxLayout()
         right_layout.addLayout(side_by_side_layout, 3)
@@ -756,54 +758,56 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         text = self.gen.record.notes
         self.log_edit.setPlainText(text)
 
-    def set_plot(
-        self, graph_layout: pg.GraphicsLayout, phase_layout: pg.GraphicsView
-    ) -> None:
+    def set_plot(self, key: str) -> pg.PlotItem:
         gis = GraphInfo()
-
-        graphs = {}
 
         limit_pen = pg.mkPen(color=(170, 30, 30), width=3, style=QtCore.Qt.DashLine)
         current_pen = pg.mkPen(color=(50, 50, 180), width=3, style=QtCore.Qt.DotLine)
 
-        for j, key in enumerate(gis.graph_labels):
-            graphs[key] = graph_layout.addPlot(
-                x=None,
-                y=None,
-                name=key.capitalize(),
-                autoDownsample=True,
-                clipToView=True,
-            )
-            graphs[key].invertX()
-            graphs[key].setRange(
-                xRange=(28, 0)
-            )  # Actually shows a bit more that the range
-            graphs[key].setLabel(
-                "left", gis.graph_names[key], "L" if key == "volume" else gis.units[key]
-            )
-            if j != len(gis.graph_labels):
-                graph_layout.nextRow()
+        if self.graph_layout.items:
+            self.graph_layout.nextRow()
 
-            graphs[key].addItem(pg.PlotDataItem([0, 30], [0, 0]))
+        graph = self.graph_layout.addPlot(
+            x=None,
+            y=None,
+            name=key.capitalize(),
+            autoDownsample=True,
+            clipToView=True,
+        )
+        graph.invertX()
+        graph.setRange(xRange=(28, 0))  # Actually shows a bit more that the range
+        graph.setLabel(
+            "left", gis.graph_names[key], "L" if key == "volume" else gis.units[key]
+        )
 
-            self.upper[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
-            graphs[key].addItem(self.upper[key])
-            self.lower[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
-            graphs[key].addItem(self.lower[key])
-            self.current[key] = pg.PlotDataItem(x=None, y=None, pen=current_pen)
-            graphs[key].addItem(self.current[key])
+        graph.addItem(pg.PlotDataItem([0, 30], [0, 0]))
 
-            pen = pg.mkPen(color=gis.graph_pens[key], width=2)
-            self.curves[key] = graphs[key].plot(x=None, y=None, pen=pen)
-            self.curves2[key] = graphs[key].plot(x=None, y=None, pen=pen)
+        self.upper[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
+        graph.addItem(self.upper[key])
+        self.lower[key] = pg.PlotDataItem(x=None, y=None, pen=limit_pen)
+        graph.addItem(self.lower[key])
+        self.current[key] = pg.PlotDataItem(x=None, y=None, pen=current_pen)
+        graph.addItem(self.current[key])
 
-        graphs[key].setLabel("bottom", "Time", "s")
+        pen = pg.mkPen(color=gis.graph_pens[key], width=2)
+        self.curves[key] = graph.plot(x=None, y=None, pen=pen)
+        self.curves2[key] = graph.plot(x=None, y=None, pen=pen)
+
+        return graph
+
+    def set_plots(self) -> None:
+        gis = GraphInfo()
+
+        graphs = {key: self.set_plot(key) for key in gis.graph_labels}
+        self.graphs = graphs
+
+        graphs["volume"].setLabel("bottom", "Time", "s")
 
         graphs[gis.graph_labels[0]].setXLink(graphs[gis.graph_labels[1]])
         graphs[gis.graph_labels[1]].setXLink(graphs[gis.graph_labels[2]])
 
         # Phase plot
-        self.phase_graph = phase_layout.addPlot(x=None, y=None, name="Phase")
+        self.phase_graph = self.phase_layout.addPlot(x=None, y=None, name="Phase")
         self.phase_graph.setRange(
             xRange=gis.yLims["pressure"],
             yRange=tuple(v / 1000 for v in gis.yLims["volume"]),
@@ -838,10 +842,32 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         if len(self.gen.time)
                         else slice(None)
                     )
-                    xvalues = self.gen.time[select]
+                    co2_select = (
+                        slice(
+                            np.searchsorted(-self.gen.co2_time, -30),
+                            None,
+                        )
+                        if len(self.gen.co2_time)
+                        else slice(None)
+                    )
 
-                    for key in gis.graph_labels:
-                        yvalues = getattr(self.gen, key)[select]
+                    # If we have CO2 sensor data
+                    if self.gen._co2:
+                        # Add the plot if not added already
+                        if self.co2_plot is None:
+                            self.co2_plot = self.set_plot("co2")
+                            self.graphs["volume"].setLabel("bottom", "", "")
+                            self.co2_plot.setLabel("bottom", "Time", "s")
+
+                    labels = gis.all_graph_labels if self.co2_plot else gis.graph_labels
+                    for key in labels:
+                        if key == "co2":
+                            xvalues = self.gen.co2_time[co2_select]
+                            yvalues = self.gen.co2[co2_select]
+                        else:
+                            xvalues = self.gen.time[select]
+                            yvalues = getattr(self.gen, key)[select]
+
                         if key == "volume":
                             yvalues = yvalues / 1000
 
@@ -855,7 +881,16 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 )
 
                         else:
-                            realtime = self.gen.realtime[select]
+                            realtime = (
+                                self.gen.co2_realtime[co2_select]
+                                if key == "co2"
+                                else self.gen.realtime[select]
+                            )
+
+                            # This should never be empty, but quit here if it is
+                            if not len(realtime):
+                                continue
+
                             last = realtime[-1]
                             breakpt = np.searchsorted(realtime, last - last % 30)
                             gap = 25

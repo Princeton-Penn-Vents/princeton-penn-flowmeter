@@ -36,19 +36,27 @@ class GraphInfo:
     def __init__(self):
         # the y limits ought to be configurable.
         self.graph_labels = ["flow", "pressure", "volume"]
+        self.all_graph_labels = self.graph_labels + ["co2"]
         self.graph_names = {key: key.capitalize() for key in self.graph_labels}
+        self.graph_names["co2"] = "CO2"
 
         self.graph_pens = {
             "flow": (120, 255, 50),
             "pressure": (255, 120, 50),
             "volume": (255, 128, 255),
+            "co2": (255, 50, 50),
         }
 
-        self.yMax = {"flow": 300, "pressure": 100, "volume": 5000}
-        self.yMin = {"flow": -300, "pressure": -100, "volume": 0}
-        self.yStep = {"flow": 10, "pressure": 2, "volume": 100}
+        self.yMax = {"flow": 300, "pressure": 100, "volume": 5000, "co2": 5000}
+        self.yMin = {"flow": -300, "pressure": -100, "volume": 0, "co2": 0}
+        self.yStep = {"flow": 10, "pressure": 2, "volume": 100, "co2": 10}
 
         self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
 
-        self.yLims = {"flow": (-20, 140), "pressure": (-1, 20), "volume": (0, 800)}
-        self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL"}
+        self.yLims = {
+            "flow": (-20, 140),
+            "pressure": (-1, 20),
+            "volume": (0, 800),
+            "co2": (-5, 6000),
+        }
+        self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL", "co2": ""}
