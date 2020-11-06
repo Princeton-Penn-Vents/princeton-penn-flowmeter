@@ -770,7 +770,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
         graph = self.graph_layout.addPlot(
             x=None,
             y=None,
-            name=key.capitalize(),
+            name="CO2" if key == "co2" else key.capitalize(),
             autoDownsample=True,
             clipToView=True,
         )
@@ -782,7 +782,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         # Force autoscaling to avoid micro sized y ranges
         # Also keep x from going out of bounds
-        graph.getViewBox().setLimits(xMin=0, xMax=30, minYRange=gis.yMinScale[key])
+        graph.getViewBox().setLimits(
+            xMin=0, xMax=30, minXRange=2, **gis.yLimKeywords[key]
+        )
 
         # Axis line at 0
         graph.addItem(pg.PlotDataItem([0, 30], [0, 0]))
@@ -857,7 +859,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     )
 
                     # If we have CO2 sensor data
-                    if self.gen._co2:
+                    if len(self.gen.co2):
                         # Add the plot if not added already
                         if self.co2_plot is None:
                             self.co2_plot = self.set_plot("co2")
@@ -870,9 +872,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                         if key == "co2":
                             xvalues = self.gen.co2_time[co2_select]
                             yvalues = self.gen.co2[co2_select]
+                            key_cap = "CO2"
                         else:
                             xvalues = self.gen.time[select]
                             yvalues = getattr(self.gen, key)[select]
+                            key_cap = key.capitalize()
 
                         if key == "volume":
                             yvalues = yvalues / 1000
@@ -910,9 +914,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 yvalues[gap:breakpt],
                             )
 
-                        val_key = f"Avg {key.capitalize()}"
-                        min_key = f"{val_key} Min"
-                        max_key = f"{val_key} Max"
+                        min_key = f"Avg {key_cap} Min"
+                        max_key = f"Avg {key_cap} Max"
                         if min_key in self.gen.rotary:
                             self.lower[key].setData(
                                 [0, 30], [self.gen.rotary[min_key].value] * 2
@@ -922,11 +925,11 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 [0, 30], [self.gen.rotary[max_key].value] * 2
                             )
 
-                        if val_key == "Avg Flow":
+                        if key == "flow":
                             self.current[key].setData(
                                 [0, avg_window], [self.gen.average_flow[avg_window]] * 2
                             )
-                        elif val_key == "Avg Pressure":
+                        elif key == "pressure":
                             self.current[key].setData(
                                 [0, avg_window],
                                 [self.gen.average_pressure[avg_window]] * 2,
