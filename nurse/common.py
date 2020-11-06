@@ -51,11 +51,11 @@ class GraphInfo:
         self.yMin = {"flow": -300, "pressure": -100, "volume": 0, "co2": 0}
         self.yStep = {"flow": 10, "pressure": 2, "volume": 100, "co2": 10}
 
-        self.yMinScale = {
-            "flow": 5,
-            "pressure": 2,
-            "volume": 0.5,
-            "co2": 100,
+        self.yLimKeywords = {
+            "flow": {"minYRange": 5, "yMin": -200, "yMax": 200},
+            "pressure": {"minYRange": 2, "yMin": -15, "yMax": 40},
+            "volume": {"minYRange": 0.5},
+            "co2": {"minYRange": 100, "yMin": 0, "yMax": 40_000},
         }
 
         self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
@@ -66,4 +66,4 @@ class GraphInfo:
             "volume": (0, 800),
             "co2": (-5, 6000),
         }
-        self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL", "co2": ""}
+        self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL", "co2": "ppm"}

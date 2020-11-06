@@ -53,6 +53,15 @@ rotary:
     unit: 1/min
     zero: "OFF"
 
+  Avg CO2 Max:
+    type: Incr
+    name: Avg CO2 Max
+    default: 5000
+    min: 0
+    max: 10000
+    incr: 100
+    unit: ppm
+
   Stale Data Timeout:
     type: Incr
     name: Stale Data Timeout

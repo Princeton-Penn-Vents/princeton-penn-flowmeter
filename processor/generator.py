@@ -329,6 +329,8 @@ class Generator(abc.ABC):
         """
         Quick analysis that's easier to run often, makes volume (run by `analyze` too)
         """
+        avg_window = config["global"]["avg-window"].get(int)
+
         realtime = self.realtime
         if len(realtime) > 0:
             if self._logging is not None:
@@ -365,24 +367,31 @@ class Generator(abc.ABC):
             )
 
             if len(self.realtime) > 0:
-                self._avg_alarms = {
-                    **processor.analysis.avg_alarms(
+                processor.analysis.avg_alarms(
+                    self._avg_alarms,
+                    self.rotary,
+                    "flow",
+                    self._flow_cumulative,
+                    self.realtime[-1],
+                    self.logger,
+                )
+                processor.analysis.avg_alarms(
+                    self._avg_alarms,
+                    self.rotary,
+                    "pressure",
+                    self._pressure_cumulative,
+                    self.realtime[-1],
+                    self.logger,
+                )
+
+                if len(self.co2_realtime) > 0:
+                    processor.analysis.co2_alarm(
                         self._avg_alarms,
                         self.rotary,
-                        "flow",
-                        self._flow_cumulative,
+                        self.co2[self.co2_time < avg_window],
                         self.realtime[-1],
                         self.logger,
-                    ),
-                    **processor.analysis.avg_alarms(
-                        self._avg_alarms,
-                        self.rotary,
-                        "pressure",
-                        self._pressure_cumulative,
-                        self.realtime[-1],
-                        self.logger,
-                    ),
-                }
+                    )
 
             self._volume = processor.analysis.flow_to_volume(
                 realtime,

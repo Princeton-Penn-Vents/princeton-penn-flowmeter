@@ -3,9 +3,15 @@ import scipy.integrate
 import scipy.signal
 from typing import Iterable, Dict
 import logging
+import enum
 
 from processor.rotary import LocalRotary
 from processor.config import config
+
+
+class MaxMin(enum.Enum):
+    max = enum.auto()
+    min = enum.auto()
 
 
 def pressure_deglitch_smooth(
@@ -652,6 +658,32 @@ def alarm_record(old_record, timestamp, value, ismax):
         return record
 
 
+def sync_alarm(
+    old_alarms: Dict[str, Dict[str, float]],
+    logger: logging.Logger,
+    key: str,
+    timestamp: float,
+    value: float,
+    limit: float,
+    direction: MaxMin,
+) -> None:
+
+    condition = (value < limit) if direction == MaxMin.min else (value > limit)
+
+    if condition:
+        old_alarms[key] = alarm_record(old_alarms.get(key), timestamp, value, True)
+        if old_alarms[key]["first timestamp"] == timestamp:
+            logger.info(
+                f"Alarm {key!r} activated with value {old_alarms[key]['extreme']}"
+            )
+    elif key in old_alarms:
+        time_active = timestamp - old_alarms[key]["first timestamp"]
+        logger.info(
+            f"Alarm {key!r} deactivated after being on for {time_active:g} seconds"
+        )
+        del old_alarms[key]
+
+
 def avg_alarms(
     old_alarms: Dict[str, Dict[str, float]],
     rotary: LocalRotary,
@@ -659,7 +691,7 @@ def avg_alarms(
     values: Dict[int, float],
     timestamp: float,
     logger: logging.Logger,
-) -> Dict[str, Dict[str, float]]:
+):
     """
     Return a dict with an alarm if alarm present and out of bounds.
     """
@@ -669,36 +701,66 @@ def avg_alarms(
     min_key = f"Avg {key.capitalize()} Min"
 
     if max_key in rotary:
-        if values[avg_window] > rotary[max_key].value:
-            old_alarms[max_key] = alarm_record(
-                old_alarms.get(max_key), timestamp, values[avg_window], True
-            )
-            if old_alarms[max_key]["first timestamp"] == timestamp:
-                logger.info(
-                    f"Alarm {max_key!r} activated with value {old_alarms[max_key]['extreme']}"
-                )
-        elif max_key in old_alarms:
-            time_active = timestamp - old_alarms[max_key]["first timestamp"]
-            logger.info(
-                f"Alarm {max_key!r} deactivated after being on for {time_active:g} seconds"
-            )
-            del old_alarms[max_key]
+        sync_alarm(
+            old_alarms,
+            logger,
+            max_key,
+            timestamp,
+            values[avg_window],
+            rotary[max_key].value,
+            MaxMin.max,
+        )
 
     if min_key in rotary:
-        if values[avg_window] < rotary[min_key].value:
-            old_alarms[min_key] = alarm_record(
-                old_alarms.get(min_key), timestamp, values[avg_window], True
+        sync_alarm(
+            old_alarms,
+            logger,
+            min_key,
+            timestamp,
+            values[avg_window],
+            rotary[min_key].value,
+            MaxMin.min,
+        )
+
+
+def co2_alarm(
+    old_alarms: Dict[str, Dict[str, float]],
+    rotary: LocalRotary,
+    values: np.ndarray,
+    timestamp: float,
+    logger: logging.Logger,
+):
+    """
+    Return a dict with an alarm if alarm present and out of bounds.
+    """
+
+    max_key = "Avg CO2 Max"
+    min_key = "Avg CO2 Min"
+
+    if max_key in rotary:
+        avg = float(np.mean(values))
+
+        if max_key in rotary:
+            sync_alarm(
+                old_alarms,
+                logger,
+                max_key,
+                timestamp,
+                avg,
+                rotary[max_key].value,
+                MaxMin.max,
             )
-            if old_alarms[min_key]["first timestamp"] == timestamp:
-                logger.info(
-                    f"Alarm {min_key!r} activated with value {old_alarms[min_key]['extreme']}"
-                )
-        elif min_key in old_alarms:
-            time_active = timestamp - old_alarms[min_key]["first timestamp"]
-            logger.info(
-                f"Alarm {min_key!r} deactivated after being on for {time_active:g} seconds"
+
+        if min_key in rotary:
+            sync_alarm(
+                old_alarms,
+                logger,
+                min_key,
+                timestamp,
+                avg,
+                rotary[min_key].value,
+                MaxMin.min,
             )
-            del old_alarms[min_key]
 
     return old_alarms
 
