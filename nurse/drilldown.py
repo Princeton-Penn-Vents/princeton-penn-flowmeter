@@ -763,7 +763,6 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
 
         limit_pen = pg.mkPen(color=(170, 30, 30), width=3, style=QtCore.Qt.DashLine)
         current_pen = pg.mkPen(color=(50, 50, 180), width=3, style=QtCore.Qt.DotLine)
-        black_pen = pg.mkPen(color=(0, 0, 0))
 
         if self.graph_layout.items:
             self.graph_layout.nextRow()
@@ -781,10 +780,9 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
             "left", gis.graph_names[key], "L" if key == "volume" else gis.units[key]
         )
 
-        # Force autoscaling to avoid micro sized y ranges by adding a hidden item
-        # if key in gis.yMinRange:
-        min, max = gis.yMinRange[key]
-        graph.addItem(pg.PlotDataItem([0, 0], [min, max], pen=black_pen))
+        # Force autoscaling to avoid micro sized y ranges
+        # Also keep x from going out of bounds
+        graph.getViewBox().setLimits(xMin=0, xMax=30, minYRange=gis.yMinScale[key])
 
         # Axis line at 0
         graph.addItem(pg.PlotDataItem([0, 30], [0, 0]))

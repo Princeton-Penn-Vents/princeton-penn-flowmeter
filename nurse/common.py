@@ -51,11 +51,11 @@ class GraphInfo:
         self.yMin = {"flow": -300, "pressure": -100, "volume": 0, "co2": 0}
         self.yStep = {"flow": 10, "pressure": 2, "volume": 100, "co2": 10}
 
-        self.yMinRange = {
-            "flow": (-1, 1),
-            "pressure": (-0.1, 0.1),
-            "volume": (-0.01, 0.01),
-            "co2": (0, 1000),
+        self.yMinScale = {
+            "flow": 5,
+            "pressure": 2,
+            "volume": 0.5,
+            "co2": 100,
         }
 
         self.graph_pen_qcol = {k: QtGui.QColor(*v) for k, v in self.graph_pens.items()}
