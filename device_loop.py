@@ -24,6 +24,7 @@ import struct
 import json
 import zmq
 import threading
+import shutil
 from pathlib import Path
 from typing import Optional, TextIO, Iterator, TYPE_CHECKING, Dict, Any, List
 from contextlib import contextmanager, ExitStack
@@ -32,6 +33,9 @@ if TYPE_CHECKING:
     from typing_extensions import Final
 
 DIR = Path(__file__).parent.resolve()
+
+GB = 1_000_000_000
+HOUR = 60 * 60
 
 if arg.dir:
     directory = Path(arg.dir).expanduser().resolve() / "device_log"
@@ -124,6 +128,27 @@ def open_next(mypath: Path) -> TextIO:
             return open(str(new_file_path), "x")
         except FileExistsError:
             i += 1
+
+
+def delete_oldest(mypath: Path, size: int) -> None:
+    """
+    Delete the oldest file(s) in a directory. Give the filename you want to create. The
+    size parameter tells you how much to delete.
+    """
+
+    path_list = mypath.parent.glob("*." + mypath.suffix)
+    # Sort by creation time
+    paths = sorted(path_list, key=lambda x: x.stat().st_ctime)
+
+    total_deleted = 0
+
+    for path in paths:
+        total_deleted += path.stat().st_size
+        path.unlink()
+        if total_deleted > size:
+            break
+    else:
+        print("Warning: all log files deleted and still not enough space reclaimed!")
 
 
 def read_loop(
@@ -352,7 +377,7 @@ def read_loop(
             print(ds, file=myfile)
 
 
-with ExitStack() as stack:
+with ExitStack() as stack, ExitStack() as filestack:
 
     pi = stack.enter_context(pi_cleanup())
     spiMCP3008 = stack.enter_context(spidev.SpiDev())
@@ -365,7 +390,8 @@ with ExitStack() as stack:
 
     if arg.name:
         file_path = directory / arg.name
-        myfile = stack.enter_context(open_next(file_path))
+        myfile = filestack.enter_context(open_next(file_path))
+        time_since_file_start = time.monotonic()
         print("Logging:", myfile.name)
 
     running = threading.Event()
@@ -386,6 +412,19 @@ with ExitStack() as stack:
         # Get I2C bus handle
         hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
         hSCD3 = pi.i2c_open(1, DEVICE_SCD3) if arg.co2 else None
+
+        if arg.name:
+            # If the disk is full, we should delete a few files.
+            total, used, free = shutil.disk_usage(str(myfile))
+            if free < 2 * GB:
+                delete_this_much = int(2.5 * GB - free)
+                delete_oldest(file_path, delete_this_much)
+
+            # Also we should make a new file every hour.
+            if time_since_file_start > 1 * HOUR:
+                filestack.pop_all().close()
+                myfile = filestack.enter_context(open_next(file_path))
+                time_since_file_start = time.monotonic()
 
         try:
             read_loop(spiMCP3008, pi, hSDP3, hSCD3, running, myfile)
