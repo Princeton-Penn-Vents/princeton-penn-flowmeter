@@ -4,22 +4,23 @@ from pathlib import Path
 from typing import Optional
 import logging
 from datetime import datetime
+import time
 
 from processor.config import config, get_data_dir
 
 
-def open_next(mypath: Path) -> Path:
+def name_of_next(mypath: Path) -> Path:
     """
-    Open the next available file
+    Get the next available file
     """
-    dt = datetime.now().isoformat(timespec="seconds")
+    dt = datetime.now().strftime("%Y%m%d_%H%M%S")
     while True:
         name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
         new_file_path = mypath.with_name(name)
         if not new_file_path.exists():
             return new_file_path
         else:
-            dt = datetime.now().isoformat(timespec="microseconds")
+            time.sleep(1)
 
 
 def init_logger(logstr: Optional[str] = None) -> None:
@@ -41,7 +42,7 @@ def init_logger(logstr: Optional[str] = None) -> None:
     else:
         file_path = get_data_dir() / logstr
         file_path.parent.mkdir(exist_ok=True)
-        logfile_incr = open_next(file_path)
+        logfile_incr = name_of_next(file_path)
         fh = logging.FileHandler(str(logfile_incr))
         logger.setLevel(logging.INFO)
         fh.setFormatter(formatter)
