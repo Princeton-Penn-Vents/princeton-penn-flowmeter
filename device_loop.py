@@ -25,6 +25,7 @@ import json
 import zmq
 import threading
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, TextIO, Iterator, TYPE_CHECKING, Dict, Any, List
 from contextlib import contextmanager, ExitStack
@@ -120,14 +121,14 @@ def open_next(mypath: Path) -> TextIO:
     """
     Open the next available file
     """
-    i = 0
+    dt = datetime.now().strftime("%Y%m%d_%H%M%S")
     while True:
+        name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
+        new_file_path = mypath.with_name(name)
         try:
-            name = "{n}{i:04}{s}".format(n=mypath.stem, i=i, s=mypath.suffix)
-            new_file_path = mypath.with_name(name)
-            return open(str(new_file_path), "x")
+            return open(str(new_file_path))
         except FileExistsError:
-            i += 1
+            time.sleep(1)
 
 
 def delete_oldest(mypath: Path, size: int) -> None:
