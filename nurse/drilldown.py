@@ -57,7 +57,7 @@ class DrilldownSince(QtWidgets.QLabel):
     pass
 
 
-class DisplayBox(QtWidgets.QFrame):
+class DisplayBoxBase(QtWidgets.QFrame):
     @property
     def status(self) -> Status:
         return Status[self.property("alert_status")]
@@ -73,6 +73,8 @@ class DisplayBox(QtWidgets.QFrame):
             self.cumulative.style().unpolish(self.cumulative)
             self.cumulative.style().polish(self.cumulative)
 
+
+class DisplayBox(DisplayBoxBase):
     def __init__(self, *, key: str, label: str, fmt: str = ""):
         super().__init__()
         self.key = key
@@ -196,6 +198,18 @@ class DisplayBox(QtWidgets.QFrame):
                 self.avg_time.setText(f"({avg_window})")
 
 
+class DisplayBoxCO2(DisplayBoxBase):
+    def __init__(self, label: str):
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout(self)
+
+        title = DrilldownLabel(label)
+        layout.addWidget(title)
+
+        self.cumulative = DrilldownCumulative(label)
+        layout.addWidget(self.cumulative)
+
+
 class AllDisplays(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -229,13 +243,13 @@ class CO2Displays(QtWidgets.QWidget):
         super().__init__()
         layout = QtWidgets.QHBoxLayout(self)
 
-        self.co2 = QtWidgets.QLabel("CO2:\n")
+        self.co2 = DisplayBoxCO2("CO2:")
         layout.addWidget(self.co2)
 
-        self.co2_temp = QtWidgets.QLabel("CO2 Temp:\n")
+        self.co2_temp = DisplayBoxCO2("Temp:")
         layout.addWidget(self.co2_temp)
 
-        self.humidity = QtWidgets.QLabel("Humidity:\n")
+        self.humidity = DisplayBoxCO2("Humidity:")
         layout.addWidget(self.humidity)
 
         self.setVisible(False)
@@ -244,17 +258,20 @@ class CO2Displays(QtWidgets.QWidget):
         gen: Optional[GeneratorGUI] = self.parent().gen if self.parent() else None
 
         if gen is not None:
-            if len(gen._co2):
-                co2 = np.mean(gen._co2[-5:])
+            if len(gen.co2):
+                co2 = np.mean(gen.co2[-5:])
                 co2_temp = np.mean(gen._co2_temp[-5:])
                 humidity = np.mean(gen._humidity[-5:])
 
-                self.co2.setText(f"CO2:\n{co2:.0f}")
-                self.co2_temp.setText(f"Temp:\n{co2_temp:.1f}")
-                self.humidity.setText(f"Humidity:\n{humidity:.2f}")
+                self.co2.cumulative.setText(f"{co2:.0f}")
+                self.co2_temp.cumulative.setText(f"{co2_temp:.1f}")
+                self.humidity.cumulative.setText(f"{humidity:.2f}")
 
                 if not self.isVisible():
                     self.setVisible(True)
+
+                alarming = "Avg CO2 Max" in gen.alarms or "Avg CO2 Min" in gen.alarms
+                self.co2.status = Status.ALERT if alarming else Status.OK
 
 
 class DisplayText(QtWidgets.QTextEdit):

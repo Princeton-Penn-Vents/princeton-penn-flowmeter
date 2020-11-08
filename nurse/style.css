@@ -404,21 +404,21 @@ CO2Displays > QLabel {
   color: #C0C0C0;
 }
 
-DisplayBox {
+DisplayBoxBase {
   border: 2px solid grey;
 }
 
-DisplayBox > DrilldownCumulative {
+DisplayBoxBase > DrilldownCumulative {
   font-size: 28pt;
   font-weight: bold;
 }
 
-DisplayBox > DrilldownLimit {
+DisplayBoxBase > DrilldownLimit {
   font-size: 16pt;
   color: #A0A0A0;
 }
 
-DisplayBox > DrilldownSince {
+DisplayBoxBase > DrilldownSince {
   font-size: 12pt;
   min-height: 12px;
   color: #C0C0C0;
@@ -426,24 +426,24 @@ DisplayBox > DrilldownSince {
   padding: 0px;
 }
 
-DisplayBox > DrilldownLabel {
+DisplayBoxBase > DrilldownLabel {
   font-size: 24pt;
   color: #A0A0A0;
 }
 
-DisplayBox[alert_status="DISCON"] {
+DisplayBoxBase[alert_status="DISCON"] {
   background-color: #000050;
 }
 
-DisplayBox[alert_status="ALERT"] {
+DisplayBoxBase[alert_status="ALERT"] {
   background-color: darkred;
 }
 
-DisplayBox[alert_status="ALERT_SILENT"] {
+DisplayBoxBase[alert_status="ALERT_SILENT"] {
   background-color: #606020;
 }
 
-DisplayBox[alert_status="ALERT"] > DrilldownCumulative {
+DisplayBoxBase[alert_status="ALERT"] > DrilldownCumulative {
   text-decoration: underline;
 }
 
