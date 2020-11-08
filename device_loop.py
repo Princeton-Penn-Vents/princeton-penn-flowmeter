@@ -414,9 +414,9 @@ with ExitStack() as stack, ExitStack() as filestack:
         hSDP3 = pi.i2c_open(1, DEVICE_SDP3)
         hSCD3 = pi.i2c_open(1, DEVICE_SCD3) if arg.co2 else None
 
-        if arg.name:
+        if myfile:
             # If the disk is full, we should delete a few files.
-            total, used, free = shutil.disk_usage(str(myfile))
+            total, used, free = shutil.disk_usage(str(myfile.name))
             if free < 2 * GB:
                 delete_this_much = int(2.5 * GB - free)
                 delete_oldest(file_path, delete_this_much)
