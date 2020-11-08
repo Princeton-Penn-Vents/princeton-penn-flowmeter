@@ -126,7 +126,7 @@ def open_next(mypath: Path) -> TextIO:
         name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
         new_file_path = mypath.with_name(name)
         try:
-            return open(str(new_file_path))
+            return open(str(new_file_path), "x")
         except FileExistsError:
             time.sleep(1)
 
