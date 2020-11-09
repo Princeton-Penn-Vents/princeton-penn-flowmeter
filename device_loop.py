@@ -422,7 +422,7 @@ with ExitStack() as stack, ExitStack() as filestack:
                 delete_oldest(file_path, delete_this_much)
 
             # Also we should make a new file every hour.
-            if time_since_file_start > 1 * HOUR:
+            if time.monotonic() > time_since_file_start + 1 * HOUR:
                 filestack.pop_all().close()
                 myfile = filestack.enter_context(open_next(file_path))
                 time_since_file_start = time.monotonic()
