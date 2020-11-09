@@ -23,7 +23,7 @@ from nurse.qt import (
     DraggableMixin,
 )
 
-from nurse.common import GraphInfo, HOVER_STRINGS
+from nurse.common import GraphInfo, HOVER_STRINGS, rolling_mean
 from nurse.header import DrilldownHeaderWidget
 from nurse.gen_record_gui import GenRecordGUI, GeneratorGUI
 from processor.generator import Status
@@ -862,13 +862,13 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     avg_window = config["global"]["avg-window"].get(int)
 
                     select = (
-                        slice(np.searchsorted(-self.gen.time, -30), None)
+                        slice(np.searchsorted(-self.gen.time, -32), None)
                         if len(self.gen.time)
                         else slice(None)
                     )
                     co2_select = (
                         slice(
-                            np.searchsorted(-self.gen.co2_time, -30),
+                            np.searchsorted(-self.gen.co2_time, -35),
                             None,
                         )
                         if len(self.gen.co2_time)
@@ -888,7 +888,8 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                     for key in labels:
                         if key == "co2":
                             xvalues = self.gen.co2_time[co2_select]
-                            yvalues = self.gen.co2[co2_select]
+                            orig_yvalues = self.gen.co2[co2_select]
+                            yvalues = rolling_mean(orig_yvalues, 5)
                             key_cap = "CO2"
                         else:
                             xvalues = self.gen.time[select]
@@ -952,7 +953,7 @@ class PatientDrilldownWidget(QtWidgets.QFrame):
                                 [self.gen.average_pressure[avg_window]] * 2,
                             )
                         elif key == "co2":
-                            avg_co2 = float(np.mean(yvalues[xvalues < avg_window]))
+                            avg_co2 = float(np.mean(orig_yvalues[xvalues < avg_window]))
                             self.current[key].setData(
                                 [0, avg_window],
                                 [avg_co2] * 2,

@@ -1,4 +1,9 @@
+from __future__ import annotations
+
+import numpy as np
+
 from nurse.qt import QtGui
+
 
 # Replace with proper importlib.resources if made a package
 from processor.config import get_internal_file
@@ -67,3 +72,15 @@ class GraphInfo:
             "co2": (-5, 6000),
         }
         self.units = {"flow": "L/m", "pressure": "cm H2O", "volume": "mL", "co2": "ppm"}
+
+
+def rolling_mean(data: np.ndarray, size: int) -> np.ndarray:
+    assert size % 2 == 1, "Only odd sizes supported"
+    edge = (size - 1) // 2
+    cumsum = np.empty(len(data) + 1, dtype=float)
+    cumsum[0] = 0
+    np.cumsum(data, dtype=float, out=cumsum[1:])
+    counts = np.arange(len(data))
+    right = np.clip(counts + edge + 1, 0, len(data))
+    left = np.clip(counts - edge, 0, len(data))
+    return (cumsum[right] - cumsum[left]) / (right - left)
