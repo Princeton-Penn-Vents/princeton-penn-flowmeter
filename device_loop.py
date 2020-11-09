@@ -421,7 +421,9 @@ with ExitStack() as stack, ExitStack() as filestack:
                 delete_this_much = int(2.5 * GB - free)
                 delete_oldest(file_path, delete_this_much)
 
-            # Also we should make a new file every hour.
+            # Also we should make a new file if it's been more than an hour
+            # (Currently only triggered by a read error, like removing the
+            # sensor and replacing)
             if time.monotonic() > time_since_file_start + 1 * HOUR:
                 filestack.pop_all().close()
                 myfile = filestack.enter_context(open_next(file_path))
