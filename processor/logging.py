@@ -13,8 +13,8 @@ def name_of_next(mypath: Path) -> Path:
     """
     Get the next available file
     """
-    dt = datetime.now().strftime("%Y%m%d_%H%M%S")
     while True:
+        dt = datetime.now().strftime("%Y%m%d_%H%M%S")
         name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
         new_file_path = mypath.with_name(name)
         if not new_file_path.exists():

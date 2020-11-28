@@ -121,8 +121,8 @@ def open_next(mypath: Path) -> TextIO:
     """
     Open the next available file
     """
-    dt = datetime.now().strftime("%Y%m%d_%H%M%S")
     while True:
+        dt = datetime.now().strftime("%Y%m%d_%H%M%S")
         name = "{n}_{dt}{s}".format(n=mypath.stem, dt=dt, s=mypath.suffix)
         new_file_path = mypath.with_name(name)
         try:
