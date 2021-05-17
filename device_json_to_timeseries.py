@@ -27,9 +27,9 @@ import numpy
 
 from processor.config import config
 from processor import analysis
-from processor.flow_calibrator import flow_calibrator
+from processor.flow_calibrator import FlowCalibrator
 
-caliber = flow_calibrator()
+caliber = FlowCalibrator()
 
 flow_scale = config["device"]["flow"]["scale"].as_number()
 flow_offset = config["device"]["flow"]["offset"].as_number()
