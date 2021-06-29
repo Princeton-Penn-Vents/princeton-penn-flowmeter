@@ -14,6 +14,7 @@ from processor.display_settings import CurrentSetting, CO2Setting
 from processor.generator import Generator
 from processor.rotary import LocalRotary
 from processor.thread_base import ThreadBase
+from processor.flow_calibrator import FlowCalibrator
 
 from patient.mac_address import get_mac_addr, get_box_name
 
@@ -30,6 +31,9 @@ class CollectorThread(ThreadBase):
         self._pressure_scale = config["device"]["pressure"]["scale"].as_number()
         self._pressure_offset = config["device"]["pressure"]["offset"].as_number()
 
+        # flow calibration
+        self._caliber = FlowCalibrator()
+
         super().__init__(parent)
 
     @context()
@@ -40,11 +44,6 @@ class CollectorThread(ThreadBase):
     ) -> None:
         sub_socket.connect("tcp://localhost:5556")
         sub_socket.subscribe(b"")
-
-        # flow calibration
-        from processor.flow_calibrator import flow_calibrator
-
-        caliber = flow_calibrator()
 
         # Up to 60 seconds of data (roughly, not promised)
         pub_socket.hwm = 3000
@@ -63,7 +62,7 @@ class CollectorThread(ThreadBase):
                     f: float = 0
                     p: float = 0
                 else:
-                    f = caliber.Q(j["F"])
+                    f = self._caliber.Q(j["F"])
                     p = j["P"] * self._pressure_scale - self._pressure_offset
 
                 pub_socket.send_json({"t": t, "f": f, "p": p})

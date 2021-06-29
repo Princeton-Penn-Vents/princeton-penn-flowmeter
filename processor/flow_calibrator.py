@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import numpy as np
 import scipy.interpolate
 import yaml
 import os
-from typing import Union
+from typing import Union, Callable
 from pathlib import Path
 
 DIR = Path(__file__).parent.resolve()
@@ -23,30 +24,27 @@ def get_yaml(yml_file):
     return qs, deltaPs
 
 
-class flow_calibrator:
+class FlowCalibrator:
     def __init__(self, block: str = DEFAULT_BLOCK) -> None:
-        func = None
+        self.func: Callable[[np.ndarray], np.ndarray]
         if block == "simple":
-            func = self.simple
-        if block.endswith("yaml") or block.endswith("yml"):
+            self.func = self.simple
+        elif block.endswith("yaml") or block.endswith("yml"):
             qs, deltaPs = get_yaml(block)
             self.interp = scipy.interpolate.interp1d(
                 deltaPs, qs, kind="cubic", fill_value="extrapolate"
             )
-            func = self.extrap1d
+            self.func = self.extrap1d
+        else:
+            raise RuntimeError("Invalid configuration for FlowCalibrator")
 
-        assert func is not None
-        self.func = func
-
-    def simple(self, deltaP):
+    @staticmethod
+    def simple(deltaP: np.ndarray) -> np.ndarray:
         #        return np.copysign(np.abs(deltaP) ** (4 / 7),deltaP)*0.7198/0.09636372314370535
         return np.copysign(np.abs(deltaP / 0.02962975) ** (4 / 7), deltaP)
 
-    def extrap1d(self, in_deltaP):
-        if not isinstance(in_deltaP, np.ndarray):
-            deltaP = np.array(in_deltaP)
-        else:
-            deltaP = in_deltaP
+    def extrap1d(self, in_deltaP: np.ndarray) -> np.ndarray:
+        deltaP = np.asarray(in_deltaP)
 
         retval = self.interp(np.abs(deltaP))
         xs = self.interp.x
@@ -63,7 +61,7 @@ class flow_calibrator:
 
 if __name__ == "__main__":
     print("Checking old software calibration")
-    caliber = flow_calibrator("simple")
+    caliber = FlowCalibrator("simple")
     fs = np.arange(0.0, 33000.0, 1000.0)
     for f in fs:
         print(f, caliber.Q(f))
@@ -73,7 +71,7 @@ if __name__ == "__main__":
     print(caliber.Q(fs))
 
     print("Checking the default")
-    caliber_def = flow_calibrator()
+    caliber_def = FlowCalibrator()
     print(caliber.Q(fs))
 
     fs = np.arange(0.0, 33000.0, 1000.0)
@@ -86,7 +84,7 @@ if __name__ == "__main__":
 
     res_list = []
     for i, f in enumerate(files):
-        caliber_f = flow_calibrator(
+        caliber_f = FlowCalibrator(
             os.path.join(os.path.dirname(__file__), "flowcalib_data", f)
         )
         res_list.append(caliber_f.Q(fs))
