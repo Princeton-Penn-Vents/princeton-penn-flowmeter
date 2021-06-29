@@ -117,7 +117,7 @@ class VentSim:
         self.precompute()
         self.current_bin = 0
 
-    def get_breath_starts(self) -> np.array:
+    def get_breath_starts(self) -> np.ndarray:
         """
         returns:
         array of breath start times
@@ -135,7 +135,7 @@ class VentSim:
         )  # put a breath at the beginning..
         return breath_starts
 
-    def nominal_flow(self) -> np.array:
+    def nominal_flow(self) -> np.ndarray:
 
         """
         expected parameters:

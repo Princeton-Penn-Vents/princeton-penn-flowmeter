@@ -231,7 +231,14 @@ def find_breaths(A, B, C, D):
     return outs
 
 
-def measure_breaths(time, flow, volume, pressure, *, breath_thresh: float):
+def measure_breaths(
+    time: np.ndarray,
+    flow: np.ndarray,
+    volume: np.ndarray,
+    pressure: np.ndarray,
+    *,
+    breath_thresh: float,
+):
     try:
         smooth_time_f, smooth_flow, smooth_dflow = smooth_derivative(time, flow)
         smooth_time_p, smooth_pressure, smooth_dpressure = smooth_derivative(
