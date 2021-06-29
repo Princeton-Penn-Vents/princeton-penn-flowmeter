@@ -1,4 +1,15 @@
-from typing import TypeVar, Type, overload, AnyStr, Union, Sequence, Iterator, Any, Dict, Optional
+from typing import (
+    TypeVar,
+    Type,
+    overload,
+    AnyStr,
+    Union,
+    Sequence,
+    Iterator,
+    Any,
+    Dict,
+    Optional,
+)
 from os import PathLike
 
 T = TypeVar("T")
@@ -17,7 +28,9 @@ class ConfigView:
     def __setitem__(self, item: str, value: Union[str, int, bool]) -> None: ...
 
 class Configuration:
-    def __init__(self, appname: str, modname: Optional[str] = None, read: bool = True): ...
+    def __init__(
+        self, appname: str, modname: Optional[str] = None, read: bool = True
+    ): ...
     def set_file(self, filename: Path) -> None: ...
     def clear(self) -> None: ...
     def __getitem__(self, item: str) -> ConfigView: ...
