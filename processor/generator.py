@@ -168,6 +168,9 @@ class Generator(abc.ABC):
         # A quick way to get the debug status
         self._debug = config["global"]["debug"].get(bool)
 
+        # A function to calibrate the volume calculation
+        self._volume_flow = config["processor"]["volume"]["flow"].get(str)
+
         # The breath threshold
         self.breath_thresh: float = config["global"]["breath-thresh"].as_number()
 
@@ -242,6 +245,22 @@ class Generator(abc.ABC):
         else:
             self.logger.info(
                 "No file-based logging attached, not saving time series or cumulatives"
+            )
+
+    @property
+    def volume_flow(self) -> np.ndarray:
+        if self._volume_flow is None:
+            return self.flow
+        else:
+            return eval(
+                self._volume_flow,
+                {"np": np},
+                {
+                    "flow": self.flow,
+                    "pressure": self.pressure,
+                    "Σpressure": self._pressure_cumulative,
+                    "Σflow": self._flow_cumulative,
+                },
             )
 
     def run(self) -> None:
@@ -396,7 +415,7 @@ class Generator(abc.ABC):
             self._volume = processor.analysis.flow_to_volume(
                 realtime,
                 self._old_realtime,
-                self.flow,
+                self.volume_flow,
                 self._volume - self._volume_shift,
                 critical_frequency=0.004,
             )
